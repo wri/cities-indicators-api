@@ -1,17 +1,12 @@
 from fastapi import FastAPI
-from pyairtable import Table
-
-import os
-airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
+from fastapi.responses import RedirectResponse
 
 
 app = FastAPI()
 
-
-@app.get("/")
-def read_root():
-    return {"Welcome": "This is the WRI Cities Indicators API"}
-
+@app.get("/", include_in_schema=False)
+async def docs_redirect():
+    return RedirectResponse(url='/docs')
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int):

@@ -2,8 +2,22 @@
 FastAPI connected to Airtable
 Docs: https://citiesapi-1-x4387694.deta.app/docs
 
-## Local
-To run this locally you just need to create an Airtable API token with the `data.records:read` scope and `Cities Indicators Metadata` Access on https://airtable.com/create/tokens/new and store it as a local environment variable called `CITIES_API_AIRTABLE_KEY`.
+## Local dev setup
+To run this locally 
+1. Create an Airtable API token with the `data.records:read` scope and `Cities Indicators Metadata` Access on https://airtable.com/create/tokens/new
+2. Store it as a local environment variable called `CITIES_API_AIRTABLE_KEY`. 
+    I recommend putting it in a .env file and then running
+    ```
+    from dotenv import load_dotenv
+    load_dotenv('/path/to/.env')
+    ```
+3. Install python packages from requirement.txt
+    ```
+    pip install -r requirements.txt
+    ```
+
+## Run locally
+`uvicorn main:app --reload`
 
 ## Deployed
 The API is deployed to https://citiesapi-1-x4387694.deta.app/
