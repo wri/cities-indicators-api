@@ -4,6 +4,12 @@ from pyairtable import Table
 import os
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 from fastapi.responses import RedirectResponse
+# Authentication
+## Airtable 
+airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
+cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
+datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
+
 
 
 app = FastAPI()
