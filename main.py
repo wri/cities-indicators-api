@@ -1,4 +1,8 @@
 from fastapi import FastAPI
+from pyairtable import Table
+
+import os
+airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 from fastapi.responses import RedirectResponse
 
 
