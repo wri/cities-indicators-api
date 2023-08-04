@@ -4,12 +4,16 @@ from pyairtable import Table
 import os
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 from fastapi.responses import RedirectResponse
+from cartoframes import read_carto
+from cartoframes.auth import set_default_credentials
 # Authentication
 ## Airtable 
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
 datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
 
+## Carto
+set_default_credentials(username='wri-cities', api_key='default_public')
 
 
 app = FastAPI()
@@ -18,6 +22,11 @@ app = FastAPI()
 async def docs_redirect():
     return RedirectResponse(url='/docs')
 
+# Indicators
+@app.get("/indicators")
+def list_indicators():
+    indicators = read_carto('indicators')
+    return indicators
 
 
 @app.get("/cities")
