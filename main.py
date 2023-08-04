@@ -1,5 +1,15 @@
 from fastapi import FastAPI
+from pyairtable import Table
+
+import os
+airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 from fastapi.responses import RedirectResponse
+# Authentication
+## Airtable 
+airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
+cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
+datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
+
 
 
 app = FastAPI()
@@ -8,9 +18,6 @@ app = FastAPI()
 async def docs_redirect():
     return RedirectResponse(url='/docs')
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int):
-    return {"item_id": item_id}
 
 
 @app.get("/cities")
@@ -18,3 +25,8 @@ def list_cities():
     table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
     cities = table.all(view="api")
     return {"cities": cities}
+# Datasets
+@app.get("/datasets")
+def list_datasets():
+    datasets = datasets_table.all(view="api")
+    return {"datasets": datasets}
