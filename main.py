@@ -15,3 +15,8 @@ def list_cities():
     table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
     cities = table.all(view="api")
     return {"cities": cities}
+# Datasets
+@app.get("/datasets")
+def list_datasets():
+    datasets = datasets_table.all(view="api")
+    return {"datasets": datasets}
