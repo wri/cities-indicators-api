@@ -33,7 +33,7 @@ def list_cities():
 # Indicators
 @app.get("/indicators")
 def list_indicators():
-    indicators = read_carto('indicators')
+    indicators = read_carto('indicators').to_json()
     return indicators
 
 
