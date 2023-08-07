@@ -22,6 +22,13 @@ app = FastAPI()
 async def docs_redirect():
     return RedirectResponse(url='/docs')
 
+@app.get("/cities")
+def list_cities():
+    table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
+    cities = table.all(view="api")
+    return {"cities": cities}
+
+
 # Indicators
 @app.get("/indicators")
 def list_indicators():
@@ -29,11 +36,6 @@ def list_indicators():
     return indicators
 
 
-@app.get("/cities")
-def list_cities():
-    table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
-    cities = table.all(view="api")
-    return {"cities": cities}
 # Datasets
 @app.get("/datasets")
 def list_datasets():
