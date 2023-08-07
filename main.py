@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-from pyairtable import Table
+from fastapi.responses import RedirectResponse
 
 import os
-airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
-from fastapi.responses import RedirectResponse
+
+from pyairtable import Table
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
+
 # Authentication
 ## Airtable 
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
