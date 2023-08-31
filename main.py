@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 import os
+import json
 
 from pyairtable import Table
+from pyairtable.formulas import match
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 import requests
@@ -29,6 +31,23 @@ def list_cities():
     table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
     cities = table.all(view="api")
     return {"cities": cities}
+
+
+@app.get("/cities/{city_id}/{admin_level}")
+def list_cities(city_id: str, admin_level: str):
+    formula = f'SEARCH("{city_id}",{{id}})'
+    city = cities_table.all(view="api", formula=formula)
+    return city
+
+@app.get("/cities/{city_id}/{admin_level}/geojson")
+def list_cities(city_id: str, admin_level: str):
+    q = f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+    city = json.loads(read_carto(q).to_json())
+
+    #TODO: add indicators dataframe from Carto and combine with city before jsonifying
+    return city
+
+
 # Boundaries
 @app.get("/boundaries")
 def list_boundaries():
