@@ -26,9 +26,10 @@ async def docs_redirect():
 
 @app.get("/cities")
 def list_cities():
-    table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
-    cities = table.all(view="api")
+    cities = cities_table.all(view="api")
     return {"cities": cities}
+
+
 # Boundaries
 @app.get("/boundaries")
 def list_boundaries():
