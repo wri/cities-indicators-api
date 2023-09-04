@@ -63,7 +63,7 @@ def list_boundaries():
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
-    geography_boundary = read_carto('SELECT * FROM boundaries WHERE geo_id = {geography}').to_json()
+    geography_boundary = json.loads(read_carto("SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json())
     return geography_boundary
 
 @app.get("/boundaries/geojson")
