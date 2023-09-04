@@ -13,6 +13,7 @@ import requests
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
 datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
+indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
@@ -26,9 +27,10 @@ async def docs_redirect():
 
 @app.get("/cities")
 def list_cities():
-    table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
-    cities = table.all(view="api")
+    cities = cities_table.all(view="api")
     return {"cities": cities}
+
+
 # Boundaries
 @app.get("/boundaries")
 def list_boundaries():
@@ -58,8 +60,8 @@ def list_boundaries():
 # Indicators
 @app.get("/indicators")
 def list_indicators():
-    indicators = read_carto('indicators').to_json()
-    return indicators
+    indicators = indicators_table.all(view="api")
+    return {"indicators": indicators}
 
 
 # Datasets
