@@ -1,8 +1,6 @@
 name: Push to Space
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch
 jobs:
   push-to-space:
     runs-on: ubuntu-latest
