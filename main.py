@@ -79,7 +79,7 @@ def list_indicators():
 
 @app.get("/indicators/{indicator_name}")
 def get_indicator(indicator_name: str):
-    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}'")
+    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and indicators.geo_name=indicators.geo_parent_name")
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
     indicator =  json.loads(indicator_df.to_json())
@@ -87,7 +87,7 @@ def get_indicator(indicator_name: str):
 
 @app.get("/indicators/{indicator_name}/{city_id}")
 def get_indicator(indicator_name: str, city_id: str):
-    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_parent_name = '{city_id}'")
+    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_name = '{city_id}'")
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
     indicator =  json.loads(indicator_df.to_json())
