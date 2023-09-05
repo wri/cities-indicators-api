@@ -32,7 +32,6 @@ def list_cities():
     cities = cities_table.all(view="api")
     return {"cities": cities}
 
-
 @app.get("/cities/{city_id}/{admin_level}")
 def list_cities(city_id: str, admin_level: str):
     formula = f'SEARCH("{city_id}",{{id}})'
@@ -63,7 +62,7 @@ def list_boundaries():
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
-    geography_boundary = json.loads(read_carto("SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json())
+    geography_boundary = json.loads(read_carto(f"SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json())
     return geography_boundary
 
 @app.get("/boundaries/geojson")
@@ -72,13 +71,27 @@ def list_boundaries():
     return boundaries
 
 
-
-
 # Indicators
 @app.get("/indicators")
 def list_indicators():
     indicators = indicators_table.all(view="api")
     return {"indicators": indicators}
+
+@app.get("/indicators/{indicator_name}")
+def get_indicator(indicator_name: str):
+    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}'")
+    # Object of type Timestamp is not JSON serializable. Need to convert to string first.
+    indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
+    indicator =  json.loads(indicator_df.to_json())
+    return indicator
+
+@app.get("/indicators/{indicator_name}/{city_id}")
+def get_indicator(indicator_name: str, city_id: str):
+    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_parent_name = '{city_id}'")
+    # Object of type Timestamp is not JSON serializable. Need to convert to string first.
+    indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
+    indicator =  json.loads(indicator_df.to_json())
+    return indicator
 
 
 # Datasets
