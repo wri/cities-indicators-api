@@ -17,8 +17,26 @@ datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
+description = """
+You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
+"""
 
-app = FastAPI()
+app = FastAPI(
+    title="WRI Cities Indicators API",
+    description=description,
+    summary="An indicators API",
+    version="v0",
+    terms_of_service="TBD",
+    contact={
+        "name": "WRI Cities Data Team",
+        "url": "https://citiesindicators.wri.org/",
+        "email": "citiesdata@wri.org",
+    },
+    license_info={
+        "name": "License TBD",
+        "url": "https://opensource.org/licenses/",
+    },
+)
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
