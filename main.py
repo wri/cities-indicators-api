@@ -43,7 +43,7 @@ def get_city(city_id: str):
     formula = f'SEARCH("{city_id}",{{id}})'
     city = cities_table.all(view="api", formula=formula)
     city = city[0]['fields']
-    return city
+    return {"cities": city} 
 
 @app.get("/cities/{city_id}/{admin_level}")
 # Return one city all indicators values from Carto
@@ -52,25 +52,22 @@ def get_city_indicators(city_id: str, admin_level: str):
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     city_indicators_df['creation_date'] = city_indicators_df['creation_date'].dt.strftime('%Y-%m-%d')
     city_indicators =  json.loads(city_indicators_df.to_json())
-    city_indicators = {"city_indicators": [item['properties'] for item in city_indicators['features']]}
-    return city_indicators
+    city_indicators = [item['properties'] for item in city_indicators['features']]
+    return {"city_indicators": city_indicators}
 
 @app.get("/cities/{city_id}/{admin_level}/geojson")
 # Return one city all indicators values and geometry from Carto
 def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
-    city_geometry =  json.loads(city_geometry_df.to_json())
+    city_geometry = json.loads(city_geometry_df.to_json())
+    city_geometry = [{'properties': item['properties'], 'geometry': item['geometry']} for item in city_geometry['features']]
 
     city_indicators_df = read_carto(f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     city_indicators_df['creation_date'] = city_indicators_df['creation_date'].dt.strftime('%Y-%m-%d')
     city_indicators = json.loads(city_indicators_df.to_json())
-
-    city_indicators_geometry = {"city_indicators": [item['properties'] for item in city_indicators['features']], 
-                                "city_geometry":[{'properties': item['properties'], 'geometry': item['geometry']} for item in city_geometry['features']]}
-
-    #TODO: add indicators dataframe from Carto and combine with city before jsonifying
-    return city_indicators_geometry
+    city_indicators = [item['properties'] for item in city_indicators['features']]
+    return {"city_indicators": city_indicators, "city_geometry": city_geometry}
 
 
 # Boundaries
@@ -122,8 +119,8 @@ def get_indicator(indicator_name: str):
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
     indicator = json.loads(indicator_df.to_json())
-    indicator = {"indicator_values": [item['properties'] for item in indicator['features']]}
-    return indicator
+    indicator = [item['properties'] for item in indicator['features']]
+    return {"indicator_values": indicator}
 
 @app.get("/indicators/{indicator_name}/{city_id}")
 # Return one indicator value for one city top admin level from Carto
@@ -133,7 +130,7 @@ def get_city_indicator(indicator_name: str, city_id: str):
     city_indicator_df['creation_date'] = city_indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
     city_indicator = json.loads(city_indicator_df.to_json())
     city_indicator = city_indicator['features'][0]['properties']
-    return city_indicator
+    return {"indicator_values": city_indicator}
 
 
 # Datasets
