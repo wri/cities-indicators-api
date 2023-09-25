@@ -30,15 +30,23 @@ async def docs_redirect():
 
 
 # Cities
+# Define the desired keys to extract from each city's data
+city_keys = ["id", 
+            "country_name", 
+            "country_code_iso3", 
+            "name", 
+            "admin_levels", 
+            "project",
+            "aoi_boundary_level", 
+            "aoi_boundary_file", 
+            "units_boundary_level", 
+            "unit_boundary_file"]
+
 @app.get("/cities")
 # Return all cities metadata from Airtable
 def list_cities():
     cities_data = cities_table.all(view="api")
-    # Define the desired keys to extract from each city's data
-    desired_keys = ["id", "country_name", "country_code_iso3", "name", "admin_levels", "project",
-                    "aoi_boundary_level", "aoi_boundary_file", "units_boundary_level", "unit_boundary_file"]
-    cities = [{key: city['fields'][key] for key in desired_keys if key in city['fields']} for city in cities_data]
-
+    cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_data]
     return {"cities": cities}
 
 @app.get("/cities/{city_id}")
@@ -48,9 +56,7 @@ def get_city(city_id: str):
     city_data = cities_table.all(view="api", formula=formula)
     city = city_data[0]['fields']
     # Define the desired keys to extract from the city's data
-    desired_keys = ["id", "country_name", "country_code_iso3", "name", "admin_levels", "project",
-                    "aoi_boundary_level", "aoi_boundary_file", "units_boundary_level", "unit_boundary_file"]
-    city = {key: city[key] for key in desired_keys if key in city}
+    city = {key: city[key] for key in city_keys if key in city}
     
     return {"cities": city}
 
@@ -63,7 +69,13 @@ def get_city_indicators(city_id: str, admin_level: str):
     city_indicators = json.loads(city_indicators_df.to_json())
     city_indicators = [item['properties'] for item in city_indicators['features']]
     # Select and reorder the desired keys
-    desired_keys = ["geo_id", "geo_level", "geo_name", "geo_parent_name", "indicator", "value", "indicator_version"]
+    desired_keys = ["geo_id", 
+                    "geo_level", 
+                    "geo_name", 
+                    "geo_parent_name", 
+                    "indicator", 
+                    "value", 
+                    "indicator_version"]
     city_indicators = [{key: city_indicator[key] for key in desired_keys if key in city_indicator} for city_indicator in city_indicators]
 
     return {"city_indicators": city_indicators}
@@ -73,7 +85,12 @@ def get_city_indicators(city_id: str, admin_level: str):
 def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
-    city_geometry_df = city_geometry_df[["geo_id", "geo_level", "geo_name", "geo_parent_name", "geo_version", "the_geom"]]
+    city_geometry_df = city_geometry_df[["geo_id", 
+                                         "geo_level", 
+                                         "geo_name", 
+                                         "geo_parent_name", 
+                                         "geo_version", 
+                                         "the_geom"]]
     city_geometry = json.loads(city_geometry_df.to_json())
     city_geometry = [{'properties': item['properties'],
                       'geometry': item['geometry']} for item in city_geometry['features']]
@@ -84,7 +101,13 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_indicators = json.loads(city_indicators_df.to_json())
     city_indicators = [item['properties'] for item in city_indicators['features']]
     # Reorder and select city indicators fields
-    desired_keys = ["geo_id", "geo_level", "geo_name", "geo_parent_name", "indicator", "value", "indicator_version"]
+    desired_keys = ["geo_id", 
+                    "geo_level", 
+                    "geo_name", 
+                    "geo_parent_name", 
+                    "indicator", 
+                    "value", 
+                    "indicator_version"]
     city_indicators = [{key: city_indicator[key] for key in desired_keys if key in city_indicator} for city_indicator in city_indicators]
 
     return {"city_indicators": city_indicators, "city_geometry": city_geometry}
@@ -105,8 +128,17 @@ def list_indicators():
 
     indicators = list(indicators_dict.values())
     # Reorder indicators fields
-    desired_keys = ["indicator", "indicator_label", "code", "indicator_definition", "importance",
-                    "methods", "data_sources", "data_sources_link", "indicator_legend", "theme", "Notebook"]
+    desired_keys = ["indicator", 
+                    "indicator_label", 
+                    "code", 
+                    "indicator_definition", 
+                    "importance",
+                    "methods", 
+                    "data_sources", 
+                    "data_sources_link", 
+                    "indicator_legend", 
+                    "theme", 
+                    "Notebook"]
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
     return {"indicators": indicators}
@@ -120,7 +152,14 @@ def get_indicator(indicator_name: str):
     indicator = json.loads(indicator_df.to_json())
     indicator = [item['properties'] for item in indicator['features']]
     # Reorder and select indicators fields
-    desired_keys = ["geo_id", "geo_level", "geo_name","geo_parent_name", "indicator", "value", "indicator_version"]
+    desired_keys = ["geo_id", 
+                    "geo_level", 
+                    "geo_name", 
+                    "geo_parent_name", 
+                    "indicator", 
+                    "value", 
+                    "indicator_version"
+                    ]
     indicator = [{key: city_indicator[key] for key in desired_keys} for city_indicator in indicator]
 
     return {"indicator_values": indicator}
@@ -134,7 +173,14 @@ def get_city_indicator(indicator_name: str, city_id: str):
     city_indicator = json.loads(city_indicator_df.to_json())
     city_indicator = city_indicator['features'][0]['properties']
     # Reorder and select city indicator fields
-    desired_keys = ["geo_id", "geo_level", "geo_name","geo_parent_name", "indicator", "value", "indicator_version"]
+    desired_keys = ["geo_id", 
+                    "geo_level", 
+                    "geo_name", 
+                    "geo_parent_name", 
+                    "indicator", 
+                    "value", 
+                    "indicator_version"
+                    ]
     city_indicator = {key: city_indicator[key] for key in desired_keys if key in city_indicator}
 
     return {"indicator_values": city_indicator}
@@ -154,8 +200,16 @@ def list_datasets():
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
-    desired_keys = ["Name", "Spatial resolution", "Spatial Coverage", "Provider", "Data source",
-                    "Data source website", "Storage", "Theme", "visualization_endpoint", "Indicators"]
+    desired_keys = ["Name", 
+                    "Spatial resolution", 
+                    "Spatial Coverage", 
+                    "Provider", 
+                    "Data source",
+                    "Data source website", 
+                    "Storage", 
+                    "Theme", 
+                    "visualization_endpoint", 
+                    "Indicators"]
     datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
     return {"datasets": datasets}
