@@ -32,15 +32,12 @@ async def docs_redirect():
 # Cities
 # Define the desired keys to extract from each city's data
 city_keys = ["id", 
+            "name", 
             "country_name", 
             "country_code_iso3", 
-            "name", 
             "admin_levels", 
-            "project",
-            "aoi_boundary_level", 
-            "aoi_boundary_file", 
-            "units_boundary_level", 
-            "unit_boundary_file"]
+            "aoi_admin_level", 
+            "project"]
 
 @app.get("/cities")
 # Return all cities metadata from Airtable
@@ -70,8 +67,8 @@ def get_city_indicators(city_id: str, admin_level: str):
     city_indicators = [item['properties'] for item in city_indicators['features']]
     # Select and reorder the desired keys
     desired_keys = ["geo_id", 
-                    "geo_level", 
                     "geo_name", 
+                    "geo_level", 
                     "geo_parent_name", 
                     "indicator", 
                     "value", 
@@ -86,8 +83,8 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
     city_geometry_df = city_geometry_df[["geo_id", 
-                                         "geo_level", 
                                          "geo_name", 
+                                         "geo_level", 
                                          "geo_parent_name", 
                                          "geo_version", 
                                          "the_geom"]]
@@ -102,8 +99,8 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_indicators = [item['properties'] for item in city_indicators['features']]
     # Reorder and select city indicators fields
     desired_keys = ["geo_id", 
-                    "geo_level", 
                     "geo_name", 
+                    "geo_level", 
                     "geo_parent_name", 
                     "indicator", 
                     "value", 
@@ -134,11 +131,11 @@ def list_indicators():
                     "indicator_definition", 
                     "importance",
                     "methods", 
+                    "Notebook", 
                     "data_sources", 
                     "data_sources_link", 
                     "indicator_legend", 
-                    "theme", 
-                    "Notebook"]
+                    "theme"]
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
     return {"indicators": indicators}
@@ -153,8 +150,8 @@ def get_indicator(indicator_name: str):
     indicator = [item['properties'] for item in indicator['features']]
     # Reorder and select indicators fields
     desired_keys = ["geo_id", 
-                    "geo_level", 
                     "geo_name", 
+                    "geo_level", 
                     "geo_parent_name", 
                     "indicator", 
                     "value", 
@@ -174,8 +171,8 @@ def get_city_indicator(indicator_name: str, city_id: str):
     city_indicator = city_indicator['features'][0]['properties']
     # Reorder and select city indicator fields
     desired_keys = ["geo_id", 
-                    "geo_level", 
                     "geo_name", 
+                    "geo_level", 
                     "geo_parent_name", 
                     "indicator", 
                     "value", 
@@ -201,14 +198,14 @@ def list_datasets():
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
     desired_keys = ["Name", 
-                    "Spatial resolution", 
-                    "Spatial Coverage", 
                     "Provider", 
                     "Data source",
                     "Data source website", 
+                    "Spatial resolution", 
+                    "Spatial Coverage", 
                     "Storage", 
-                    "Theme", 
                     "visualization_endpoint", 
+                    "Theme", 
                     "Indicators"]
     datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
