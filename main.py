@@ -36,7 +36,7 @@ city_keys = ["id",
             "country_name", 
             "country_code_iso3", 
             "admin_levels", 
-            "aoi_admin_level", 
+            "aoi_boundary_level", 
             "project"]
 
 @app.get("/cities")
