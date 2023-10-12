@@ -22,6 +22,10 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
+# Get Airtable tables using formula to exclude rows where the key field is empty
+cities_list = cities_table.all(view="api", formula="{id}")
+datasets_list = datasets_table.all(view="api", formula="{Name}")
+indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
 app = FastAPI()
 
@@ -43,8 +47,7 @@ city_keys = ["id",
 @app.get("/cities")
 # Return all cities metadata from Airtable
 def list_cities():
-    cities_data = cities_table.all(view="api")
-    cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_data]
+    cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_list]
     return {"cities": cities}
 
 @app.get("/cities/{city_id}")
@@ -107,8 +110,8 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 # Return all indicators metadata from Airtable
 def list_indicators():
     # Fetch indicators and datasets as dictionaries for quick lookup
-    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_table.all(view="api")}
-    datasets_dict = {dataset['id']: dataset['fields']['Name'] for dataset in datasets_table.all(view="api")}
+    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_list}
+    datasets_dict = {dataset['id']: dataset['fields']['Name'] for dataset in datasets_list}
 
     # Update data_sources_link for each indicator
     for indicator in indicators_dict.values():
@@ -179,8 +182,8 @@ def get_city_indicator(indicator_name: str, city_id: str):
 @app.get("/datasets")
 def list_datasets():
     # Fetch datasets and indicators as dictionaries for quick lookup
-    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_table.all(view="api")}
-    indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_table.all(view="api")}
+    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_list}
+    indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
 
     # Update Indicators for each dataset
     for dataset in datasets_dict.values():
