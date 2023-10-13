@@ -65,19 +65,18 @@ def get_city(city_id: str):
 # Return one city all indicators values from Carto
 def get_city_indicators(city_id: str, admin_level: str):
     city_indicators_df = read_carto(f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
-    # Object of type Timestamp is not JSON serializable. Need to convert to string first.
-    city_indicators_df['creation_date'] = city_indicators_df['creation_date'].dt.strftime('%Y-%m-%d')
-    city_indicators = json.loads(city_indicators_df.to_json())
-    city_indicators = [item['properties'] for item in city_indicators['features']]
-    # Select and reorder the desired keys
-    desired_keys = ["geo_id", 
-                    "geo_name", 
-                    "geo_level", 
-                    "geo_parent_name", 
-                    "indicator", 
-                    "value", 
-                    "indicator_version"]
-    city_indicators = [{key: city_indicator[key] for key in desired_keys if key in city_indicator} for city_indicator in city_indicators]
+    # Reorder and select city geometry properties fields
+    city_indicators_df = city_indicators_df[["geo_id", 
+                                             "geo_name", 
+                                             "geo_level", 
+                                             "geo_parent_name", 
+                                             "indicator", 
+                                             "value", 
+                                             "indicator_version"]]
+    city_indicators_df = city_indicators_df.pivot(index=["geo_id", "geo_name", "geo_level", "geo_parent_name", "indicator_version"], columns='indicator', values='value')
+    city_indicators_df.reset_index(inplace=True)
+
+    city_indicators = json.loads(city_indicators_df.to_json(orient='records'))
 
     return {"city_indicators": city_indicators}
 
@@ -93,16 +92,14 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
                                          "geo_version", 
                                          "the_geom"]]
 
-    city_indicators_df = read_carto(f"SELECT indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
-    city_indicators_df = pd.DataFrame(city_indicators_gdf).sort_values(by=['indicator']).set_index('indicator').T
-    city_indicators_df.insert(0, "geo_name", [f"{city_id}"])
+    city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
+    city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
 
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_name')
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_id')
 
     city_geojson = json.loads(city_gdf.to_json())
 
     return city_geojson
-
 
 
 # Indicators
