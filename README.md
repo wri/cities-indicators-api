@@ -1,6 +1,6 @@
 # cities-indicators-api
-FastAPI connected to Airtable
-Docs: https://citiesapi-1-x4387694.deta.app/docs
+FastAPI connected to Airtable & Carto
+Docs: 44.201.179.158:8000/docs
 
 ## Local dev setup
 To run this locally 
