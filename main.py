@@ -92,7 +92,7 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
                                          "geo_version", 
                                          "the_geom"]]
 
-    city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
+    city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0")
     city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
 
     city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_id')
