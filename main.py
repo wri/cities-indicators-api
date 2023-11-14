@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import RedirectResponse
 
 import os
 import json
@@ -21,13 +23,32 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
+# Middleware to strip the /api prefix from the URL
+class StripApiPrefixMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/api":
+            return RedirectResponse(url='/api/docs')
+        elif request.url.path.startswith("/api"):
+            request.scope["path"] = request.url.path[4:]
+        response = await call_next(request)
+        return response
 
+    
 app = FastAPI()
+app.add_middleware(StripApiPrefixMiddleware)
 
-@app.get("/", include_in_schema=False)
-async def docs_redirect():
-    return RedirectResponse(url='/docs')
+# Manual OpenAPI and Swagger endpoints
+@app.get("/openapi.json", include_in_schema=False)
+async def get_open_api_endpoint():
+    return get_openapi(title="FastAPI", version="1.0.0", routes=app.routes)
 
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="Custom docs")
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # Cities
 # Define the desired keys to extract from each city's data
