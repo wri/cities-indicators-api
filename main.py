@@ -23,28 +23,27 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
-# Middleware to strip the /api prefix from the URL
 class StripApiPrefixMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/api":
-            return RedirectResponse(url='/api/docs')
-        elif request.url.path.startswith("/api"):
+        if request.url.path.startswith("/api"):
             request.scope["path"] = request.url.path[4:]
         response = await call_next(request)
         return response
 
-    
+#class Settings(BaseSettings):
+#    openapi_url: str = "/api/openapi.json"
+
 app = FastAPI()
 app.add_middleware(StripApiPrefixMiddleware)
 
 # Manual OpenAPI and Swagger endpoints
-@app.get("/openapi.json", include_in_schema=False)
-async def get_open_api_endpoint():
-    return get_openapi(title="FastAPI", version="1.0.0", routes=app.routes)
+#@app.get("/openapi.json", include_in_schema=False)
+#async def get_open_api_endpoint():
+#    return get_openapi(title="FastAPI", version="1.0.0", routes=app.routes)
 
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="Custom docs")
+#@app.get("/", include_in_schema=False)
+#async def custom_swagger_ui_html():
+#    return get_swagger_ui_html(openapi_url=openapi_url, title="API Docs")
 
 @app.get("/health")
 def health_check():
