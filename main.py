@@ -27,11 +27,11 @@ cities_list = cities_table.all(view="api", formula="{id}")
 datasets_list = datasets_table.all(view="api", formula="{Name}")
 indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
-app = FastAPI()
+app = FastAPI(root_path="/api/v1")
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
-    return RedirectResponse(url='/docs')
+    return RedirectResponse(url='/api/v1/docs')
 
 
 # Cities
