@@ -23,8 +23,8 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 set_default_credentials(username='wri-cities', api_key='default_public')
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
-cities_list = cities_table.all(view="api", formula="{id}")
-datasets_list = datasets_table.all(view="api", formula="{Name}")
+cities_list = cities_table.all(view="api", formula="{city_id}")
+datasets_list = datasets_table.all(view="api", formula="{dataset_name}")
 indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
 app = FastAPI()
