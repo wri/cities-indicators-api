@@ -53,7 +53,7 @@ def list_cities():
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
 def get_city(city_id: str):
-    formula = f'"{city_id}" = {{id}}'
+    formula = f'"{city_id}" = {{city_id}}'
     city_data = cities_table.all(view="api", formula=formula)
     city = city_data[0]['fields']
     # Define the desired keys to extract from the city's data
