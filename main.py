@@ -130,7 +130,7 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 def list_indicators():
     # Fetch indicators and datasets as dictionaries for quick lookup
     indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_list}
-    datasets_dict = {dataset['id']: dataset['fields']['Name'] for dataset in datasets_list}
+    datasets_dict = {dataset['id']: dataset['fields']['dataset_name'] for dataset in datasets_list}
 
     # Update data_sources_link for each indicator
     for indicator in indicators_dict.values():
