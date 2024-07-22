@@ -23,8 +23,8 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 set_default_credentials(username='wri-cities', api_key='default_public')
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
-cities_list = cities_table.all(view="api", formula="{id}")
-datasets_list = datasets_table.all(view="api", formula="{Name}")
+cities_list = cities_table.all(view="api", formula="{city_id}")
+datasets_list = datasets_table.all(view="api", formula="{dataset_name}")
 indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
 app = FastAPI()
@@ -53,7 +53,7 @@ def list_cities():
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
 def get_city(city_id: str):
-    formula = f'"{city_id}" = {{id}}'
+    formula = f'"{city_id}" = {{city_id}}'
     city_data = cities_table.all(view="api", formula=formula)
     city = city_data[0]['fields']
     # Define the desired keys to extract from the city's data
@@ -130,7 +130,7 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 def list_indicators():
     # Fetch indicators and datasets as dictionaries for quick lookup
     indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_list}
-    datasets_dict = {dataset['id']: dataset['fields']['Name'] for dataset in datasets_list}
+    datasets_dict = {dataset['id']: dataset['fields']['dataset_name'] for dataset in datasets_list}
 
     # Update data_sources_link for each indicator
     for indicator in indicators_dict.values():
