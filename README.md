@@ -20,7 +20,11 @@ Docs: [http://44.201.179.158:8000/docs](http://44.201.179.158:8000/docs)
         ```sh
         pip install -r requirements.txt
         ```
-    4. Run the server:
+    4. Install the pre-push script:
+        ```sh
+        pre-commit install --hook-type pre-push
+        ```
+    5. Run the server:
         ```sh
         uvicorn main:app --env-file '.env' --reload
         ```

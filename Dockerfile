@@ -9,6 +9,7 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pre-commit install --hook-type pre-push
 
 COPY ./main.py /code/main.py
 
