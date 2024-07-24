@@ -3,10 +3,8 @@ from fastapi.responses import RedirectResponse
 
 import os
 import json
-import datetime as dt
 
 from pyairtable import Table
-from pyairtable.formulas import match
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 import requests
@@ -81,8 +79,8 @@ def get_city_indicators(city_id: str, admin_level: str):
     return {"city_indicators": city_indicators}
 
 @app.get("/cities/{city_id}/{admin_level}/geojson")
-# Return one city all indicators values and geometry from Carto
-def get_city_indicators_geometry(city_id: str, admin_level: str):
+# Return one city's geometry from Carto
+def get_city_geometry(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
     city_geometry_df = city_geometry_df[["geo_id", 
@@ -95,16 +93,13 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0")
     city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
 
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_id')
-
     city_geojson = json.loads(city_geometry_df.to_json())
 
     return city_geojson
 
-
 @app.get("/cities/{city_id}/{admin_level}/geojson/indicators")
-# Return one city all indicators values and geometry from Carto
-def get_city_indicators_geometry(city_id: str, admin_level: str):
+# Return one city’s geometry and indicator values from Carto
+def get_city_geometry_with_indicators(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
     city_geometry_df = city_geometry_df[["geo_id", 
@@ -122,7 +117,6 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_geojson = json.loads(city_gdf.to_json())
 
     return city_geojson
-
 
 # Indicators
 @app.get("/indicators")
@@ -230,16 +224,14 @@ def list_datasets():
 @app.get("/boundaries")
 def list_boundaries():
     api_url = "https://wri-cities.carto.com/api/v2/sql?q=select geo_id from boundaries"
-    response = requests.get(api_url)
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        # The response should contain JSON data
+    try:
+        response = requests.get(api_url, timeout=20)
+        response.raise_for_status()
         json_data = response.json()
-    else:
-        print("Failed to fetch data from the API.")
-
-    return json_data
-
+        return json_data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return {"error": "Failed to fetch data from the API."}
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
@@ -249,7 +241,7 @@ def get_geography_boundary(geography: str):
 
 
 @app.get("/boundaries/geojson")
-def list_boundaries():
+def list_boundaries_geojson():
     boundaries = read_carto('SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM boundaries LIMIT 1').to_json()
 
     return boundaries

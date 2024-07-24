@@ -82,7 +82,7 @@ logging-format-style=new
 
 [EXCEPTIONS]
 # Exceptions that will emit a warning when being caught. Defaults to "Exception"
-overgeneral-exceptions=Exception, BaseException
+overgeneral-exceptions=builtins.Exception,builtins.BaseException
 
 [VARIABLES]
 # List of additional names supposed to be defined in builtins. Remember that you should avoid defining new builtins when possible.
