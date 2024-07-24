@@ -3,4 +3,5 @@ repos:
     rev: v3.0.0a5
     hooks:
       - id: pylint
-        args: ['main.py']
+        args: ['--rcfile=.pylintrc']
+        files: \.py$
