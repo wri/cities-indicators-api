@@ -91,7 +91,7 @@ additional-builtins=
 [EXTERNAL]
 # List of external dependencies that need not to be checked.
 known-standard-library=
-known-third-party=cartoframes, fastapi, pyairtable, pylint, uvicorn
+known-third-party=cartoframes, fastapi, pre-commit, pyairtable, pylint, uvicorn
 
 # List of modules that should be ignored (while checking imports).
 ignored-modules=
