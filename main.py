@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
@@ -35,8 +36,8 @@ async def docs_redirect():
 
 # Cities
 # Define the desired keys to extract from each city's data
-city_keys = ["id", 
-            "name", 
+city_keys = ["city_id", 
+            "city_name", 
             "country_name", 
             "country_code_iso3", 
             "admin_levels", 
@@ -45,11 +46,21 @@ city_keys = ["id",
 
 @app.get("/cities")
 # Return all cities metadata from Airtable
-def list_cities(project: str = Query(None)):
+def list_cities(
+    project: str = Query(None, description="Project name"),
+    country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
+):
     try:
-        filter_formula = "" if project is None else f"{{project}} = '{project}'"
+        filters = []
+        if project:
+            filters.append(f"{{project}} = '{project}'")
+        if country_code_iso3:
+            filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+        
+        filter_formula = f"AND({', '.join(filters)})" if filters else ""
         cities_list = cities_table.all(view="api", formula=filter_formula)
-        cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_list]
+        cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
+        
         return {"cities": cities}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
