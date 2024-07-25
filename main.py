@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 import os
@@ -23,7 +23,6 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 set_default_credentials(username='wri-cities', api_key='default_public')
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
-cities_list = cities_table.all(view="api", formula="{city_id}")
 datasets_list = datasets_table.all(view="api", formula="{dataset_name}")
 indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
@@ -46,9 +45,14 @@ city_keys = ["id",
 
 @app.get("/cities")
 # Return all cities metadata from Airtable
-def list_cities():
-    cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_list]
-    return {"cities": cities}
+def list_cities(project: str = Query(None)):
+    try:
+        filter_formula = "" if project is None else f"{{project}} = '{project}'"
+        cities_list = cities_table.all(view="api", formula=filter_formula)
+        cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_list]
+        return {"cities": cities}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
