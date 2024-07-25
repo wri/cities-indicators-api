@@ -1,4 +1,3 @@
-import logging
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
