@@ -18,6 +18,7 @@ airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
 datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
 indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
+projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
 
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
@@ -36,8 +37,8 @@ async def docs_redirect():
 
 # Cities
 # Define the desired keys to extract from each city's data
-city_keys = ["id", 
-            "name", 
+city_keys = ["city_id", 
+            "city_name", 
             "country_name", 
             "country_code_iso3", 
             "admin_levels", 
@@ -123,6 +124,12 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 
     return city_geojson
 
+@app.get("/projects")
+# Return all projects metadata from Airtable
+def list_projects():
+    projects_list = projects_table.all(view="api-v2", formula="{project_id}")
+    projects_dict = {project['fields']['project_id'] for project in projects_list}
+    return {"projects": projects_dict}
 
 # Indicators
 @app.get("/indicators")
