@@ -24,11 +24,15 @@ Docs: [http://44.201.179.158:8000/docs](http://44.201.179.158:8000/docs)
         ```sh
         uvicorn main:app --env-file '.env' --reload
         ```
-4. If you are on a Debian/Ubuntu system, install the `python3-venv` package using the following command:
+4. If you need to run pylint on your local environment:
+    ```sh
+    pylint $(git ls-files '*.py')
+    ```
+5. If you are on a Debian/Ubuntu system, install the `python3-venv` package using the following command:
     ```sh
     sudo apt install python3.10-venv
     ```
-5. Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to preview the API documentation.
+6. Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to preview the API documentation.
 
 ## Deployment
 The API is deployed to [https://citiesapi-1-x4387694.deta.app/](https://citiesapi-1-x4387694.deta.app/). We followed this tutorial to get it working: [FastAPI Deta Deployment](https://fastapi.tiangolo.com/deployment/deta/).
