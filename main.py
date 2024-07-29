@@ -46,7 +46,7 @@ city_keys = ["city_id",
 @app.get("/cities")
 # Return all cities metadata from Airtable
 def list_cities(
-    project: str = Query(None, description="Project name"),
+    project: str = Query(None, description="Project ID"),
     country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
 ):
     try:
