@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 import os
@@ -199,32 +199,37 @@ def get_city_indicator(indicator_name: str, city_id: str):
 
 # Datasets
 @app.get("/datasets")
-def list_datasets():
-    # Fetch datasets and indicators as dictionaries for quick lookup
-    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_list}
-    indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
+def list_datasets(city_id: str = Query(None, description="City ID"),):
+    try:
+        filter_formula = f"{{city_id}} = \"{city_id}\"" if city_id else ""
+        datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
+        # Fetch datasets and indicators as dictionaries for quick lookup
+        datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_filter_list}
+        indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
 
-    # Update Indicators for each dataset
-    for dataset in datasets_dict.values():
-        indicator_ids = dataset.get('Indicators', [])
-        dataset['Indicators'] = [indicators_dict.get(indicator_id, indicator_id) for indicator_id in indicator_ids]
+        # Update Indicators for each dataset
+        for dataset in datasets_dict.values():
+            indicator_ids = dataset.get('Indicators', [])
+            dataset['Indicators'] = [indicators_dict.get(indicator_id, indicator_id) for indicator_id in indicator_ids]
 
-    datasets = list(datasets_dict.values())
-    # Reorder and select indicators fields
-    desired_keys = ["Name", 
-                    "Provider", 
-                    "Data source",
-                    "Data source website", 
-                    "Spatial resolution", 
-                    "Spatial Coverage", 
-                    "Storage", 
-                    "visualization_endpoint", 
-                    "Theme", 
-                    "Indicators"]
-    datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
+        datasets = list(datasets_dict.values())
+        # Reorder and select indicators fields
+        desired_keys = ["dataset_id",
+                        "dataset_name", 
+                        "Provider", 
+                        "Data source",
+                        "Data source website", 
+                        "Spatial resolution", 
+                        "Spatial Coverage", 
+                        "Storage", 
+                        "visualization_endpoint", 
+                        "Theme", 
+                        "Indicators"]
+        datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
-    return {"datasets": datasets}
-
+        return {"datasets": datasets}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 # Boundaries
 @app.get("/boundaries")
