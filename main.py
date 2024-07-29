@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 
 import os
@@ -127,9 +127,12 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 @app.get("/projects")
 # Return all projects metadata from Airtable
 def list_projects():
-    projects_list = projects_table.all(view="api-v2", formula="{project_id}")
-    projects_dict = {project['fields']['project_id'] for project in projects_list}
-    return {"projects": projects_dict}
+    try:
+        projects_list = projects_table.all(view="api-v2", formula="{project_id}")
+        projects_dict = {project['fields']['project_id'] for project in projects_list}
+        return {"projects": projects_dict}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 # Indicators
 @app.get("/indicators")
