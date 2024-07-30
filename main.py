@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import RedirectResponse
 
 import os
@@ -127,9 +127,12 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
 # Indicators
 @app.get("/indicators")
 # Return all indicators metadata from Airtable
-def list_indicators():
+def list_indicators(project: str = Query(None, description="Project ID")):
+    filter_formula = f"FIND('{project}', {{project}}) > 0" if project else ""
+    indicators_filtered_list = indicators_table.all(view="api", formula=filter_formula)
+    
     # Fetch indicators and datasets as dictionaries for quick lookup
-    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_list}
+    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_filtered_list}
     datasets_dict = {dataset['id']: dataset['fields']['dataset_name'] for dataset in datasets_list}
 
     # Update data_sources_link for each indicator
@@ -139,16 +142,16 @@ def list_indicators():
 
     indicators = list(indicators_dict.values())
     # Reorder indicators fields
-    desired_keys = ["indicator", 
-                    "indicator_label", 
-                    "code", 
-                    "indicator_definition", 
-                    "importance",
-                    "methods", 
-                    "Notebook", 
+    desired_keys = ["code", 
                     "data_sources", 
                     "data_sources_link", 
-                    "indicator_legend", 
+                    "importance",
+                    "indicator",
+                    "indicator_definition", 
+                    "indicator_label", 
+                    "indicator_legend",
+                    "methods", 
+                    "Notebook",
                     "theme"]
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
