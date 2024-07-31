@@ -62,7 +62,7 @@ def list_cities(
         
         return {"cities": cities}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
