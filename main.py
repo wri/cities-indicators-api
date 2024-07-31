@@ -47,20 +47,25 @@ def list_cities(
     project: str = Query(None, description="Project ID"),
     country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
 ):
+    filters = []
+    if project:
+        filters.append(f"{{project}} = '{project}'")
+    if country_code_iso3:
+        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+    
+    filter_formula = f"AND({', '.join(filters)})" if filters else ""
+
     try:
-        filters = []
-        if project:
-            filters.append(f"{{project}} = '{project}'")
-        if country_code_iso3:
-            filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
-        
-        filter_formula = f"AND({', '.join(filters)})" if filters else ""
         cities_list = cities_table.all(view="api", formula=filter_formula)
-        cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
-        
-        return {"cities": cities}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+
+    if not cities_list:
+        raise HTTPException(status_code=400, detail="No cities found.")
+    
+    cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
+
+    return {"cities": cities}
 
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
