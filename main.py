@@ -136,8 +136,15 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
 @app.get("/indicators")
 # Return all indicators metadata from Airtable
 def list_indicators(project: str = Query(None, description="Project ID")):
-    filter_formula = f"FIND('{project}', {{project}}) > 0" if project else ""
-    indicators_filtered_list = indicators_table.all(view="api", formula=filter_formula)
+    filter_formula = f"SEARCH(',{project},', ',' & ARRAYJOIN({{projects}}, ',') & ',')" if project else ""
+
+    try:
+        indicators_filtered_list = indicators_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+    
+    if not indicators_filtered_list:
+        raise HTTPException(status_code=400, detail="No indicators found.")
     
     # Fetch indicators and datasets as dictionaries for quick lookup
     indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_filtered_list}
