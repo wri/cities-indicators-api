@@ -41,7 +41,57 @@ city_keys = ["city_id",
             "aoi_boundary_level", 
             "project"]
 
-@app.get("/cities")
+@app.get(
+    "/cities",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "cities": [
+                            {
+                                "city_id": "ARG-Buenos_Aires",
+                                "city_name": "Buenos Aires",
+                                "country_name": "Argentina",
+                                "country_code_iso3": "ARG",
+                                "admin_levels": [
+                                    "ADM2union ",
+                                    "ADM2"
+                                ],
+                                "aoi_boundary_level": "ADM2union",
+                                "project": [
+                                    "urbanshift",
+                                    "data4coolcities"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No cities found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No cities found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
 # Return all cities metadata from Airtable
 def list_cities(
     project: str = Query(None, description="Project ID"),
