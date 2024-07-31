@@ -58,7 +58,7 @@ def list_cities(
     try:
         cities_list = cities_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
     if not cities_list:
         raise HTTPException(status_code=400, detail="No cities found.")
