@@ -3,7 +3,7 @@ v: 0
 micros:
   - name: cities-indicators-api
     src: ./
-    engine: python3.9
+    engine: python3.10
     primary: true
     run: uvicorn main:app
     public_routes:
