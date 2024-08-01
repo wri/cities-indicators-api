@@ -1,7 +1,5 @@
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import RedirectResponse
 
 import os
 import json
