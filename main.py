@@ -137,7 +137,7 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
 # Return all projects metadata from Airtable
 def list_projects():
     try:
-        projects_list = projects_table.all(view="api-v2", formula="{project_id}")
+        projects_list = projects_table.all(view="api", formula="{project_id}")
         projects_dict = {project['fields']['project_id'] for project in projects_list}
         return {"projects": projects_dict}
     except Exception as e:
