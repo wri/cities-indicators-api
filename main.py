@@ -10,6 +10,8 @@ from cartoframes.auth import set_default_credentials
 import requests
 import pandas as pd
 
+from utils.filters import generate_search_query
+
 # Authentication
 ## Airtable
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
@@ -99,7 +101,7 @@ def list_cities(
 ):
     filters = []
     if project:
-        filters.append(f"{{project}} = '{project}'")
+        filters.append(generate_search_query("project", project))
     if country_code_iso3:
         filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
     
