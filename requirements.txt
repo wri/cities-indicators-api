@@ -1,4 +1,6 @@
 cartoframes
 fastapi
+pre-commit
 pyairtable
+pylint
 uvicorn[standard]

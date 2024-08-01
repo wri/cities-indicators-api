@@ -3,14 +3,14 @@ from fastapi.responses import RedirectResponse
 
 import os
 import json
-import datetime as dt
 
 from pyairtable import Table
-from pyairtable.formulas import match
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 import requests
 import pandas as pd
+
+from utils.filters import generate_search_query
 
 # Authentication
 ## Airtable
@@ -23,7 +23,6 @@ indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 set_default_credentials(username='wri-cities', api_key='default_public')
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
-cities_list = cities_table.all(view="api", formula="{city_id}")
 datasets_list = datasets_table.all(view="api", formula="{dataset_name}")
 indicators_list = indicators_table.all(view="api", formula="{indicator}")
 
@@ -36,18 +35,88 @@ async def docs_redirect():
 
 # Cities
 # Define the desired keys to extract from each city's data
-city_keys = ["id", 
-            "name", 
+city_keys = ["city_id", 
+            "city_name", 
             "country_name", 
             "country_code_iso3", 
             "admin_levels", 
             "aoi_boundary_level", 
             "project"]
 
-@app.get("/cities")
+@app.get(
+    "/cities",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "cities": [
+                            {
+                                "city_id": "ARG-Buenos_Aires",
+                                "city_name": "Buenos Aires",
+                                "country_name": "Argentina",
+                                "country_code_iso3": "ARG",
+                                "admin_levels": [
+                                    "ADM2union ",
+                                    "ADM2"
+                                ],
+                                "aoi_boundary_level": "ADM2union",
+                                "project": [
+                                    "urbanshift",
+                                    "data4coolcities"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No cities found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No cities found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
 # Return all cities metadata from Airtable
-def list_cities():
-    cities = [{key: city['fields'][key] for key in city_keys if key in city['fields']} for city in cities_list]
+def list_cities(
+    project: str = Query(None, description="Project ID"),
+    country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
+):
+    filters = []
+    if project:
+        filters.append(generate_search_query("project", project))
+    if country_code_iso3:
+        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+    
+    filter_formula = f"AND({', '.join(filters)})" if filters else ""
+
+    try:
+        cities_list = cities_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not cities_list:
+        raise HTTPException(status_code=400, detail="No cities found.")
+    
+    cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
+
     return {"cities": cities}
 
 @app.get("/cities/{city_id}")
@@ -81,8 +150,8 @@ def get_city_indicators(city_id: str, admin_level: str):
     return {"city_indicators": city_indicators}
 
 @app.get("/cities/{city_id}/{admin_level}/geojson")
-# Return one city all indicators values and geometry from Carto
-def get_city_indicators_geometry(city_id: str, admin_level: str):
+# Return one city's geometry from Carto
+def get_city_geometry(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
     city_geometry_df = city_geometry_df[["geo_id", 
@@ -95,16 +164,13 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0")
     city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
 
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_id')
-
     city_geojson = json.loads(city_geometry_df.to_json())
 
     return city_geojson
 
-
 @app.get("/cities/{city_id}/{admin_level}/geojson/indicators")
-# Return one city all indicators values and geometry from Carto
-def get_city_indicators_geometry(city_id: str, admin_level: str):
+# Return one city’s geometry and indicator values from Carto
+def get_city_geometry_with_indicators(city_id: str, admin_level: str):
     city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
     # Reorder and select city geometry properties fields
     city_geometry_df = city_geometry_df[["geo_id", 
@@ -122,7 +188,6 @@ def get_city_indicators_geometry(city_id: str, admin_level: str):
     city_geojson = json.loads(city_gdf.to_json())
 
     return city_geojson
-
 
 # Indicators
 @app.get("/indicators")
@@ -245,16 +310,14 @@ def list_datasets(city_id: str = Query(None, description="City ID"),):
 @app.get("/boundaries")
 def list_boundaries():
     api_url = "https://wri-cities.carto.com/api/v2/sql?q=select geo_id from boundaries"
-    response = requests.get(api_url)
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        # The response should contain JSON data
+    try:
+        response = requests.get(api_url, timeout=20)
+        response.raise_for_status()
         json_data = response.json()
-    else:
-        print("Failed to fetch data from the API.")
-
-    return json_data
-
+        return json_data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return {"error": "Failed to fetch data from the API."}
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
@@ -264,7 +327,7 @@ def get_geography_boundary(geography: str):
 
 
 @app.get("/boundaries/geojson")
-def list_boundaries():
+def list_boundaries_geojson():
     boundaries = read_carto('SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM boundaries LIMIT 1').to_json()
 
     return boundaries
