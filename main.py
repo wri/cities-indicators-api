@@ -210,18 +210,21 @@ def list_datasets(city_id: str = Query(None, description="City ID"),):
     if not datasets_filter_list:
         raise HTTPException(status_code=400, detail="No datasets found")
     
-    # Fetch datasets and indicators as dictionaries for quick lookup
+    # Fetch cities, datasets and indicators as dictionaries for quick lookup
+    cities_dict = {city['id']: city['fields'] for city in cities_list}
     datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_filter_list}
     indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
 
     # Update Indicators for each dataset
     for dataset in datasets_dict.values():
         indicator_ids = dataset.get('Indicators', [])
+        cities_ids = dataset.get('city_id', [])
         dataset['Indicators'] = [indicators_dict.get(indicator_id, indicator_id) for indicator_id in indicator_ids]
+        dataset['city_ids'] = [cities_dict[city_id]['city_id'] for city_id in cities_ids]
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
-    desired_keys = ["city_id",
+    desired_keys = ["city_ids",
                     "Data source",
                     "Data source website", 
                     "dataset_id",
