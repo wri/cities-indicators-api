@@ -1,2 +1,2 @@
 def generate_search_query(column_name, value):
-    return f"SEARCH(',{value},', ',' & ARRAYJOIN({{{column_name}}}, ',') & ',')"
+    return f"SEARCH(',{value},', ',' & ARRAYJOIN({{{column_name}}}, ',') & ',')" if value else ""

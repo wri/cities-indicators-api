@@ -263,11 +263,76 @@ def get_city_indicator(indicator_name: str, city_id: str):
 
 
 # Datasets
-@app.get("/datasets")
+@app.get(
+    "/datasets",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "datasets": [
+                            {
+                                "city_ids": [
+                                    "ARG-Buenos_Aires"
+                                ],
+                                "Data source": "ESA World Cover",
+                                "Data source website": "https://esa-worldcover.org/en",
+                                "dataset_id": "esa_land_cover_2020",
+                                "dataset_name": "ESA Land Cover",
+                                "Indicators": [
+                                    "Natural Areas",
+                                    "Connectivity of natural lands",
+                                    "Biodiversity in built-up areas (birds)",
+                                    "Built-up Key Biodiversity Areas",
+                                    "Urban open space for public use",
+                                    "Surface reflectivity",
+                                    "Built land without tree cover",
+                                    "Exposure to coastal and river flooding",
+                                    "Land near natural drainage",
+                                    "Impervious surfaces",
+                                    "Vegetation cover in built areas"
+                                ],
+                                "Provider": "ESA",
+                                "Spatial Coverage": "Global",
+                                "Spatial resolution": "10m",
+                                "Storage": "s3://cities-indicators/data/land_use/esa_world_cover/",
+                                "Theme": [
+                                    "Land use"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No datasets found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No datasets found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
 def list_datasets(city_id: str = Query(None, description="City ID"),):
-    filter_formula = f"{{city_id}} = \"{city_id}\"" if city_id else ""
+    filter_formula = generate_search_query("city_id", city_id)
     
     try:
+        cities_list = cities_table.all(view="api", formula="{city_id}")
         datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
