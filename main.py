@@ -221,17 +221,18 @@ def list_datasets(city_id: str = Query(None, description="City ID"),):
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
-    desired_keys = ["dataset_id",
-                    "dataset_name", 
-                    "Provider", 
+    desired_keys = ["city_id",
                     "Data source",
                     "Data source website", 
-                    "Spatial resolution", 
+                    "dataset_id",
+                    "dataset_name", 
+                    "Indicators",
+                    "Provider", 
                     "Spatial Coverage", 
+                    "Spatial resolution", 
                     "Storage", 
-                    "visualization_endpoint", 
                     "Theme", 
-                    "Indicators"]
+                    "visualization_endpoint"]
     datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
     return {"datasets": datasets}
