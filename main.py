@@ -144,6 +144,7 @@ def list_projects():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
+
 # Indicators
 @app.get(
     "/indicators",
@@ -244,6 +245,21 @@ def list_indicators(project: str = Query(None, description="Project ID")):
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
     return {"indicators": indicators}
+
+
+@app.get("/indicators/themes")
+# Return all unique indicator themes from Airtable, sorted alphabetically
+def list_themes():
+    indicators = indicators_table.all(view="api", formula="")
+    themes = set()
+    
+    for indicator in indicators:
+        theme = indicator['fields'].get('theme')
+        if theme:
+            themes.add(theme)
+    
+    return sorted(list(themes))
+
 
 @app.get("/indicators/{indicator_name}")
 # Return one indicator values for all cities top admin level from Carto
