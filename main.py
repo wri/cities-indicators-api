@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import os
 import json
@@ -18,8 +18,21 @@ datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
 indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
 projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
 
+# Get Airtable tables using formula to exclude rows where the key field is empty
+datasets_list = datasets_table.all(view="api", formula="")
+indicators_list = indicators_table.all(view="api", formula="")
+projects_list = projects_table.all(view="api", formula="")
+
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
+
+# Middlewares
+class StripApiPrefixMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path.startswith("/api"):
+            request.scope["path"] = request.url.path[4:]
+        response = await call_next(request)
+        return response
 
 DESCRIPTION = """
 You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
@@ -41,17 +54,15 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/",
     },
 )
+app.add_middleware(StripApiPrefixMiddleware)
 
-# Get Airtable tables using formula to exclude rows where the key field is empty
-datasets_list = datasets_table.all(view="api", formula="")
-indicators_list = indicators_table.all(view="api", formula="")
-projects_list = projects_table.all(view="api", formula="")
+#@app.get("/", include_in_schema=False)
+#async def custom_swagger_ui_html():
+#    return get_swagger_ui_html(openapi_url=openapi_url, title="API Docs")
 
-
-@app.get("/", include_in_schema=False)
-async def docs_redirect():
-    return RedirectResponse(url='/docs')
-
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # Cities
 # Define the desired keys to extract from each city's data
