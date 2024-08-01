@@ -21,13 +21,13 @@ projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
-description = """
+DESCRIPTION = """
 You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
 """
 
 app = FastAPI(
     title="WRI Cities Indicators API",
-    description=description,
+    description=DESCRIPTION,
     summary="An indicators API",
     version="v0",
     terms_of_service="TBD",
