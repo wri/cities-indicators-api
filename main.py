@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import os
 import json
@@ -21,17 +21,33 @@ projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
+class StripApiPrefixMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path.startswith("/api"):
+            request.scope["path"] = request.url.path[4:]
+        response = await call_next(request)
+        return response
+
 # Get Airtable tables using formula to exclude rows where the key field is empty
 datasets_list = datasets_table.all(view="api", formula="")
 indicators_list = indicators_table.all(view="api", formula="")
 projects_list = projects_table.all(view="api", formula="")
 
 app = FastAPI()
+app.add_middleware(StripApiPrefixMiddleware)
 
-@app.get("/", include_in_schema=False)
-async def docs_redirect():
-    return RedirectResponse(url='/docs')
+# Manual OpenAPI and Swagger endpoints
+#@app.get("/openapi.json", include_in_schema=False)
+#async def get_open_api_endpoint():
+#    return get_openapi(title="FastAPI", version="1.0.0", routes=app.routes)
 
+#@app.get("/", include_in_schema=False)
+#async def custom_swagger_ui_html():
+#    return get_swagger_ui_html(openapi_url=openapi_url, title="API Docs")
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # Cities
 # Define the desired keys to extract from each city's data
