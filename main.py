@@ -18,13 +18,15 @@ airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
 cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
 datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
 indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
+projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
 
 ## Carto
 set_default_credentials(username='wri-cities', api_key='default_public')
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
-datasets_list = datasets_table.all(view="api", formula="{dataset_name}")
-indicators_list = indicators_table.all(view="api", formula="{indicator}")
+datasets_list = datasets_table.all(view="api", formula="")
+indicators_list = indicators_table.all(view="api", formula="")
+projects_list = projects_table.all(view="api", formula="")
 
 app = FastAPI()
 
@@ -189,32 +191,113 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
 
     return city_geojson
 
+@app.get("/projects")
+# Return all projects metadata from Airtable
+def list_projects():
+    try:
+        projects = projects_table.all(view="api", formula="{project_id}")
+        projects_dict = {project['fields']['project_id'] for project in projects}
+        return {"projects": projects_dict}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
 # Indicators
-@app.get("/indicators")
+@app.get(
+    "/indicators",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "indicators": [
+                            {
+                                "code": "ACC-1",
+                                "data_sources": "<a href=\"https://www.openstreetmap.org\">OpenStreetMap</a>, <a href=\"https://developers.google.com/earth-engine/datasets/catalog/WorldPop_GP_100m_pop_age_sex_cons_unadj\">WorldPop</a> ",
+                                "data_sources_link": [
+                                    "Open spaces for public use",
+                                    "Population density"
+                                ],
+                                "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
+                                "indicator": "ACC_1_OpenSpaceHectaresper1000people2022",
+                                "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
+                                "indicator_label": "Recreational space per capita",
+                                "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
+                                "methods": "The recreational services indicator is calculated as (total area of recreational space within the boundary) / (population within the boundary / 1000). Data on recreational areas were taken from the crowdsourced data initiative OpenStreetMap. Population data are 2020 estimates from WorldPop.  There are limitations to these methods and uncertainty regarding the resulting indicator values. There is uncertainty in the population estimates, especially the distribution of population within enumeration areas.",
+                                "Notebook": "https://github.com/wri/cities-indicators/blob/emackres-patch-1/notebooks/compute-indicators/compute-indicator-ACC-1-openspace-per-capita.ipynb",
+                                "projects": [
+                                    "urbanshift",
+                                    "cities4forests",
+                                    "deepdive"
+                                ],
+                                "theme": "Greenspace access"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No indicators found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No indicators found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
 # Return all indicators metadata from Airtable
-def list_indicators():
+def list_indicators(project: str = Query(None, description="Project ID")):
+    filter_formula = f"SEARCH(',{project},', ',' & ARRAYJOIN({{projects}}, ',') & ',')" if project else ""
+
+    try:
+        indicators_filtered_list = indicators_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+    
+    if not indicators_filtered_list:
+        raise HTTPException(status_code=400, detail="No indicators found.")
+    
     # Fetch indicators and datasets as dictionaries for quick lookup
-    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_list}
+    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_filtered_list}
     datasets_dict = {dataset['id']: dataset['fields']['dataset_name'] for dataset in datasets_list}
+    projects_dict = {project['id']: project['fields']['project_id'] for project in projects_list}
 
     # Update data_sources_link for each indicator
     for indicator in indicators_dict.values():
         data_sources_link = indicator.get('data_sources_link', [])
+        indicator_projects = indicator.get('projects', [])
         indicator['data_sources_link'] = [datasets_dict.get(data_source, data_source) for data_source in data_sources_link]
+        indicator['projects'] = [projects_dict.get(project, project) for project in indicator_projects]
 
     indicators = list(indicators_dict.values())
     # Reorder indicators fields
-    desired_keys = ["indicator", 
-                    "indicator_label", 
-                    "code", 
-                    "indicator_definition", 
-                    "importance",
-                    "methods", 
-                    "Notebook", 
+    desired_keys = ["code", 
                     "data_sources", 
                     "data_sources_link", 
-                    "indicator_legend", 
-                    "theme"]
+                    "importance",
+                    "indicator",
+                    "indicator_definition", 
+                    "indicator_label", 
+                    "indicator_legend",
+                    "methods", 
+                    "Notebook",
+                    "projects",
+                    "theme",
+                    "unit"]
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
     return {"indicators": indicators}
