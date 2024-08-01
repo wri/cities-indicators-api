@@ -1,0 +1,100 @@
+[MASTER]
+# Bad variable names which should always be refused, separated by a comma.
+bad-names=foo,
+          bar,
+          baz
+# Add files or directories to the blacklist. They should be base names, not paths.
+ignore=venv, __pycache__, tests
+# List of plugins (as comma separated values of python module names) to load, usually to register additional checkers.
+load-plugins=
+# Minimum Python version to use for version dependent checks. Will default to
+# the version used to run pylint.
+py-version=3.10
+
+[MESSAGES CONTROL]
+# Disable the message, report, category or checker with the given id(s).
+disable=
+    C0114,  # Missing module docstring
+    C0115,  # Missing class docstring
+    C0116,  # Missing function or method docstring
+    R0903,  # Too few public methods
+    R0801,  # Similar lines in 2 files
+    W0511,  # Fixme comments
+    W0703,  # Catching too general exception
+    W0613,  # Unused argument
+    C0301,  # Line too long (handled by max-line-length)
+    C0303,  # Trailing whitespace
+    C0411,  # wrong-import-order
+
+[REPORTS]
+# Set the output format. Available formats are text, parseable, colorized, msvs (visual studio) and json.
+output-format=colorized
+# Tells whether to display a full report or only the messages.
+reports=no
+# Python expression which should return a note less than 10 (10 is the highest possible note).
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=88
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+[BASIC]
+# Variable names that should not be checked for lower/UPPER/camel case
+good-names=i,j,k,e,x,_,pk,id
+# Argument names that match this expression will be ignored. Default to name with leading underscore.
+ignored-argument-names=_.*|^unused_.*
+
+[IMPORTS]
+# Deprecated modules which should not be used.
+deprecated-modules=optparse
+# Allow wildcard imports from modules that define `__all__`.
+allow-wildcard-with-all=yes
+
+[DESIGN]
+# Maximum number of arguments for function / method.
+max-args=7
+# Minimum number of public methods for a class (see R0903).
+min-public-methods=1
+# Maximum number of return / yield for function / method body.
+max-returns=6
+# Maximum number of branch for function / method body.
+max-branches=12
+# Maximum number of statements in function / method body.
+max-statements=50
+# Maximum number of parents for a class (see R0901).
+max-parents=7
+# Maximum number of attributes for a class (see R0902).
+max-attributes=10
+
+[CLASSES]
+# List of method names used to declare (i.e. assign) instance attributes.
+defining-attr-methods=__init__, __new__, setUp, __post_init__
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=4
+
+[LOGGING]
+# Format style used to check logging format string. It supports 'old' for '%' formatting, 'new' for '{}' formatting, and 'fstr' for f-strings.
+logging-format-style=new
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught. Defaults to "Exception"
+overgeneral-exceptions=builtins.Exception,builtins.BaseException
+
+[VARIABLES]
+# List of additional names supposed to be defined in builtins. Remember that you should avoid defining new builtins when possible.
+additional-builtins=
+
+[EXTERNAL]
+# List of external dependencies that need not to be checked.
+known-standard-library=
+known-third-party=cartoframes, fastapi, pre-commit, pyairtable, pylint, uvicorn
+
+# List of modules that should be ignored (while checking imports).
+ignored-modules=
+
+# List of classes names for which member attributes should not be checked (useful for enumerations).
+ignored-classes=
