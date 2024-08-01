@@ -61,7 +61,7 @@ def list_cities(
         
         return {"cities": cities}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
@@ -141,7 +141,7 @@ def list_projects():
         projects_dict = {project['fields']['project_id'] for project in projects_list}
         return {"projects": projects_dict}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
 # Indicators
 @app.get("/indicators")
