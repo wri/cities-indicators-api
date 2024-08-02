@@ -233,6 +233,7 @@ def list_projects():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
+
 # Indicators
 @app.get(
     "/indicators",
@@ -333,6 +334,53 @@ def list_indicators(project: str = Query(None, description="Project ID")):
     indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
     
     return {"indicators": indicators}
+
+
+@app.get(
+    "/indicators/themes",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "themes": [
+                            "Biodiversity",
+                            "Climate mitigation",
+                            "Flooding",
+                            "Greenspace access",
+                            "Health - Air Quality",
+                            "Health - Heat",
+                            "Land protection and restoration"
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
+# Return all unique indicators themes from Airtable, sorted alphabetically
+def list_indicators_themes():
+    indicators = indicators_table.all(view="api", formula="")
+    themes_set = set()
+    
+    for indicator in indicators:
+        theme = indicator['fields'].get('theme')
+        if theme:
+            themes_set.add(theme)
+    
+    return {"themes": sorted(list(themes_set))}
+
 
 @app.get("/indicators/{indicator_name}")
 # Return one indicator values for all cities top admin level from Carto
@@ -484,6 +532,58 @@ def list_datasets(city_id: str = Query(None, description="City ID"),):
     datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
     return {"datasets": datasets}
+
+
+@app.get(
+    "/datasets/themes",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "themes": [
+                            "Accessibility",
+                            "Air pollution",
+                            "Albedo",
+                            "Biodiversity",
+                            "Climate mitigation",
+                            "Flooding",
+                            "Land Surface Temperature",
+                            "Land use",
+                            "Open Space",
+                            "Population",
+                            "Tree cover",
+                            "Vegetation"
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
+# Return all unique datasets themes from Airtable, sorted alphabetically
+def list_datasets_themes():
+    datasets = datasets_table.all(view="api", formula="")
+    themes_set = set()
+    
+    for dataset in datasets:
+        themes_list = dataset['fields'].get('Theme', [])
+        for theme in themes_list:
+            if theme:
+                themes_set.add(theme)
+    
+    return {"themes": sorted(list(themes_set))}
 
 
 # Boundaries
