@@ -365,58 +365,6 @@ def list_datasets():
     return {"datasets": datasets}
 
 
-@app.get(
-    "/datasets/themes",
-    responses={
-        200: {
-            "description": "Successful Response",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "themes": [
-                            "Accessibility",
-                            "Air pollution",
-                            "Albedo",
-                            "Biodiversity",
-                            "Climate mitigation",
-                            "Flooding",
-                            "Land Surface Temperature",
-                            "Land use",
-                            "Open Space",
-                            "Population",
-                            "Tree cover",
-                            "Vegetation"
-                        ]
-                    }
-                }
-            }
-        },
-        500: {
-            "description": "Internal Server Error",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "An error occurred: <error_message>"
-                    }
-                }
-            }
-        }
-    }
-)
-# Return all unique datasets themes from Airtable, sorted alphabetically
-def list_datasets_themes():
-    datasets = datasets_table.all(view="api", formula="")
-    themes_set = set()
-    
-    for dataset in datasets:
-        themes_list = dataset['fields'].get('Theme', [])
-        for theme in themes_list:
-            if theme:
-                themes_set.add(theme)
-    
-    return {"themes": sorted(list(themes_set))}
-
-
 # Boundaries
 @app.get("/boundaries")
 def list_boundaries():
