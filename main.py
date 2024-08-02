@@ -10,6 +10,8 @@ from cartoframes.auth import set_default_credentials
 import requests
 import pandas as pd
 
+from utils.filters import generate_search_query
+
 # Authentication
 ## Airtable
 airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
@@ -74,26 +76,82 @@ city_keys = ["city_id",
             "aoi_boundary_level", 
             "project"]
 
-@app.get("/cities")
+@app.get(
+    "/cities",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "cities": [
+                            {
+                                "city_id": "ARG-Buenos_Aires",
+                                "city_name": "Buenos Aires",
+                                "country_name": "Argentina",
+                                "country_code_iso3": "ARG",
+                                "admin_levels": [
+                                    "ADM2union ",
+                                    "ADM2"
+                                ],
+                                "aoi_boundary_level": "ADM2union",
+                                "project": [
+                                    "urbanshift",
+                                    "data4coolcities"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No cities found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No cities found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
 # Return all cities metadata from Airtable
 def list_cities(
     project: str = Query(None, description="Project ID"),
     country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
 ):
+    filters = []
+    if project:
+        filters.append(generate_search_query("project", project))
+    if country_code_iso3:
+        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+    
+    filter_formula = f"AND({', '.join(filters)})" if filters else ""
+
     try:
-        filters = []
-        if project:
-            filters.append(f"{{project}} = '{project}'")
-        if country_code_iso3:
-            filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
-        
-        filter_formula = f"AND({', '.join(filters)})" if filters else ""
         cities_list = cities_table.all(view="api", formula=filter_formula)
-        cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
-        
-        return {"cities": cities}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not cities_list:
+        raise HTTPException(status_code=400, detail="No cities found.")
+    
+    cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
+
+    return {"cities": cities}
+
 
 @app.get("/cities/{city_id}")
 # Return one city metadata from Airtable
@@ -320,29 +378,109 @@ def get_city_indicator(indicator_name: str, city_id: str):
 
 
 # Datasets
-@app.get("/datasets")
-def list_datasets():
-    # Fetch datasets and indicators as dictionaries for quick lookup
-    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_list}
+@app.get(
+    "/datasets",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "datasets": [
+                            {
+                                "city_ids": [
+                                    "ARG-Buenos_Aires"
+                                ],
+                                "Data source": "ESA World Cover",
+                                "Data source website": "https://esa-worldcover.org/en",
+                                "dataset_id": "esa_land_cover_2020",
+                                "dataset_name": "ESA Land Cover",
+                                "Indicators": [
+                                    "Natural Areas",
+                                    "Connectivity of natural lands",
+                                    "Biodiversity in built-up areas (birds)",
+                                    "Built-up Key Biodiversity Areas",
+                                    "Urban open space for public use",
+                                    "Surface reflectivity",
+                                    "Built land without tree cover",
+                                    "Exposure to coastal and river flooding",
+                                    "Land near natural drainage",
+                                    "Impervious surfaces",
+                                    "Vegetation cover in built areas"
+                                ],
+                                "Provider": "ESA",
+                                "Spatial Coverage": "Global",
+                                "Spatial resolution": "10m",
+                                "Storage": "s3://cities-indicators/data/land_use/esa_world_cover/",
+                                "Theme": [
+                                    "Land use"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - No datasets found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No datasets found."
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
+def list_datasets(city_id: str = Query(None, description="City ID"),):
+    filter_formula = generate_search_query("city_id", city_id)
+    
+    try:
+        cities_list = cities_table.all(view="api", formula="{city_id}")
+        datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not datasets_filter_list:
+        raise HTTPException(status_code=400, detail="No datasets found")
+    
+    # Fetch cities, datasets and indicators as dictionaries for quick lookup
+    cities_dict = {city['id']: city['fields'] for city in cities_list}
+    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_filter_list}
     indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
 
     # Update Indicators for each dataset
     for dataset in datasets_dict.values():
         indicator_ids = dataset.get('Indicators', [])
+        cities_ids = dataset.get('city_id', [])
         dataset['Indicators'] = [indicators_dict.get(indicator_id, indicator_id) for indicator_id in indicator_ids]
+        dataset['city_ids'] = [cities_dict[city_id]['city_id'] for city_id in cities_ids]
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
-    desired_keys = ["Name", 
-                    "Provider", 
+    desired_keys = ["city_ids",
                     "Data source",
                     "Data source website", 
-                    "Spatial resolution", 
+                    "dataset_id",
+                    "dataset_name", 
+                    "Indicators",
+                    "Provider", 
                     "Spatial Coverage", 
+                    "Spatial resolution", 
                     "Storage", 
-                    "visualization_endpoint", 
                     "Theme", 
-                    "Indicators"]
+                    "visualization_endpoint"]
     datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
 
     return {"datasets": datasets}
