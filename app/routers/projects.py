@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 
 from app.responses.projects import LIST_PROJECTS_RESPONSES
 from app.services import projects as projects_service
