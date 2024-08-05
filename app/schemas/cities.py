@@ -74,7 +74,3 @@ class FeatureResponse(BaseModel):
 class GeoJSONResponse(BaseModel):
     type: str
     features: List[FeatureResponse]
-
-# Common 500 error response
-class ErrorResponse(BaseModel):
-    detail: str

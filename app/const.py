@@ -1,7 +1,7 @@
 import os
 from pyairtable import Table
 
-from app.schemas.cities import ErrorResponse
+from app.responses.common import ErrorResponse
 
 # Carto
 CARTO_API_KEY = os.getenv('CARTO_API_KEY')

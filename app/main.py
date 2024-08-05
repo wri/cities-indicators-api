@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.middlewares.strip_api_prefix import StripApiPrefixMiddleware
-from app.routers import cities
+from app.routers import cities, projects
 
 DESCRIPTION = """
 You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
@@ -29,10 +29,29 @@ app.add_middleware(StripApiPrefixMiddleware)
 
 
 # Health check
-@app.get("/health")
+@app.get(
+    "/health", 
+    tags=["Default"],
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "ok"
+                    }
+                }
+            }
+        }
+    }
+)
 def health_check():
+    """
+    Health check endpoint to verify if the API is running.
+    """
     return {"status": "ok"}
 
+
 # Routers
-## Cities
-app.include_router(cities.router, prefix="/cities")
+app.include_router(cities.router, prefix="/cities", tags=["Cities"])
+app.include_router(projects.router, prefix="/projects", tags=["Projects"])

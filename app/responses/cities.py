@@ -1,5 +1,6 @@
 from app.const import COMMON_500_ERROR_RESPONSE
-from app.schemas.cities import CityResponse, ErrorResponse, GeoJSONResponse, GetCityIndicatorsResponse, ListCitiesResponse
+from app.responses.common import ErrorResponse
+from app.schemas.cities import CityResponse, GeoJSONResponse, GetCityIndicatorsResponse, ListCitiesResponse
 
 LIST_CITIES_RESPONSES={
     200: {
@@ -42,6 +43,7 @@ LIST_CITIES_RESPONSES={
     },
     500: COMMON_500_ERROR_RESPONSE
 }
+
 GET_CITY_BY_CITY_ID_RESPONSES={
     200: {
         "model": CityResponse,
@@ -79,6 +81,7 @@ GET_CITY_BY_CITY_ID_RESPONSES={
     },
     500: COMMON_500_ERROR_RESPONSE
 }
+
 GET_CITY_INDICATORS_RESPONSES={
     200: {
         "model": GetCityIndicatorsResponse,
@@ -132,6 +135,7 @@ GET_CITY_INDICATORS_RESPONSES={
     },
     500: COMMON_500_ERROR_RESPONSE
 }
+
 GET_CITY_GEOMETRY_RESPONSES={
     200: {
         "model": GeoJSONResponse,
@@ -204,6 +208,7 @@ GET_CITY_GEOMETRY_RESPONSES={
     },
     500: COMMON_500_ERROR_RESPONSE
 }
+
 GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES={
     200: {
         "model": GeoJSONResponse,
