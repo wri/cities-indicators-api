@@ -69,4 +69,3 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
     return city_indicators
-
