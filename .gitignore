@@ -167,3 +167,4 @@ cython_debug/
 
 # VS Code
 .vscode/
+cities-indicators-api.code-workspace
