@@ -1,7 +1,7 @@
 from app.const import COMMON_500_ERROR_RESPONSE
 from app.schemas.projects import ListProjectsResponse
 
-LIST_PROJECTS_RESPONSES={
+LIST_PROJECTS_RESPONSES = {
     200: {
         "model": ListProjectsResponse,
         "description": "Successful Response",
@@ -12,11 +12,11 @@ LIST_PROJECTS_RESPONSES={
                         "urbanshift",
                         "dataforcoolcities",
                         "deepdive",
-                        "cities4forests"
+                        "cities4forests",
                     ]
                 }
             }
-        }
+        },
     },
-    500: COMMON_500_ERROR_RESPONSE
+    500: COMMON_500_ERROR_RESPONSE,
 }

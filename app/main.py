@@ -32,22 +32,17 @@ app.include_router(cities.router, prefix="/cities", tags=["Cities"])
 app.include_router(indicators.router, prefix="/indicators", tags=["Indicators"])
 app.include_router(projects.router, prefix="/projects", tags=["Projects"])
 
+
 # Health check
 @app.get(
-    "/health", 
+    "/health",
     tags=["Default"],
     responses={
         200: {
             "description": "Successful Response",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "status": "ok"
-                    }
-                }
-            }
+            "content": {"application/json": {"example": {"status": "ok"}}},
         }
-    }
+    },
 )
 def health_check():
     """

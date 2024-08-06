@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Union
 
+
 # City Schema
 class CityResponse(BaseModel):
     city_id: str
@@ -11,9 +12,11 @@ class CityResponse(BaseModel):
     aoi_boundary_level: str
     project: List[str]
 
+
 # Response for listing cities
 class ListCitiesResponse(BaseModel):
     cities: List[CityResponse]
+
 
 # Indicator Schema
 class CityIndicatorResponse(BaseModel):
@@ -54,14 +57,17 @@ class CityIndicatorResponse(BaseModel):
     LND_7_percentKBAsProtected: Optional[float]
     LND_8_percentKBAsBuiltup: Optional[float]
 
+
 # Response for getting city indicators
 class GetCityIndicatorsResponse(BaseModel):
     city_indicators: List[CityIndicatorResponse]
+
 
 # Geometry Schema
 class GeometryResponse(BaseModel):
     type: str
     coordinates: List[List[List[List[float]]]]
+
 
 # Feature Schema
 class FeatureResponse(BaseModel):
@@ -69,6 +75,7 @@ class FeatureResponse(BaseModel):
     type: str
     properties: CityIndicatorResponse
     geometry: GeometryResponse
+
 
 # GeoJSON Response
 class GeoJSONResponse(BaseModel):
