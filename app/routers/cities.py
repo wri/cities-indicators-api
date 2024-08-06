@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.dependencies import get_expected_params
 from app.responses.cities import (GET_CITY_BY_CITY_ID_RESPONSES,
                                   GET_CITY_GEOMETRY_RESPONSES,
                                   GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES,
@@ -9,7 +10,7 @@ from app.services import cities as cities_service
 
 router = APIRouter()
 
-@router.get("", responses=LIST_CITIES_RESPONSES)
+@router.get("", dependencies=[Depends(get_expected_params("project", "country_code_iso3"))], responses=LIST_CITIES_RESPONSES)
 # Return all cities metadata from Airtable
 def list_cities(
     project: str = Query(None, description="Project ID"),

@@ -22,7 +22,7 @@ LIST_CITIES_RESPONSES={
                             "aoi_boundary_level": "ADM2union",
                             "project": [
                                 "urbanshift",
-                                "data4coolcities"
+                                "dataforcoolcities"
                             ]
                         }
                     ]
@@ -62,7 +62,7 @@ GET_CITY_BY_CITY_ID_RESPONSES={
                     "aoi_boundary_level": "ADM2union",
                     "project": [
                         "urbanshift",
-                        "data4coolcities"
+                        "dataforcoolcities"
                     ]
                 }
             }

@@ -6,7 +6,7 @@ from app.services import projects as projects_service
 router = APIRouter()
 
 @router.get("", responses=LIST_PROJECTS_RESPONSES)
-# Return all cities metadata from Airtable
+# Return all projects metadata from Airtable
 def list_projects():
     try:
         projects_list = projects_service.list_projects()

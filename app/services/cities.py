@@ -11,7 +11,7 @@ set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 def get_cities(project: str = None, country_code_iso3: str = None):
     filters = []
     if project:
-        filters.append(generate_search_query("project", project))
+        filters.append(generate_search_query("projects", project))
     if country_code_iso3:
         filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
     
