@@ -24,15 +24,59 @@ Docs: [http://44.201.179.158:8000/docs](http://44.201.179.158:8000/docs)
         ```sh
         uvicorn main:app --env-file '.env' --reload
         ```
-4. If you need to run pylint on your local environment:
-    ```sh
-    pylint $(git ls-files '*.py')
-    ```
-5. If you are on a Debian/Ubuntu system, install the `python3-venv` package using the following command:
+4. If you are on a Debian/Ubuntu system, install the `python3-venv` package using the following command:
     ```sh
     sudo apt install python3.10-venv
     ```
-6. Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to preview the API documentation.
+5. Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to preview the API documentation.
+
+## Best Practices
+
+To ensure the maintainability and quality of the codebase, please adhere to the following Python best practices:
+
+1. **Code Formatting**:
+   - Use `black` for consistent code formatting. Run `black` using:
+     ```sh
+     black .
+     ```
+
+2. **Linting**:
+   - Use `pylint` to check for potential errors and enforce coding standards. Run `pylint` on your Python files with:
+     ```sh
+     pylint $(git ls-files '*.py')
+     ```
+   - Configure `.pylintrc` as needed for project-specific settings.
+
+3. **Type Checking**:
+   - Use `mypy` for type checking to catch type-related bugs. Run it using:
+     ```sh
+     mypy .
+     ```
+
+4. **Testing**:
+   - Write tests for your code using `pytest` to ensure your application behaves as expected. Install `pytest` and run tests with:
+     ```sh
+     pip install pytest
+     pytest
+     ```
+
+5. **Documentation**:
+   - Update the documentation to reflect changes in the codebase. Ensure that all public functions and methods are properly documented.
+
+6. **Dependency Management**:
+   - Use `pip` to manage dependencies and ensure consistency across environments. Generate a `requirements.txt` with:
+     ```sh
+     pip freeze > requirements.txt
+     ```
+   - Install dependencies when `requirements.txt` is changed:
+     ```sh
+    pip install -r requirements.txt
+     ```
+
+8. **Code Review**:
+   - Participate in code reviews to ensure code quality and share knowledge with team members.
+
+By following these best practices, you will help maintain a high-quality and consistent codebase. Feel free to reach out if you have any questions or need assistance.
 
 ## Deployment
 The API is deployed to [https://citiesapi-1-x4387694.deta.app/](https://citiesapi-1-x4387694.deta.app/). We followed this tutorial to get it working: [FastAPI Deta Deployment](https://fastapi.tiangolo.com/deployment/deta/).
