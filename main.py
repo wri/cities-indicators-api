@@ -1,14 +1,14 @@
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
-
-import os
 import json
+import logging
+import os
 
-from pyairtable import Table
+import pandas as pd
+import requests
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
-import requests
-import pandas as pd
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
+from pyairtable import Table
 
 from utils.filters import generate_search_query
 
@@ -29,6 +29,10 @@ indicators_list = indicators_table.all(view="api", formula="")
 projects_list = projects_table.all(view="api", formula="")
 
 app = FastAPI()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @app.get("/", include_in_schema=False)
@@ -99,7 +103,10 @@ def list_cities(
     try:
         cities_list = cities_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error(f"An Airtable error occurred: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred: Retrieving cities failed."
+        ) from e
 
     cities = [
         {key: city["fields"].get(key) for key in city_keys} for city in cities_list
@@ -226,7 +233,10 @@ def list_projects():
         projects_dict = {project["fields"]["project_id"] for project in projects}
         return {"projects": projects_dict}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error(f"An Airtable error occurred: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred: Retrieving projects failed."
+        ) from e
 
 
 # Indicators
@@ -277,14 +287,17 @@ def list_projects():
 )
 # Return all indicators metadata from Airtable
 def list_indicators(project: str = Query(None, description="Project ID")):
-    filter_formula = generate_search_query('projects', project)
+    filter_formula = generate_search_query("projects", project)
 
     try:
         indicators_filtered_list = indicators_table.all(
             view="api", formula=filter_formula
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error(f"An Airtable error occurred: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred: Retrieving indicators failed."
+        ) from e
 
     # Fetch indicators and datasets as dictionaries for quick lookup
     indicators_dict = {
