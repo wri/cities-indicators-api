@@ -1,6 +1,6 @@
 def generate_find_query(column_name: str, value: str) -> str:
     """
-    Generates a FIND query to filter string values from multiple select fields in Airtable.
+    Generates a case-sensitive FIND query to filter string values from multiple select fields in Airtable.
 
     Args:
         column_name (str): The name of the column to search within.
