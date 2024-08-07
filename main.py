@@ -158,6 +158,42 @@ def list_cities(
     return {"cities": cities}
 
 
+@app.get(
+    "/cities",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "cities": {
+                            "city_id": "BRA-Florianopolis",
+                            "city_name": "Florianopolis",
+                            "country_name": "Brazil",
+                            "country_code_iso3": "BRA",
+                            "admin_levels": [
+                                "ADM4union",
+                                "ADM4"
+                            ],
+                            "aoi_boundary_level": "ADM4union",
+                            "project": [
+                                "urbanshift"
+                            ]
+                        }
+                    }
+                }
+            },
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An error occurred: <error_message>"}
+                }
+            },
+        },
+    },
+)
 @app.get("/cities/{city_id}")
 def get_city(city_id: str):
     """
