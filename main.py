@@ -171,14 +171,9 @@ def list_cities(
                             "city_name": "Florianopolis",
                             "country_name": "Brazil",
                             "country_code_iso3": "BRA",
-                            "admin_levels": [
-                                "ADM4union",
-                                "ADM4"
-                            ],
+                            "admin_levels": ["ADM4union", "ADM4"],
                             "aoi_boundary_level": "ADM4union",
-                            "project": [
-                                "urbanshift"
-                            ]
+                            "project": ["urbanshift"],
                         }
                     }
                 }
@@ -358,6 +353,7 @@ def list_projects():
                                     "deepdive",
                                 ],
                                 "theme": "Greenspace access",
+                                "unit": "%",
                             }
                         ]
                     }
@@ -492,7 +488,7 @@ def list_indicators_themes():
 @app.get("/indicators/{indicator_id}")
 def get_indicator(indicator_id: str):
     """
-    Retrieve a single indicator by indicator_id.
+    Retrieve all the cities indicators specified by indicator_id.
     """
     indicator_df = read_carto(
         f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and indicators.geo_name=indicators.geo_parent_name"
@@ -524,7 +520,7 @@ def get_indicator(indicator_id: str):
 @app.get("/indicators/{indicator_id}/{city_id}")
 def get_city_indicator(indicator_id: str, city_id: str):
     """
-    Retrieve a single indicator by indicator_id and city_id.
+    Retrieve a single city indicator specified by indicator_id and city_id.
     """
     city_indicator_df = read_carto(
         f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and geo_name = '{city_id}'"
