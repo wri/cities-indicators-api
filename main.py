@@ -147,7 +147,7 @@ def get_city_indicators(city_id: str, admin_level: str):
             "geo_name",
             "geo_level",
             "geo_parent_name",
-            "indicator",
+            "indicator_id",
             "value",
             "indicator_version",
         ]
@@ -160,7 +160,7 @@ def get_city_indicators(city_id: str, admin_level: str):
             "geo_parent_name",
             "indicator_version",
         ],
-        columns="indicator",
+        columns="indicator_id",
         values="value",
     )
     city_indicators_df.reset_index(inplace=True)
@@ -194,7 +194,7 @@ def get_city_geometry(city_id: str, admin_level: str):
         f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
     )
     city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="value"
+        index="geo_id", columns="indicator_id", values="value"
     )
 
     city_geojson = json.loads(city_geometry_df.to_json())
@@ -227,7 +227,7 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
         f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
     )
     city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="value"
+        index="geo_id", columns="indicator_id", values="value"
     )
 
     city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
@@ -271,7 +271,7 @@ def list_projects():
                                     "Population density",
                                 ],
                                 "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
-                                "indicator": "ACC_1_OpenSpaceHectaresper1000people2022",
+                                "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
                                 "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
                                 "indicator_label": "Recreational space per capita",
                                 "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
@@ -299,11 +299,11 @@ def list_projects():
         },
     },
 )
-def list_indicators(project: str = Query(None, description="Project ID")):
+def list_indicators(project_in: Optional[str] = Query(None, description="Filter by a specific Project ID in a multiple selection field")):
     """
     Retrieve a list of indicators based on provided filter parameters.
     """
-    filter_formula = generate_search_query("projects", project)
+    filter_formula = generate_search_query("projects", project_in)
 
     try:
         indicators_filtered_list = indicators_table.all(
@@ -345,7 +345,7 @@ def list_indicators(project: str = Query(None, description="Project ID")):
         "data_sources",
         "data_sources_link",
         "importance",
-        "indicator",
+        "indicator_id",
         "indicator_definition",
         "indicator_label",
         "indicator_legend",
@@ -363,13 +363,13 @@ def list_indicators(project: str = Query(None, description="Project ID")):
     return {"indicators": indicators}
 
 
-@app.get("/indicators/{indicator_name}")
-def get_indicator(indicator_name: str):
+@app.get("/indicators/{indicator_id}")
+def get_indicator(indicator_id: str):
     """
-    Retrieve a single indicator by indicator_name.
+    Retrieve a single indicator by indicator_id.
     """
     indicator_df = read_carto(
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and indicators.geo_name=indicators.geo_parent_name"
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and indicators.geo_name=indicators.geo_parent_name"
     )
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
@@ -383,7 +383,7 @@ def get_indicator(indicator_name: str):
         "geo_name",
         "geo_level",
         "geo_parent_name",
-        "indicator",
+        "indicator_id",
         "value",
         "indicator_version",
     ]
@@ -395,13 +395,13 @@ def get_indicator(indicator_name: str):
     return {"indicator_values": indicator}
 
 
-@app.get("/indicators/{indicator_name}/{city_id}")
-def get_city_indicator(indicator_name: str, city_id: str):
+@app.get("/indicators/{indicator_id}/{city_id}")
+def get_city_indicator(indicator_id: str, city_id: str):
     """
-    Retrieve a single indicator by indicator_name and city_id.
+    Retrieve a single indicator by indicator_id and city_id.
     """
     city_indicator_df = read_carto(
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_name = '{city_id}'"
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and geo_name = '{city_id}'"
     )
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
@@ -415,7 +415,7 @@ def get_city_indicator(indicator_name: str, city_id: str):
         "geo_name",
         "geo_level",
         "geo_parent_name",
-        "indicator",
+        "indicator_id",
         "value",
         "indicator_version",
     ]
