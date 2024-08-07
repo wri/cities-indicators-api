@@ -159,7 +159,7 @@ def list_cities(
 
 
 @app.get(
-    "/cities",
+    "/cities/{city_id}",
     responses={
         200: {
             "description": "Successful Response",
@@ -194,7 +194,6 @@ def list_cities(
         },
     },
 )
-@app.get("/cities/{city_id}")
 def get_city(city_id: str):
     """
     Retrieve a single city by its ID.
@@ -274,6 +273,7 @@ def get_city_geometry(city_id: str, admin_level: str):
     )
 
     city_geojson = json.loads(city_geometry_df.to_json())
+    print(city_geojson)
 
     return city_geojson
 
