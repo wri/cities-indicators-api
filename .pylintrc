@@ -25,6 +25,7 @@ disable=
     C0301,  # Line too long (handled by max-line-length)
     C0303,  # Trailing whitespace
     C0411,  # wrong-import-order
+    E1205,  # Too many arguments for logging format string (logging-too-many-args)
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs (visual studio) and json.

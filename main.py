@@ -1,24 +1,26 @@
-from fastapi import FastAPI, HTTPException, Query, Request
-from starlette.middleware.base import BaseHTTPMiddleware
-
-import os
 import json
+import logging
+import os
+from typing import Optional
 
-from pyairtable import Table
+import pandas as pd
+import requests
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
-import requests
-import pandas as pd
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
+from pyairtable import Table
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from utils.filters import generate_search_query
+from utils.filters import construct_filter_formula, generate_search_query
 
 # Authentication
 ## Airtable
-airtable_api_key = os.getenv('CITIES_API_AIRTABLE_KEY')
-cities_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Cities')
-datasets_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Datasets')
-indicators_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Indicators')
-projects_table = Table(airtable_api_key, 'appDWCVIQlVnLLaW2', 'Projects')
+airtable_api_key = os.getenv("CITIES_API_AIRTABLE_KEY")
+cities_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Cities")
+datasets_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Datasets")
+indicators_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Indicators")
+projects_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Projects")
 
 # Get Airtable tables using formula to exclude rows where the key field is empty
 datasets_list = datasets_table.all(view="api", formula="")
@@ -26,7 +28,12 @@ indicators_list = indicators_table.all(view="api", formula="")
 projects_list = projects_table.all(view="api", formula="")
 
 ## Carto
-set_default_credentials(username='wri-cities', api_key='default_public')
+set_default_credentials(username="wri-cities", api_key="default_public")
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 # Middlewares
 class StripApiPrefixMiddleware(BaseHTTPMiddleware):
@@ -35,6 +42,7 @@ class StripApiPrefixMiddleware(BaseHTTPMiddleware):
             request.scope["path"] = request.url.path[4:]
         response = await call_next(request)
         return response
+
 
 DESCRIPTION = """
 You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
@@ -58,23 +66,28 @@ app = FastAPI(
 )
 app.add_middleware(StripApiPrefixMiddleware)
 
-#@app.get("/", include_in_schema=False)
-#async def custom_swagger_ui_html():
-#    return get_swagger_ui_html(openapi_url=openapi_url, title="API Docs")
+# Cities
+# Define the desired keys to extract from each city's data
+city_keys = [
+    "city_id",
+    "city_name",
+    "country_name",
+    "country_code_iso3",
+    "admin_levels",
+    "aoi_boundary_level",
+    "project",
+]
+
+
+@app.get("/", include_in_schema=False)
+async def docs_redirect():
+    return RedirectResponse(url="/docs")
+
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-# Cities
-# Define the desired keys to extract from each city's data
-city_keys = ["city_id", 
-            "city_name", 
-            "country_name", 
-            "country_code_iso3", 
-            "admin_levels", 
-            "aoi_boundary_level", 
-            "project"]
 
 @app.get(
     "/cities",
@@ -90,151 +103,227 @@ city_keys = ["city_id",
                                 "city_name": "Buenos Aires",
                                 "country_name": "Argentina",
                                 "country_code_iso3": "ARG",
-                                "admin_levels": [
-                                    "ADM2union ",
-                                    "ADM2"
-                                ],
+                                "admin_levels": ["ADM2union ", "ADM2"],
                                 "aoi_boundary_level": "ADM2union",
-                                "project": [
-                                    "urbanshift",
-                                    "data4coolcities"
-                                ]
+                                "project": ["urbanshift", "data4coolcities"],
                             }
                         ]
                     }
                 }
-            }
-        },
-        400: {
-            "description": "Bad Request - No cities found",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No cities found."
-                    }
-                }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "An error occurred: <error_message>"
-                    }
+                    "example": {"detail": "An error occurred: <error_message>"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
-# Return all cities metadata from Airtable
 def list_cities(
-    project: str = Query(None, description="Project ID"),
-    country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
+    project_in: Optional[str] = Query(
+        None,
+        description="Filter by a specific Project ID in a multiple selection field",
+    ),
+    country_code_iso3: Optional[str] = Query(
+        None, description="Filter by ISO 3166-1 alpha-3 country code"
+    ),
 ):
-    filters = []
-    if project:
-        filters.append(generate_search_query("project", project))
+    """
+    Retrieve a list of cities based on provided filter parameters.
+    """
+    filters = {}
+
+    if project_in:
+        filters["project_in"] = project_in
     if country_code_iso3:
-        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
-    
-    filter_formula = f"AND({', '.join(filters)})" if filters else ""
+        filters["country_code_iso3"] = country_code_iso3
+
+    filter_formula = construct_filter_formula(filters)
 
     try:
         cities_list = cities_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving cities failed."
+        ) from e
 
-    if not cities_list:
-        raise HTTPException(status_code=400, detail="No cities found.")
-    
-    cities = [{key: city['fields'].get(key) for key in city_keys} for city in cities_list]
+    cities = [
+        {key: city["fields"].get(key) for key in city_keys} for city in cities_list
+    ]
 
     return {"cities": cities}
 
 
-@app.get("/cities/{city_id}")
-# Return one city metadata from Airtable
+@app.get(
+    "/cities/{city_id}",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "cities": {
+                            "city_id": "BRA-Florianopolis",
+                            "city_name": "Florianopolis",
+                            "country_name": "Brazil",
+                            "country_code_iso3": "BRA",
+                            "admin_levels": ["ADM4union", "ADM4"],
+                            "aoi_boundary_level": "ADM4union",
+                            "project": ["urbanshift"],
+                        }
+                    }
+                }
+            },
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An error occurred: <error_message>"}
+                }
+            },
+        },
+    },
+)
 def get_city(city_id: str):
+    """
+    Retrieve a single city by its ID.
+    """
     formula = f'"{city_id}" = {{city_id}}'
     city_data = cities_table.all(view="api", formula=formula)
-    city = city_data[0]['fields']
+    city = city_data[0]["fields"]
     # Define the desired keys to extract from the city's data
     city = {key: city[key] for key in city_keys if key in city}
-    
+
     return {"cities": city}
 
+
 @app.get("/cities/{city_id}/{admin_level}")
-# Return one city all indicators values from Carto
 def get_city_indicators(city_id: str, admin_level: str):
-    city_indicators_df = read_carto(f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'")
+    """
+    Retrieve all indicators for a single city and admin level.
+    """
+    city_indicators_df = read_carto(
+        f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
+    )
     # Reorder and select city geometry properties fields
-    city_indicators_df = city_indicators_df[["geo_id", 
-                                             "geo_name", 
-                                             "geo_level", 
-                                             "geo_parent_name", 
-                                             "indicator", 
-                                             "value", 
-                                             "indicator_version"]]
-    city_indicators_df = city_indicators_df.pivot(index=["geo_id", "geo_name", "geo_level", "geo_parent_name", "indicator_version"], columns='indicator', values='value')
+    city_indicators_df = city_indicators_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "indicator",
+            "value",
+            "indicator_version",
+        ]
+    ]
+    city_indicators_df = city_indicators_df.pivot(
+        index=[
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "indicator_version",
+        ],
+        columns="indicator",
+        values="value",
+    )
     city_indicators_df.reset_index(inplace=True)
 
-    city_indicators = json.loads(city_indicators_df.to_json(orient='records'))
+    city_indicators = json.loads(city_indicators_df.to_json(orient="records"))
 
     return {"city_indicators": city_indicators}
 
-@app.get("/cities/{city_id}/{admin_level}/geojson")
-# Return one city's geometry from Carto
-def get_city_geometry(city_id: str, admin_level: str):
-    city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
-    # Reorder and select city geometry properties fields
-    city_geometry_df = city_geometry_df[["geo_id", 
-                                         "geo_name", 
-                                         "geo_level", 
-                                         "geo_parent_name", 
-                                         "geo_version", 
-                                         "the_geom"]]
 
-    city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0")
-    city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
+@app.get("/cities/{city_id}/{admin_level}/geojson")
+def get_city_geometry(city_id: str, admin_level: str):
+    """
+    Retrieve the geometry of a single city and admin level.
+    """
+    city_geometry_df = read_carto(
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+    )
+    # Reorder and select city geometry properties fields
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+            "the_geom",
+        ]
+    ]
+
+    city_indicators_df = read_carto(
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
+    )
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
 
     city_geojson = json.loads(city_geometry_df.to_json())
+    print(city_geojson)
 
     return city_geojson
+
 
 @app.get("/cities/{city_id}/{admin_level}/geojson/indicators")
 # Return one city’s geometry and indicator values from Carto
 def get_city_geometry_with_indicators(city_id: str, admin_level: str):
-    city_geometry_df = read_carto(f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'")
+    """
+    Retrieve the indicators and geometry of a single city and admin level.
+    """
+    city_geometry_df = read_carto(
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+    )
     # Reorder and select city geometry properties fields
-    city_geometry_df = city_geometry_df[["geo_id", 
-                                         "geo_name", 
-                                         "geo_level", 
-                                         "geo_parent_name", 
-                                         "geo_version", 
-                                         "the_geom"]]
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+            "the_geom",
+        ]
+    ]
 
-    city_indicators_df = read_carto(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0")
-    city_indicators_df = city_indicators_df.pivot(index='geo_id', columns='indicator', values='value')
+    city_indicators_df = read_carto(
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
+    )
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
 
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on='geo_id')
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
 
     city_geojson = json.loads(city_gdf.to_json())
 
     return city_geojson
 
+
 @app.get("/projects")
-# Return all projects metadata from Airtable
 def list_projects():
+    """
+    Retrieve the list of projects.
+    """
     try:
         projects = projects_table.all(view="api", formula="{project_id}")
-        projects_dict = {project['fields']['project_id'] for project in projects}
+        projects_dict = {project["fields"]["project_id"] for project in projects}
         return {"projects": projects_dict}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving projects failed."
+        ) from e
 
 
-# Indicators
 @app.get(
     "/indicators",
     responses={
@@ -246,13 +335,13 @@ def list_projects():
                         "indicators": [
                             {
                                 "code": "ACC-1",
-                                "data_sources": "<a href=\"https://www.openstreetmap.org\">OpenStreetMap</a>, <a href=\"https://developers.google.com/earth-engine/datasets/catalog/WorldPop_GP_100m_pop_age_sex_cons_unadj\">WorldPop</a> ",
+                                "data_sources": '<a href="https://www.openstreetmap.org">OpenStreetMap</a>, <a href="https://developers.google.com/earth-engine/datasets/catalog/WorldPop_GP_100m_pop_age_sex_cons_unadj">WorldPop</a> ',
                                 "data_sources_link": [
                                     "Open spaces for public use",
-                                    "Population density"
+                                    "Population density",
                                 ],
                                 "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
-                                "indicator": "ACC_1_OpenSpaceHectaresper1000people2022",
+                                "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
                                 "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
                                 "indicator_label": "Recreational space per capita",
                                 "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
@@ -261,78 +350,92 @@ def list_projects():
                                 "projects": [
                                     "urbanshift",
                                     "cities4forests",
-                                    "deepdive"
+                                    "deepdive",
                                 ],
-                                "theme": "Greenspace access"
+                                "theme": "Greenspace access",
+                                "unit": "%",
                             }
                         ]
                     }
                 }
-            }
-        },
-        400: {
-            "description": "Bad Request - No indicators found",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No indicators found."
-                    }
-                }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "An error occurred: <error_message>"
-                    }
+                    "example": {"detail": "An error occurred: <error_message>"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
-# Return all indicators metadata from Airtable
-def list_indicators(project: str = Query(None, description="Project ID")):
-    filter_formula = f"SEARCH(',{project},', ',' & ARRAYJOIN({{projects}}, ',') & ',')" if project else ""
+def list_indicators(
+    project_in: Optional[str] = Query(
+        None,
+        description="Filter by a specific Project ID in a multiple selection field",
+    )
+):
+    """
+    Retrieve a list of indicators based on provided filter parameters.
+    """
+    filter_formula = generate_search_query("projects", project_in)
 
     try:
-        indicators_filtered_list = indicators_table.all(view="api", formula=filter_formula)
+        indicators_filtered_list = indicators_table.all(
+            view="api", formula=filter_formula
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
-    
-    if not indicators_filtered_list:
-        raise HTTPException(status_code=400, detail="No indicators found.")
-    
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving indicators failed."
+        ) from e
+
     # Fetch indicators and datasets as dictionaries for quick lookup
-    indicators_dict = {indicator['id']: indicator['fields'] for indicator in indicators_filtered_list}
-    datasets_dict = {dataset['id']: dataset['fields']['dataset_name'] for dataset in datasets_list}
-    projects_dict = {project['id']: project['fields']['project_id'] for project in projects_list}
+    indicators_dict = {
+        indicator["id"]: indicator["fields"] for indicator in indicators_filtered_list
+    }
+    datasets_dict = {
+        dataset["id"]: dataset["fields"]["dataset_name"] for dataset in datasets_list
+    }
+    projects_dict = {
+        project["id"]: project["fields"]["project_id"] for project in projects_list
+    }
 
     # Update data_sources_link for each indicator
     for indicator in indicators_dict.values():
-        data_sources_link = indicator.get('data_sources_link', [])
-        indicator_projects = indicator.get('projects', [])
-        indicator['data_sources_link'] = [datasets_dict.get(data_source, data_source) for data_source in data_sources_link]
-        indicator['projects'] = [projects_dict.get(project, project) for project in indicator_projects]
+        data_sources_link = indicator.get("data_sources_link", [])
+        indicator_projects = indicator.get("projects", [])
+        indicator["data_sources_link"] = [
+            datasets_dict.get(data_source, data_source)
+            for data_source in data_sources_link
+        ]
+        indicator["projects"] = [
+            projects_dict.get(project, project) for project in indicator_projects
+        ]
 
     indicators = list(indicators_dict.values())
     # Reorder indicators fields
-    desired_keys = ["code", 
-                    "data_sources", 
-                    "data_sources_link", 
-                    "importance",
-                    "indicator",
-                    "indicator_definition", 
-                    "indicator_label", 
-                    "indicator_legend",
-                    "methods", 
-                    "Notebook",
-                    "projects",
-                    "theme",
-                    "unit"]
-    indicators = [{key: indicator[key] for key in desired_keys if key in indicator} for indicator in indicators]
-    
+    desired_keys = [
+        "code",
+        "data_sources",
+        "data_sources_link",
+        "importance",
+        "indicator_id",
+        "indicator_definition",
+        "indicator_label",
+        "indicator_legend",
+        "methods",
+        "Notebook",
+        "projects",
+        "theme",
+        "unit",
+    ]
+    indicators = [
+        {key: indicator[key] for key in desired_keys if key in indicator}
+        for indicator in indicators
+    ]
+
     return {"indicators": indicators}
 
 
@@ -351,81 +454,100 @@ def list_indicators(project: str = Query(None, description="Project ID")):
                             "Greenspace access",
                             "Health - Air Quality",
                             "Health - Heat",
-                            "Land protection and restoration"
+                            "Land protection and restoration",
                         ]
                     }
                 }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "An error occurred: <error_message>"
-                    }
+                    "example": {"detail": "An error occurred: <error_message>"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
-# Return all unique indicators themes from Airtable, sorted alphabetically
 def list_indicators_themes():
+    """
+    Retrieve the list of themes.
+    """
     indicators = indicators_table.all(view="api", formula="")
     themes_set = set()
-    
+
     for indicator in indicators:
-        theme = indicator['fields'].get('theme')
+        theme = indicator["fields"].get("theme")
         if theme:
             themes_set.add(theme)
-    
+
     return {"themes": sorted(list(themes_set))}
 
 
-@app.get("/indicators/{indicator_name}")
-# Return one indicator values for all cities top admin level from Carto
-def get_indicator(indicator_name: str):
-    indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and indicators.geo_name=indicators.geo_parent_name")
+@app.get("/indicators/{indicator_id}")
+def get_indicator(indicator_id: str):
+    """
+    Retrieve all the cities indicators specified by indicator_id.
+    """
+    indicator_df = read_carto(
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and indicators.geo_name=indicators.geo_parent_name"
+    )
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
-    indicator_df['creation_date'] = indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
+    indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
+        "%Y-%m-%d"
+    )
     indicator = json.loads(indicator_df.to_json())
-    indicator = [item['properties'] for item in indicator['features']]
+    indicator = [item["properties"] for item in indicator["features"]]
     # Reorder and select indicators fields
-    desired_keys = ["geo_id", 
-                    "geo_name", 
-                    "geo_level", 
-                    "geo_parent_name", 
-                    "indicator", 
-                    "value", 
-                    "indicator_version"
-                    ]
-    indicator = [{key: city_indicator[key] for key in desired_keys} for city_indicator in indicator]
+    desired_keys = [
+        "geo_id",
+        "geo_name",
+        "geo_level",
+        "geo_parent_name",
+        "indicator",
+        "value",
+        "indicator_version",
+    ]
+    indicator = [
+        {key: city_indicator[key] for key in desired_keys}
+        for city_indicator in indicator
+    ]
 
     return {"indicator_values": indicator}
 
-@app.get("/indicators/{indicator_name}/{city_id}")
-# Return one indicator value for one city top admin level from Carto
-def get_city_indicator(indicator_name: str, city_id: str):
-    city_indicator_df = read_carto(f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_name = '{city_id}'")
+
+@app.get("/indicators/{indicator_id}/{city_id}")
+def get_city_indicator(indicator_id: str, city_id: str):
+    """
+    Retrieve a single city indicator specified by indicator_id and city_id.
+    """
+    city_indicator_df = read_carto(
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and geo_name = '{city_id}'"
+    )
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
-    city_indicator_df['creation_date'] = city_indicator_df['creation_date'].dt.strftime('%Y-%m-%d')
+    city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
+        "%Y-%m-%d"
+    )
     city_indicator = json.loads(city_indicator_df.to_json())
-    city_indicator = city_indicator['features'][0]['properties']
+    city_indicator = city_indicator["features"][0]["properties"]
     # Reorder and select city indicator fields
-    desired_keys = ["geo_id", 
-                    "geo_name", 
-                    "geo_level", 
-                    "geo_parent_name", 
-                    "indicator", 
-                    "value", 
-                    "indicator_version"
-                    ]
-    city_indicator = {key: city_indicator[key] for key in desired_keys if key in city_indicator}
+    desired_keys = [
+        "geo_id",
+        "geo_name",
+        "geo_level",
+        "geo_parent_name",
+        "indicator",
+        "value",
+        "indicator_version",
+    ]
+    city_indicator = {
+        key: city_indicator[key] for key in desired_keys if key in city_indicator
+    }
 
     return {"indicator_values": city_indicator}
 
 
-# Datasets
 @app.get(
     "/datasets",
     responses={
@@ -436,9 +558,7 @@ def get_city_indicator(indicator_name: str, city_id: str):
                     "example": {
                         "datasets": [
                             {
-                                "city_ids": [
-                                    "ARG-Buenos_Aires"
-                                ],
+                                "city_ids": ["ARG-Buenos_Aires"],
                                 "Data source": "ESA World Cover",
                                 "Data source website": "https://esa-worldcover.org/en",
                                 "dataset_id": "esa_land_cover_2020",
@@ -454,89 +574,103 @@ def get_city_indicator(indicator_name: str, city_id: str):
                                     "Exposure to coastal and river flooding",
                                     "Land near natural drainage",
                                     "Impervious surfaces",
-                                    "Vegetation cover in built areas"
+                                    "Vegetation cover in built areas",
                                 ],
                                 "Provider": "ESA",
                                 "Spatial Coverage": "Global",
                                 "Spatial resolution": "10m",
                                 "Storage": "s3://cities-indicators/data/land_use/esa_world_cover/",
-                                "Theme": [
-                                    "Land use"
-                                ]
+                                "Theme": ["Land use"],
                             }
                         ]
                     }
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request - No datasets found",
             "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No datasets found."
-                    }
-                }
-            }
+                "application/json": {"example": {"detail": "No datasets found."}}
+            },
         },
         500: {
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "An error occurred: <error_message>"
-                    }
+                    "example": {"detail": "An error occurred: <error_message>"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
-def list_datasets(city_id: str = Query(None, description="City ID"),):
+def list_datasets(
+    city_id: str = Query(None, description="City ID"),
+):
+    """
+    Retrieve the list of datasets
+    """
     filter_formula = generate_search_query("city_id", city_id)
-    
+
     try:
         cities_list = cities_table.all(view="api", formula="{city_id}")
         datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving indicators failed."
+        ) from e
 
-    if not datasets_filter_list:
-        raise HTTPException(status_code=400, detail="No datasets found")
-    
     # Fetch cities, datasets and indicators as dictionaries for quick lookup
-    cities_dict = {city['id']: city['fields'] for city in cities_list}
-    datasets_dict = {dataset['id']: dataset['fields'] for dataset in datasets_filter_list}
-    indicators_dict = {indicator['id']: indicator['fields']['indicator_label'] for indicator in indicators_list}
+    cities_dict = {city["id"]: city["fields"] for city in cities_list}
+    datasets_dict = {
+        dataset["id"]: dataset["fields"] for dataset in datasets_filter_list
+    }
+    indicators_dict = {
+        indicator["id"]: indicator["fields"]["indicator_label"]
+        for indicator in indicators_list
+    }
 
     # Update Indicators for each dataset
     for dataset in datasets_dict.values():
-        indicator_ids = dataset.get('Indicators', [])
-        cities_ids = dataset.get('city_id', [])
-        dataset['Indicators'] = [indicators_dict.get(indicator_id, indicator_id) for indicator_id in indicator_ids]
-        dataset['city_ids'] = [cities_dict[city_id]['city_id'] for city_id in cities_ids]
+        indicator_ids = dataset.get("Indicators", [])
+        cities_ids = dataset.get("city_id", [])
+        dataset["Indicators"] = [
+            indicators_dict.get(indicator_id, indicator_id)
+            for indicator_id in indicator_ids
+        ]
+        dataset["city_ids"] = [
+            cities_dict[city_id]["city_id"] for city_id in cities_ids
+        ]
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
-    desired_keys = ["city_ids",
-                    "Data source",
-                    "Data source website", 
-                    "dataset_id",
-                    "dataset_name", 
-                    "Indicators",
-                    "Provider", 
-                    "Spatial Coverage", 
-                    "Spatial resolution", 
-                    "Storage", 
-                    "Theme", 
-                    "visualization_endpoint"]
-    datasets = [{key: dataset[key] for key in desired_keys if key in dataset} for dataset in datasets]
+    desired_keys = [
+        "city_ids",
+        "Data source",
+        "Data source website",
+        "dataset_id",
+        "dataset_name",
+        "Indicators",
+        "Provider",
+        "Spatial Coverage",
+        "Spatial resolution",
+        "Storage",
+        "Theme",
+        "visualization_endpoint",
+    ]
+    datasets = [
+        {key: dataset[key] for key in desired_keys if key in dataset}
+        for dataset in datasets
+    ]
 
     return {"datasets": datasets}
 
 
-# Boundaries
 @app.get("/boundaries")
 def list_boundaries():
+    """
+    Retrieve the list of boundaries
+    """
     api_url = "https://wri-cities.carto.com/api/v2/sql?q=select geo_id from boundaries"
     try:
         response = requests.get(api_url, timeout=20)
@@ -544,18 +678,29 @@ def list_boundaries():
         json_data = response.json()
         return json_data
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return {"error": "Failed to fetch data from the API."}
+        logger.error("An error occurred: %s", e)
+        return {"error": "An error occurred: Retrieving boundaries failed."}
+
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
-    geography_boundary = json.loads(read_carto(f"SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json())
+    """
+    Retrieve a single boundary by geography.
+    """
+    geography_boundary = json.loads(
+        read_carto(f"SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json()
+    )
 
     return geography_boundary
 
 
 @app.get("/boundaries/geojson")
 def list_boundaries_geojson():
-    boundaries = read_carto('SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM boundaries LIMIT 1').to_json()
+    """
+    Retrieve the geometry from the boundaries.
+    """
+    boundaries = read_carto(
+        "SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM boundaries LIMIT 1"
+    ).to_json()
 
     return boundaries
