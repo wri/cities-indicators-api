@@ -1,3 +1,6 @@
+from starlette.middleware.base import BaseHTTPMiddleware
+
+import os
 import json
 import logging
 import os
@@ -13,6 +16,8 @@ from pyairtable import Table
 
 from utils.filters import construct_filter_formula, generate_search_query
 
+from utils.filters import generate_search_query
+
 # Authentication
 ## Airtable
 airtable_api_key = os.getenv("CITIES_API_AIRTABLE_KEY")
@@ -21,25 +26,49 @@ datasets_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Datasets")
 indicators_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Indicators")
 projects_table = Table(airtable_api_key, "appDWCVIQlVnLLaW2", "Projects")
 
-## Carto
-set_default_credentials(username="wri-cities", api_key="default_public")
-
 # Get Airtable tables using formula to exclude rows where the key field is empty
 datasets_list = datasets_table.all(view="api", formula="")
 indicators_list = indicators_table.all(view="api", formula="")
 projects_list = projects_table.all(view="api", formula="")
 
-app = FastAPI()
+## Carto
+set_default_credentials(username="wri-cities", api_key="default_public")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@app.get("/", include_in_schema=False)
-async def docs_redirect():
-    return RedirectResponse(url="/docs")
+# Middlewares
+class StripApiPrefixMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path.startswith("/api"):
+            request.scope["path"] = request.url.path[4:]
+        response = await call_next(request)
+        return response
 
+
+DESCRIPTION = """
+You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
+"""
+
+app = FastAPI(
+    title="WRI Cities Indicators API",
+    description=DESCRIPTION,
+    summary="An indicators API",
+    version="v0",
+    terms_of_service="TBD",
+    contact={
+        "name": "WRI Cities Data Team",
+        "url": "https://citiesindicators.wri.org/",
+        "email": "citiesdata@wri.org",
+    },
+    license_info={
+        "name": "License TBD",
+        "url": "https://opensource.org/licenses/",
+    },
+)
+app.add_middleware(StripApiPrefixMiddleware)
 
 # Cities
 # Define the desired keys to extract from each city's data
@@ -52,6 +81,16 @@ city_keys = [
     "aoi_boundary_level",
     "project",
 ]
+
+
+@app.get("/", include_in_schema=False)
+async def docs_redirect():
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 @app.get(
@@ -88,8 +127,13 @@ city_keys = [
     },
 )
 def list_cities(
-    project_in: Optional[str] = Query(None, description="Filter by a specific Project ID in a multiple selection field"),
-    country_code_iso3: Optional[str] = Query(None, description="Filter by ISO 3166-1 alpha-3 country code")
+    project_in: Optional[str] = Query(
+        None,
+        description="Filter by a specific Project ID in a multiple selection field",
+    ),
+    country_code_iso3: Optional[str] = Query(
+        None, description="Filter by ISO 3166-1 alpha-3 country code"
+    ),
 ):
     """
     Retrieve a list of cities based on provided filter parameters.
@@ -97,9 +141,9 @@ def list_cities(
     filters = dict()
 
     if project_in:
-        filters['project_in'] = project_in
+        filters["project_in"] = project_in
     if country_code_iso3:
-        filters['country_code_iso3'] = country_code_iso3
+        filters["country_code_iso3"] = country_code_iso3
 
     filter_formula = construct_filter_formula(filters)
 
@@ -110,6 +154,15 @@ def list_cities(
         raise HTTPException(
             status_code=500, detail=f"An error occurred: Retrieving cities failed."
         ) from e
+
+    cities = [
+        {key: city["fields"].get(key) for key in city_keys} for city in cities_list
+    ]
+
+    return {"cities": cities}
+
+    if not cities_list:
+        raise HTTPException(status_code=400, detail="No cities found.")
 
     cities = [
         {key: city["fields"].get(key) for key in city_keys} for city in cities_list
@@ -253,7 +306,6 @@ def list_projects():
         ) from e
 
 
-
 @app.get(
     "/indicators",
     responses={
@@ -299,7 +351,12 @@ def list_projects():
         },
     },
 )
-def list_indicators(project_in: Optional[str] = Query(None, description="Filter by a specific Project ID in a multiple selection field")):
+def list_indicators(
+    project_in: Optional[str] = Query(
+        None,
+        description="Filter by a specific Project ID in a multiple selection field",
+    )
+):
     """
     Retrieve a list of indicators based on provided filter parameters.
     """
@@ -426,13 +483,83 @@ def get_city_indicator(indicator_id: str, city_id: str):
     return {"indicator_values": city_indicator}
 
 
-@app.get("/datasets")
-def list_datasets():
+@app.get(
+    "/datasets",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "datasets": [
+                            {
+                                "city_ids": ["ARG-Buenos_Aires"],
+                                "Data source": "ESA World Cover",
+                                "Data source website": "https://esa-worldcover.org/en",
+                                "dataset_id": "esa_land_cover_2020",
+                                "dataset_name": "ESA Land Cover",
+                                "Indicators": [
+                                    "Natural Areas",
+                                    "Connectivity of natural lands",
+                                    "Biodiversity in built-up areas (birds)",
+                                    "Built-up Key Biodiversity Areas",
+                                    "Urban open space for public use",
+                                    "Surface reflectivity",
+                                    "Built land without tree cover",
+                                    "Exposure to coastal and river flooding",
+                                    "Land near natural drainage",
+                                    "Impervious surfaces",
+                                    "Vegetation cover in built areas",
+                                ],
+                                "Provider": "ESA",
+                                "Spatial Coverage": "Global",
+                                "Spatial resolution": "10m",
+                                "Storage": "s3://cities-indicators/data/land_use/esa_world_cover/",
+                                "Theme": ["Land use"],
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        400: {
+            "description": "Bad Request - No datasets found",
+            "content": {
+                "application/json": {"example": {"detail": "No datasets found."}}
+            },
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An error occurred: <error_message>"}
+                }
+            },
+        },
+    },
+)
+def list_datasets(
+    city_id: str = Query(None, description="City ID"),
+):
     """
     Retrieve the list of datasets
     """
-    # Fetch datasets and indicators as dictionaries for quick lookup
-    datasets_dict = {dataset["id"]: dataset["fields"] for dataset in datasets_list}
+    filter_formula = generate_search_query("city_id", city_id)
+
+    try:
+        cities_list = cities_table.all(view="api", formula="{city_id}")
+        datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not datasets_filter_list:
+        raise HTTPException(status_code=400, detail="No datasets found")
+
+    # Fetch cities, datasets and indicators as dictionaries for quick lookup
+    cities_dict = {city["id"]: city["fields"] for city in cities_list}
+    datasets_dict = {
+        dataset["id"]: dataset["fields"] for dataset in datasets_filter_list
+    }
     indicators_dict = {
         indicator["id"]: indicator["fields"]["indicator_label"]
         for indicator in indicators_list
@@ -441,24 +568,30 @@ def list_datasets():
     # Update Indicators for each dataset
     for dataset in datasets_dict.values():
         indicator_ids = dataset.get("Indicators", [])
+        cities_ids = dataset.get("city_id", [])
         dataset["Indicators"] = [
             indicators_dict.get(indicator_id, indicator_id)
             for indicator_id in indicator_ids
+        ]
+        dataset["city_ids"] = [
+            cities_dict[city_id]["city_id"] for city_id in cities_ids
         ]
 
     datasets = list(datasets_dict.values())
     # Reorder and select indicators fields
     desired_keys = [
-        "Name",
-        "Provider",
+        "city_ids",
         "Data source",
         "Data source website",
-        "Spatial resolution",
-        "Spatial Coverage",
-        "Storage",
-        "visualization_endpoint",
-        "Theme",
+        "dataset_id",
+        "dataset_name",
         "Indicators",
+        "Provider",
+        "Spatial Coverage",
+        "Spatial resolution",
+        "Storage",
+        "Theme",
+        "visualization_endpoint",
     ]
     datasets = [
         {key: dataset[key] for key in desired_keys if key in dataset}

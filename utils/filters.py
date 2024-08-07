@@ -40,5 +40,5 @@ def construct_filter_formula(filters: dict) -> str:
             filter_clauses.append(generate_search_query(actual_column, value))
         else:
             filter_clauses.append(f"{{{column}}} = '{value}'")
-    
+
     return f"AND({', '.join(filter_clauses)})" if filter_clauses else ""
