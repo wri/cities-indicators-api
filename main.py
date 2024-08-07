@@ -8,6 +8,7 @@ import requests
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pyairtable import Table
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -65,6 +66,19 @@ app = FastAPI(
     },
 )
 app.add_middleware(StripApiPrefixMiddleware)
+
+# CORS configuration
+cors_origins = os.getenv("CORS_ORIGINS")
+
+if cors_origins:
+    cors_origins = cors_origins.split(",")
+else:
+    cors_origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+)
 
 # Cities
 # Define the desired keys to extract from each city's data
