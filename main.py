@@ -451,8 +451,10 @@ def list_indicators(
         },
     },
 )
-# Return all unique indicators themes from Airtable, sorted alphabetically
 def list_indicators_themes():
+    """
+    Retrieve the list of themes.
+    """
     indicators = indicators_table.all(view="api", formula="")
     themes_set = set()
 
@@ -657,8 +659,8 @@ def list_boundaries():
         json_data = response.json()
         return json_data
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return {"error": "Failed to fetch data from the API."}
+        logger.error(f"An Airtable error occurred: {e}")
+        return {"error": "An error occurred: Retrieving boundaries failed."}
 
 
 @app.get("/boundaries/{geography}")
