@@ -72,12 +72,6 @@ city_keys = [
                 }
             },
         },
-        400: {
-            "description": "Bad Request - No cities found",
-            "content": {
-                "application/json": {"example": {"detail": "No cities found."}}
-            },
-        },
         500: {
             "description": "Internal Server Error",
             "content": {
@@ -106,9 +100,6 @@ def list_cities(
         cities_list = cities_table.all(view="api", formula=filter_formula)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
-
-    if not cities_list:
-        raise HTTPException(status_code=400, detail="No cities found.")
 
     cities = [
         {key: city["fields"].get(key) for key in city_keys} for city in cities_list
@@ -274,12 +265,6 @@ def list_projects():
                 }
             },
         },
-        400: {
-            "description": "Bad Request - No indicators found",
-            "content": {
-                "application/json": {"example": {"detail": "No indicators found."}}
-            },
-        },
         500: {
             "description": "Internal Server Error",
             "content": {
@@ -292,11 +277,7 @@ def list_projects():
 )
 # Return all indicators metadata from Airtable
 def list_indicators(project: str = Query(None, description="Project ID")):
-    filter_formula = (
-        f"SEARCH(',{project},', ',' & ARRAYJOIN({{projects}}, ',') & ',')"
-        if project
-        else ""
-    )
+    filter_formula = generate_search_query('projects', project)
 
     try:
         indicators_filtered_list = indicators_table.all(
@@ -304,9 +285,6 @@ def list_indicators(project: str = Query(None, description="Project ID")):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
-
-    if not indicators_filtered_list:
-        raise HTTPException(status_code=400, detail="No indicators found.")
 
     # Fetch indicators and datasets as dictionaries for quick lookup
     indicators_dict = {
