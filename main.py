@@ -10,7 +10,7 @@ from cartoframes.auth import set_default_credentials
 import requests
 import pandas as pd
 
-from utils.filters import generate_search_query
+from utils.filters import generate_find_query
 
 # Authentication
 ## Airtable
@@ -101,9 +101,10 @@ def list_cities(
     project: str = Query(None, description="Project ID"),
     country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code")
 ):
+    print(generate_find_query("project", project))
     filters = []
     if project:
-        filters.append(generate_search_query("project", project))
+        filters.append(generate_find_query("project", project))
     if country_code_iso3:
         filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
     
