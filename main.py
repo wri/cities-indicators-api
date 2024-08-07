@@ -420,6 +420,52 @@ def list_indicators(
     return {"indicators": indicators}
 
 
+@app.get(
+    "/indicators/themes",
+    responses={
+        200: {
+            "description": "Successful Response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "themes": [
+                            "Biodiversity",
+                            "Climate mitigation",
+                            "Flooding",
+                            "Greenspace access",
+                            "Health - Air Quality",
+                            "Health - Heat",
+                            "Land protection and restoration"
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "An error occurred: <error_message>"
+                    }
+                }
+            }
+        }
+    }
+)
+# Return all unique indicators themes from Airtable, sorted alphabetically
+def list_indicators_themes():
+    indicators = indicators_table.all(view="api", formula="")
+    themes_set = set()
+    
+    for indicator in indicators:
+        theme = indicator['fields'].get('theme')
+        if theme:
+            themes_set.add(theme)
+    
+    return {"themes": sorted(list(themes_set))}
+
+
 @app.get("/indicators/{indicator_id}")
 def get_indicator(indicator_id: str):
     """
