@@ -1,6 +1,3 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-
-import os
 import json
 import logging
 import os
@@ -13,10 +10,9 @@ from cartoframes.auth import set_default_credentials
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pyairtable import Table
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from utils.filters import construct_filter_formula, generate_search_query
-
-from utils.filters import generate_search_query
 
 # Authentication
 ## Airtable
@@ -138,7 +134,7 @@ def list_cities(
     """
     Retrieve a list of cities based on provided filter parameters.
     """
-    filters = dict()
+    filters = {}
 
     if project_in:
         filters["project_in"] = project_in
@@ -150,19 +146,10 @@ def list_cities(
     try:
         cities_list = cities_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        logger.error(f"An Airtable error occurred: {e}")
+        logger.error("An Airtable error occurred: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"An error occurred: Retrieving cities failed."
+            status_code=500, detail="An error occurred: Retrieving cities failed."
         ) from e
-
-    cities = [
-        {key: city["fields"].get(key) for key in city_keys} for city in cities_list
-    ]
-
-    return {"cities": cities}
-
-    if not cities_list:
-        raise HTTPException(status_code=400, detail="No cities found.")
 
     cities = [
         {key: city["fields"].get(key) for key in city_keys} for city in cities_list
@@ -300,9 +287,9 @@ def list_projects():
         projects_dict = {project["fields"]["project_id"] for project in projects}
         return {"projects": projects_dict}
     except Exception as e:
-        logger.error(f"An Airtable error occurred: {e}")
+        logger.error("An Airtable error occurred: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"An error occurred: Retrieving projects failed."
+            status_code=500, detail="An error occurred: Retrieving projects failed."
         ) from e
 
 
@@ -367,9 +354,9 @@ def list_indicators(
             view="api", formula=filter_formula
         )
     except Exception as e:
-        logger.error(f"An Airtable error occurred: {e}")
+        logger.error("An Airtable error occurred: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"An error occurred: Retrieving indicators failed."
+            status_code=500, detail="An error occurred: Retrieving indicators failed."
         ) from e
 
     # Fetch indicators and datasets as dictionaries for quick lookup
@@ -596,10 +583,10 @@ def list_datasets(
         cities_list = cities_table.all(view="api", formula="{city_id}")
         datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
-
-    if not datasets_filter_list:
-        raise HTTPException(status_code=400, detail="No datasets found")
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving indicators failed."
+        ) from e
 
     # Fetch cities, datasets and indicators as dictionaries for quick lookup
     cities_dict = {city["id"]: city["fields"] for city in cities_list}
@@ -659,7 +646,7 @@ def list_boundaries():
         json_data = response.json()
         return json_data
     except requests.exceptions.RequestException as e:
-        logger.error(f"An Airtable error occurred: {e}")
+        logger.error("An error occurred: %s", e)
         return {"error": "An error occurred: Retrieving boundaries failed."}
 
 
