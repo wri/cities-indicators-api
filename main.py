@@ -1,16 +1,17 @@
 import json
 import logging
 import os
+from typing import Optional
 
 import pandas as pd
 import requests
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pyairtable import Table
 
-from utils.filters import generate_search_query
+from utils.filters import construct_filter_formula, generate_search_query
 
 # Authentication
 ## Airtable
@@ -86,19 +87,21 @@ city_keys = [
         },
     },
 )
-# Return all cities metadata from Airtable
 def list_cities(
-    project: str = Query(None, description="Project ID"),
-    country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code"),
+    project_in: Optional[str] = Query(None, description="Filter by a specific Project ID in a multiple selection field"),
+    country_code_iso3: Optional[str] = Query(None, description="Filter by ISO 3166-1 alpha-3 country code")
 ):
-    print(generate_search_query("project", project))
-    filters = []
-    if project:
-        filters.append(generate_search_query("project", project))
-    if country_code_iso3:
-        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+    """
+    Retrieve a list of cities based on provided filter parameters.
+    """
+    filters = dict()
 
-    filter_formula = f"AND({', '.join(filters)})" if filters else ""
+    if project_in:
+        filters['project_in'] = project_in
+    if country_code_iso3:
+        filters['country_code_iso3'] = country_code_iso3
+
+    filter_formula = construct_filter_formula(filters)
 
     try:
         cities_list = cities_table.all(view="api", formula=filter_formula)
@@ -116,8 +119,10 @@ def list_cities(
 
 
 @app.get("/cities/{city_id}")
-# Return one city metadata from Airtable
 def get_city(city_id: str):
+    """
+    Retrieve a single city by its ID.
+    """
     formula = f'"{city_id}" = {{city_id}}'
     city_data = cities_table.all(view="api", formula=formula)
     city = city_data[0]["fields"]
@@ -128,8 +133,10 @@ def get_city(city_id: str):
 
 
 @app.get("/cities/{city_id}/{admin_level}")
-# Return one city all indicators values from Carto
 def get_city_indicators(city_id: str, admin_level: str):
+    """
+    Retrieve all indicators for a single city and admin level.
+    """
     city_indicators_df = read_carto(
         f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
     )
@@ -164,8 +171,10 @@ def get_city_indicators(city_id: str, admin_level: str):
 
 
 @app.get("/cities/{city_id}/{admin_level}/geojson")
-# Return one city's geometry from Carto
 def get_city_geometry(city_id: str, admin_level: str):
+    """
+    Retrieve the geometry of a single city and admin level.
+    """
     city_geometry_df = read_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     )
@@ -196,6 +205,9 @@ def get_city_geometry(city_id: str, admin_level: str):
 @app.get("/cities/{city_id}/{admin_level}/geojson/indicators")
 # Return one city’s geometry and indicator values from Carto
 def get_city_geometry_with_indicators(city_id: str, admin_level: str):
+    """
+    Retrieve the indicators and geometry of a single city and admin level.
+    """
     city_geometry_df = read_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     )
@@ -226,8 +238,10 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
 
 
 @app.get("/projects")
-# Return all projects metadata from Airtable
 def list_projects():
+    """
+    Retrieve the list of projects.
+    """
     try:
         projects = projects_table.all(view="api", formula="{project_id}")
         projects_dict = {project["fields"]["project_id"] for project in projects}
@@ -239,7 +253,7 @@ def list_projects():
         ) from e
 
 
-# Indicators
+
 @app.get(
     "/indicators",
     responses={
@@ -285,8 +299,10 @@ def list_projects():
         },
     },
 )
-# Return all indicators metadata from Airtable
 def list_indicators(project: str = Query(None, description="Project ID")):
+    """
+    Retrieve a list of indicators based on provided filter parameters.
+    """
     filter_formula = generate_search_query("projects", project)
 
     try:
@@ -348,8 +364,10 @@ def list_indicators(project: str = Query(None, description="Project ID")):
 
 
 @app.get("/indicators/{indicator_name}")
-# Return one indicator values for all cities top admin level from Carto
 def get_indicator(indicator_name: str):
+    """
+    Retrieve a single indicator by indicator_name.
+    """
     indicator_df = read_carto(
         f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and indicators.geo_name=indicators.geo_parent_name"
     )
@@ -378,8 +396,10 @@ def get_indicator(indicator_name: str):
 
 
 @app.get("/indicators/{indicator_name}/{city_id}")
-# Return one indicator value for one city top admin level from Carto
 def get_city_indicator(indicator_name: str, city_id: str):
+    """
+    Retrieve a single indicator by indicator_name and city_id.
+    """
     city_indicator_df = read_carto(
         f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_name = '{city_id}'"
     )
@@ -406,9 +426,11 @@ def get_city_indicator(indicator_name: str, city_id: str):
     return {"indicator_values": city_indicator}
 
 
-# Datasets
 @app.get("/datasets")
 def list_datasets():
+    """
+    Retrieve the list of datasets
+    """
     # Fetch datasets and indicators as dictionaries for quick lookup
     datasets_dict = {dataset["id"]: dataset["fields"] for dataset in datasets_list}
     indicators_dict = {
@@ -446,9 +468,11 @@ def list_datasets():
     return {"datasets": datasets}
 
 
-# Boundaries
 @app.get("/boundaries")
 def list_boundaries():
+    """
+    Retrieve the list of boundaries
+    """
     api_url = "https://wri-cities.carto.com/api/v2/sql?q=select geo_id from boundaries"
     try:
         response = requests.get(api_url, timeout=20)
@@ -462,6 +486,9 @@ def list_boundaries():
 
 @app.get("/boundaries/{geography}")
 def get_geography_boundary(geography: str):
+    """
+    Retrieve a single boundary by geography.
+    """
     geography_boundary = json.loads(
         read_carto(f"SELECT * FROM boundaries WHERE geo_id = '{geography}'").to_json()
     )
@@ -471,6 +498,9 @@ def get_geography_boundary(geography: str):
 
 @app.get("/boundaries/geojson")
 def list_boundaries_geojson():
+    """
+    Retrieve the geometry from the boundaries.
+    """
     boundaries = read_carto(
         "SELECT cartodb_id,ST_AsGeoJSON(the_geom) as the_geom FROM boundaries LIMIT 1"
     ).to_json()
