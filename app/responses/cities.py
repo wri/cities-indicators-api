@@ -1,5 +1,4 @@
-from app.const import COMMON_500_ERROR_RESPONSE
-from app.responses.common import ErrorResponse
+from app.const import COMMON_400_ERROR_RESPONSE, COMMON_500_ERROR_RESPONSE
 from app.schemas.cities import (
     CityResponse,
     GeoJSONResponse,
@@ -29,11 +28,7 @@ LIST_CITIES_RESPONSES = {
             }
         },
     },
-    404: {
-        "model": ErrorResponse,
-        "description": "No cities found",
-        "content": {"application/json": {"example": {"detail": "No cities found."}}},
-    },
+    400: COMMON_400_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }
 
@@ -54,11 +49,6 @@ GET_CITY_BY_CITY_ID_RESPONSES = {
                 }
             }
         },
-    },
-    404: {
-        "model": ErrorResponse,
-        "description": "No city found",
-        "content": {"application/json": {"example": {"detail": "No city found."}}},
     },
     500: COMMON_500_ERROR_RESPONSE,
 }

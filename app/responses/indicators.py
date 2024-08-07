@@ -1,4 +1,4 @@
-from app.const import COMMON_500_ERROR_RESPONSE
+from app.const import COMMON_400_ERROR_RESPONSE, COMMON_500_ERROR_RESPONSE
 from app.schemas.projects import ListProjectsResponse
 
 LIST_INDICATORS_RESPONSES = {
@@ -31,11 +31,6 @@ LIST_INDICATORS_RESPONSES = {
             }
         },
     },
-    404: {
-        "description": "No indicators found",
-        "content": {
-            "application/json": {"example": {"detail": "No indicators found."}}
-        },
-    },
+    400: COMMON_400_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }

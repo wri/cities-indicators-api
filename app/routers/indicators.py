@@ -34,32 +34,3 @@ def get_indicator(indicator_name: str):
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
     return {"indicator_values": indicators_list}
-
-
-@router.get("/indicators/{indicator_name}/{city_id}")
-# Return one indicator value for one city top admin level from Carto
-def get_city_indicator(indicator_name: str, city_id: str):
-    city_indicator_df = read_carto(
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and geo_name = '{city_id}'"
-    )
-    # Object of type Timestamp is not JSON serializable. Need to convert to string first.
-    city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
-        "%Y-%m-%d"
-    )
-    city_indicator = json.loads(city_indicator_df.to_json())
-    city_indicator = city_indicator["features"][0]["properties"]
-    # Reorder and select city indicator fields
-    desired_keys = [
-        "geo_id",
-        "geo_name",
-        "geo_level",
-        "geo_parent_name",
-        "indicator",
-        "value",
-        "indicator_version",
-    ]
-    city_indicator = {
-        key: city_indicator[key] for key in desired_keys if key in city_indicator
-    }
-
-    return {"indicator_values": city_indicator}

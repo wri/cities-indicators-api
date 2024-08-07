@@ -50,3 +50,13 @@ COMMON_500_ERROR_RESPONSE = {
         }
     },
 }
+
+COMMON_400_ERROR_RESPONSE = {
+    "model": ErrorResponse,
+    "description": "Invalid query parameter:",
+    "content": {
+        "application/json": {
+            "example": {"detail": "Invalid query parameter: <query_parameter>"}
+        }
+    },
+}
