@@ -25,5 +25,5 @@ jobs:
           git pull
           docker kill develop-container
           docker build . -t develop-image
-          docker run -d --rm -p 8000:8000 --env-file ../.env --name develop-container develop-image
+          docker run -d --rm -p 80:8000 --env-file ../.env --name develop-container develop-image
         
