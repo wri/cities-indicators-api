@@ -98,6 +98,7 @@ async def docs_redirect():
     return RedirectResponse(url="/docs")
 
 
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -530,6 +531,32 @@ def get_indicator(indicator_id: str):
     return {"indicator_values": indicator}
 
 
+@app.get("/indicators/metadata/{indicator_id}")
+def get_indicator_metadata(indicator_id: str):
+    """
+    Retrieve all metadata for a single indicator by indicator_id.
+    """
+    filter_formula = generate_search_query("indicator_id", indicator_id)
+    try:
+        filtered_indicator = indicators_table.first(view="api", formula=filter_formula)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not filtered_indicator:
+        raise HTTPException(status_code=404, detail="No indicator found.")
+
+    indicator = filtered_indicator["fields"]
+    # Reorder indicators fields
+    desired_keys = [
+        "indicator_id",
+        "indicator_definition",
+        "methods",
+        "importance",
+        "data_sources",
+    ]
+    return {key: indicator[key] for key in desired_keys if key in indicator}
+
+
 @app.get("/indicators/{indicator_id}/{city_id}")
 def get_city_indicator(indicator_id: str, city_id: str):
     """
@@ -693,6 +720,7 @@ def list_boundaries():
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred: %s", e)
         return {"error": "An error occurred: Retrieving boundaries failed."}
+
 
 
 @app.get("/boundaries/{geography}")
