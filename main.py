@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 import requests
@@ -98,7 +98,6 @@ async def docs_redirect():
     return RedirectResponse(url="/docs")
 
 
-
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -138,9 +137,9 @@ def health_check():
     },
 )
 def list_cities(
-    project_in: Optional[str] = Query(
+    projects: List[str] = Query(
         None,
-        description="Filter by a specific Project ID in a multiple selection field",
+        description="Filter by multiple Project IDs",
     ),
     country_code_iso3: Optional[str] = Query(
         None, description="Filter by ISO 3166-1 alpha-3 country code"
@@ -151,8 +150,8 @@ def list_cities(
     """
     filters = {}
 
-    if project_in:
-        filters["project_in"] = project_in
+    if projects:
+        filters["projects"] = projects
     if country_code_iso3:
         filters["country_code_iso3"] = country_code_iso3
 
@@ -385,15 +384,15 @@ def list_projects():
     },
 )
 def list_indicators(
-    project_in: Optional[str] = Query(
+    projects: List[str] = Query(
         None,
-        description="Filter by a specific Project ID in a multiple selection field",
-    )
+        description="Filter by multiple Project IDs",
+    ),
 ):
     """
     Retrieve a list of indicators based on provided filter parameters.
     """
-    filter_formula = generate_search_query("projects", project_in)
+    filter_formula = generate_search_query("projects", projects)
 
     try:
         indicators_filtered_list = indicators_table.all(
@@ -424,7 +423,7 @@ def list_indicators(
             datasets_dict.get(data_source, data_source)
             for data_source in data_sources_link
         ]
-        indicator["projects"] = [
+        indicator["project_id"] = [
             projects_dict.get(project, project) for project in indicator_projects
         ]
 
@@ -441,7 +440,7 @@ def list_indicators(
         "indicator_legend",
         "methods",
         "Notebook",
-        "projects",
+        "project_id",
         "theme",
         "unit",
     ]
@@ -720,7 +719,6 @@ def list_boundaries():
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred: %s", e)
         return {"error": "An error occurred: Retrieving boundaries failed."}
-
 
 
 @app.get("/boundaries/{geography}")
