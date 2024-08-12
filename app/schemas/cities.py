@@ -8,8 +8,8 @@ class CityDetail(BaseModel):
     city_name: str
     country_name: str
     country_code_iso3: str
-    admin_levels: List[str]
-    aoi_boundary_level: str
+    admin_levels: Optional[List[str]]
+    aoi_boundary_level: Optional[str]
     project: List[str]
 
 

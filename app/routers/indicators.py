@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.dependencies import get_expected_params
 from app.responses.indicators import (
@@ -9,6 +10,13 @@ from app.responses.indicators import (
     GET_METADATA_BY_INDICATOR_ID_RESPONSES,
     LIST_INDICATORS_RESPONSES,
     LIST_INDICATORS_THEMES_RESPONSES,
+)
+from app.schemas.indicators import (
+    CitiesByIndicatorIdResponse,
+    IndicatorsResponse,
+    IndicatorsThemesResponse,
+    IndicatorValueResponse,
+    MetadataByIndicatorIdResponse,
 )
 from app.services import indicators as indicators_service
 
@@ -24,9 +32,13 @@ router = APIRouter()
     dependencies=[Depends(get_expected_params("project"))],
     responses=LIST_INDICATORS_RESPONSES,
 )
-def list_indicators(project: Optional[str] = Query(None, description="Project ID")):
+def list_indicators(
+    project: Optional[str] = Query(
+        description="The project ID to filter indicators by"
+    ),
+) -> IndicatorsResponse:
     """
-    Retrieve list of indicators.
+    Retrieve a list of indicators based on the provided project filter.
     """
     try:
         indicators_list = indicators_service.list_indicators(project)
@@ -47,9 +59,9 @@ def list_indicators(project: Optional[str] = Query(None, description="Project ID
     "/themes",
     responses=LIST_INDICATORS_THEMES_RESPONSES,
 )
-def list_indicators_themes():
+def list_indicators_themes() -> IndicatorsThemesResponse:
     """
-    Retrieve the list of indicators themes.
+    Retrieve a set of unique themes from all indicators.
     """
     try:
         themes = indicators_service.list_indicators_themes()
@@ -67,9 +79,11 @@ def list_indicators_themes():
     "/{indicator_id}",
     responses=GET_CITIES_BY_INDICATOR_ID_RESPONSES,
 )
-def get_cities_by_indicator_id(indicator_id: str):
+def get_cities_by_indicator_id(
+    indicator_id: str = Path(description="The ID of the indicator to filter cities by"),
+) -> CitiesByIndicatorIdResponse:
     """
-    Retrieve all the cities indicators specified by indicator_id.
+    Retrieve a list of cities associated with a specific indicator.
     """
     try:
         indicators_list = indicators_service.get_cities_by_indicator_id(indicator_id)
@@ -90,9 +104,13 @@ def get_cities_by_indicator_id(indicator_id: str):
     "/metadata/{indicator_id}",
     responses=GET_METADATA_BY_INDICATOR_ID_RESPONSES,
 )
-def get_metadata_by_indicator_id(indicator_id: str):
+def get_metadata_by_indicator_id(
+    indicator_id: str = Path(
+        description="The ID of the indicator to retrieve metadata for"
+    ),
+) -> MetadataByIndicatorIdResponse:
     """
-    Retrieve all metadata for a single indicator by indicator_id.
+    Retrieve metadata for a specific indicator.
     """
     try:
         indicators_metadata_list = indicators_service.get_metadata_by_indicator_id(
@@ -115,9 +133,12 @@ def get_metadata_by_indicator_id(indicator_id: str):
     "/{indicator_id}/{city_id}",
     responses=GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES,
 )
-def get_city_indicator_by_indicator_id_and_city_id(indicator_id: str, city_id: str):
+def get_city_indicator_by_indicator_id_and_city_id(
+    indicator_id: str = Path(description="The ID of the indicator to filter by"),
+    city_id: str = Path(description="The ID of the city to filter by"),
+) -> IndicatorValueResponse:
     """
-    Retrieve a single city indicator specified by indicator_id and city_id.
+    Retrieve indicator data for a specific city and indicator.
     """
     try:
         indicator = indicators_service.get_city_indicator_by_indicator_id_and_city_id(

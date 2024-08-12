@@ -3,17 +3,9 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.indicators import (
-    CitiesByIndicatorIdResponse,
-    IndicatorValueResponse,
-    MetadataByIndicatorIdResponse,
-    IndicatorsResponse,
-    IndicatorsThemesResponse,
-)
 
 LIST_INDICATORS_RESPONSES = {
     200: {
-        "model": IndicatorsResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -48,7 +40,6 @@ LIST_INDICATORS_RESPONSES = {
 
 LIST_INDICATORS_THEMES_RESPONSES = {
     200: {
-        "model": IndicatorsThemesResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -73,7 +64,6 @@ LIST_INDICATORS_THEMES_RESPONSES = {
 
 GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
     200: {
-        "model": CitiesByIndicatorIdResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -405,7 +395,6 @@ GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
 
 GET_METADATA_BY_INDICATOR_ID_RESPONSES = {
     200: {
-        "model": MetadataByIndicatorIdResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -425,7 +414,6 @@ GET_METADATA_BY_INDICATOR_ID_RESPONSES = {
 
 GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES = {
     200: {
-        "model": IndicatorValueResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
