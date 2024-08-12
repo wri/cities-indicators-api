@@ -5,10 +5,14 @@ from typing import Optional
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
-from app.const import (CARTO_API_KEY, CARTO_USERNAME,
-                       INDICATORS_LIST_RESPONSE_KEYS,
-                       INDICATORS_METADATA_RESPONSE_KEYS,
-                       INDICATORS_RESPONSE_KEYS, indicators_table)
+from app.const import (
+    CARTO_API_KEY,
+    CARTO_USERNAME,
+    INDICATORS_LIST_RESPONSE_KEYS,
+    INDICATORS_METADATA_RESPONSE_KEYS,
+    INDICATORS_RESPONSE_KEYS,
+    indicators_table,
+)
 from app.dependencies import fetch_datasets, fetch_indicators, fetch_projects
 from app.utils.filters import generate_search_query
 
