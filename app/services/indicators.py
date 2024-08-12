@@ -74,8 +74,8 @@ def list_indicators_themes():
     themes_set = set()
 
     for indicator in indicators:
-        theme = indicator["fields"].get("theme")
-        if theme:
+        theme_list = indicator["fields"].get("theme")
+        for theme in theme_list:
             themes_set.add(theme)
 
     return themes_set
