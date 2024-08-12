@@ -20,7 +20,7 @@ router = APIRouter()
     responses=LIST_DATASETS_RESPONSES,
 )
 def list_datasets(
-    city_id: Optional[str] = Query(description="The ID of the city to filter by"),
+    city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
 ) -> DatasetsResponse:
     """
     Retrieve the list of datasets

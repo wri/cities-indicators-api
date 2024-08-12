@@ -34,7 +34,7 @@ router = APIRouter()
 )
 def list_indicators(
     project: Optional[str] = Query(
-        description="The project ID to filter indicators by"
+        None, description="The project ID to filter indicators by"
     ),
 ) -> IndicatorsResponse:
     """

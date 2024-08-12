@@ -32,10 +32,11 @@ router = APIRouter()
 )
 def list_cities(
     projects: Optional[List[str]] = Query(
+        None,
         description="A list of Project IDs to filter by",
     ),
     country_code_iso3: Optional[str] = Query(
-        description="An ISO 3166-1 alpha-3 country code to filter by"
+        None, description="An ISO 3166-1 alpha-3 country code to filter by"
     ),
 ) -> CityListResponse:
     """
