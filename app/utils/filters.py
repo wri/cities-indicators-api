@@ -1,7 +1,7 @@
 from typing import Union, List
 
 
-def generate_search_query(column_name: str, value: Union[str, List[str]] = None) -> str:
+def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str:
     """
     Generates a SEARCH query to filter string values from Multiple Select fields in Airtable.
 
@@ -25,8 +25,8 @@ def generate_search_query(column_name: str, value: Union[str, List[str]] = None)
     """
     if isinstance(value, list):
         search_clauses = [f"SEARCH('{v}', {{{column_name}}})" for v in value]
-        return f"AND({', '.join(search_clauses)})" if search_clauses else ""
-
+        return f"OR({', '.join(search_clauses)})" if search_clauses else ""
+    
     return f"SEARCH('{value}', {{{column_name}}})" if value else ""
 
 

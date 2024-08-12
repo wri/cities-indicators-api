@@ -19,7 +19,7 @@ class ListCitiesResponse(BaseModel):
 
 
 # Indicator Schema
-class CityIndicatorResponse(BaseModel):
+class CityIndicatorsResponse(BaseModel):
     geo_id: str
     geo_name: str
     geo_level: str
@@ -57,12 +57,6 @@ class CityIndicatorResponse(BaseModel):
     LND_7_percentKBAsProtected: Optional[float]
     LND_8_percentKBAsBuiltup: Optional[float]
 
-
-# Response for getting city indicators
-class GetCityIndicatorsResponse(BaseModel):
-    city_indicators: List[CityIndicatorResponse]
-
-
 # Geometry Schema
 class GeometryResponse(BaseModel):
     type: str
@@ -73,7 +67,7 @@ class GeometryResponse(BaseModel):
 class FeatureResponse(BaseModel):
     id: str
     type: str
-    properties: CityIndicatorResponse
+    properties: CityIndicatorsResponse
     geometry: GeometryResponse
 
 

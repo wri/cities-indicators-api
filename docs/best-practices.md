@@ -44,51 +44,47 @@ Building a REST API requires careful planning and adherence to best practices to
    - Implement **authorization** to restrict access to resources.
    - Protect against common vulnerabilities (e.g., SQL injection, XSS).
 
-## 7. **Implement Pagination, Filtering, and Sorting**
-   - Use query parameters for pagination (e.g., `?page=1&size=20`).
-   - Allow filtering with query parameters (e.g., `?status=active`).
-   - Implement sorting with query parameters (e.g., `?sort=created_at,desc`).
-
-## 8. **Use JSON as the Data Format**
+## 7. **Use JSON as the Data Format**
    - JSON is widely supported and easy to read.
    - Ensure that the API supports both request and response bodies in JSON.
 
-## 9. **Provide HATEOAS (Hypermedia as the Engine of Application State)**
+## 8. **Provide HATEOAS (Hypermedia as the Engine of Application State)**
    - Include links in responses to related resources (e.g., a link to a user’s orders in the user response).
    - This enhances discoverability and helps clients navigate the API.
 
-## 10. **Document the API**
+## 9. **Document the API**
    - Use tools like **Swagger/OpenAPI** to document the API endpoints, request/response formats, and errors.
    - Keep the documentation up to date.
 
-## 11. **Optimize Performance**
+## 10. **Optimize Performance**
    - Use caching headers (`ETag`, `Cache-Control`) where appropriate.
    - Minimize payload sizes by only returning necessary data.
    - Consider using compression (e.g., gzip) for large responses.
 
-## 12. **Maintain Consistency**
+## 11. **Maintain Consistency**
    - Ensure consistency in naming conventions, response formats, and error handling across the entire API.
    - Use consistent response structures (e.g., always returning `data` and `errors` fields).
 
-## 13. **Implement Rate Limiting and Throttling**
+## 12. **Implement Rate Limiting and Throttling**
    - Prevent abuse by limiting the number of requests a client can make in a given time period.
    - Use HTTP headers (e.g., `X-RateLimit-Limit`, `X-RateLimit-Remaining`) to communicate rate limits.
 
-## 14. **Use Asynchronous Processing**
+## 13. **Use Asynchronous Processing**
    - For multiple tasks that take a long time to complete, consider using asynchronous processing.
 
-## 15. **Use Consistent Time Formats**
+## 14. **Use Consistent Time Formats**
    - Use ISO 8601 format for timestamps (e.g., `2024-08-09T12:00:00Z`).
 
-## 16. **Design for Scalability**
+## 15. **Design for Scalability**
    - Ensure that the API can handle an increasing number of requests as the API use grows.
    - Consider load balancing, horizontal scaling, and database optimization.
 
-## 17. **Test the API**
+## 16. **Test the API**
+
    - Write unit and integration tests to ensure the API behaves as expected.
    - Test for edge cases, error conditions, and performance under load.
 
-## 18. **API Lifecycle Management**
+## 17. **API Lifecycle Management**
    - Plan for versioning and deprecating endpoints.
    - Provide clear communication to clients when endpoints or versions are deprecated.
 

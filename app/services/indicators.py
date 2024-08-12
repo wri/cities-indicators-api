@@ -1,15 +1,20 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+from typing import Optional
 
 from cartoframes import read_carto
-from fastapi import HTTPException
 
-from app.const import INDICATORS_LIST_RESPONSE_KEYS
+from app.const import (
+    INDICATORS_LIST_RESPONSE_KEYS,
+    INDICATORS_METADATA_RESPONSE_KEYS,
+    INDICATORS_RESPONSE_KEYS,
+    indicators_table,
+)
 from app.dependencies import fetch_datasets, fetch_indicators, fetch_projects
 from app.utils.filters import generate_search_query
 
 
-def list_indicators(project: str = None):
+def list_indicators(project: Optional[str]):
     filter_formula = generate_search_query("projects", project)
 
     with ThreadPoolExecutor() as executor:
@@ -22,13 +27,8 @@ def list_indicators(project: str = None):
         results = {}
         for future in as_completed(future_to_func):
             func_name = future_to_func[future]
-            try:
-                result = future.result()
-                results[func_name] = result
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"An error occurred: {e}"
-                ) from e
+            result = future.result()
+            results[func_name] = result
 
     datasets_list = results["datasets"]
     projects_list = results["projects"]
@@ -101,18 +101,46 @@ def get_cities_by_indicator_id(indicator_id: str):
     indicator = json.loads(indicator_df.to_json())
     indicator = [item["properties"] for item in indicator["features"]]
     # Reorder and select indicators fields
-    desired_keys = [
-        "geo_id",
-        "geo_name",
-        "geo_level",
-        "geo_parent_name",
-        "indicator",
-        "value",
-        "indicator_version",
-    ]
+
     indicator = [
-        {key: city_indicator[key] for key in desired_keys}
+        {key: city_indicator[key] for key in INDICATORS_RESPONSE_KEYS}
         for city_indicator in indicator
     ]
 
     return indicator
+
+
+def get_metadata_by_indicator_id(indicator_id: str):
+    filter_formula = generate_search_query("indicator_id", indicator_id)
+    filtered_indicator = indicators_table.first(view="api", formula=filter_formula)
+
+    if filtered_indicator is None:
+        return []
+
+    indicator = filtered_indicator.get("fields", {})
+    # Reorder indicators fields
+    return {
+        key: indicator[key]
+        for key in INDICATORS_METADATA_RESPONSE_KEYS
+        if key in indicator
+    }
+
+
+def get_city_indicator_by_indicator_id_and_city_id(indicator_id: str, city_id: str):
+    city_indicator_df = read_carto(
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and geo_name = '{city_id}'"
+    )
+    # Object of type Timestamp is not JSON serializable. Need to convert to string first.
+    city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
+        "%Y-%m-%d"
+    )
+    city_indicator = json.loads(city_indicator_df.to_json())
+    city_indicator = city_indicator["features"][0]["properties"]
+    # Reorder and select city indicator fields
+    city_indicator = {
+        key: city_indicator[key]
+        for key in INDICATORS_RESPONSE_KEYS
+        if key in city_indicator
+    }
+
+    return city_indicator

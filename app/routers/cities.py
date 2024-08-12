@@ -32,9 +32,7 @@ def list_cities(
     Retrieve a list of cities based on provided filter parameters.
     """
     try:
-        cities_list = cities_service.get_cities(
-            projects=projects, country_code_iso3=country_code_iso3
-        )
+        cities_list = cities_service.get_cities(projects, country_code_iso3)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
@@ -50,7 +48,7 @@ def get_city_by_city_id(city_id: str):
     Retrieve a single city by its ID.
     """
     try:
-        city = cities_service.get_city_by_city_id(city_id=city_id)
+        city = cities_service.get_city_by_city_id(city_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
@@ -66,16 +64,14 @@ def get_city_indicators(city_id: str, admin_level: str):
     Retrieve all indicators for a single city and admin level.
     """
     try:
-        city_indicators = cities_service.get_city_indicators(
-            city_id=city_id, admin_level=admin_level
-        )
+        city_indicators = cities_service.get_city_indicators(city_id, admin_level)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
     if not city_indicators:
         raise HTTPException(status_code=404, detail="No indicators found.")
 
-    return {"city_indicators": city_indicators}
+    return city_indicators
 
 
 @router.get("/{city_id}/{admin_level}/geojson", responses=GET_CITY_GEOMETRY_RESPONSES)
@@ -84,9 +80,7 @@ def get_city_geometry(city_id: str, admin_level: str):
     Retrieve the geometry of a single city and admin level.
     """
     try:
-        city_geojson = cities_service.get_city_geometry(
-            city_id=city_id, admin_level=admin_level
-        )
+        city_geojson = cities_service.get_city_geometry(city_id, admin_level)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
@@ -106,7 +100,7 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
     """
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
-            city_id=city_id, admin_level=admin_level
+            city_id, admin_level
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e

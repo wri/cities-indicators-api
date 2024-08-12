@@ -7,7 +7,7 @@ from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 from fastapi import HTTPException
 
-from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS, cities_table
+from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS, INDICATORS_RESPONSE_KEYS, cities_table
 from app.utils.filters import construct_filter_formula
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
@@ -62,17 +62,7 @@ def get_city_indicators(city_id: str, admin_level: str):
         f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
     )
     # Reorder and select city geometry properties fields
-    city_indicators_df = city_indicators_df[
-        [
-            "geo_id",
-            "geo_name",
-            "geo_level",
-            "geo_parent_name",
-            "indicator",
-            "value",
-            "indicator_version",
-        ]
-    ]
+    city_indicators_df = city_indicators_df[INDICATORS_RESPONSE_KEYS]
     city_indicators_df = city_indicators_df.pivot(
         index=[
             "geo_id",

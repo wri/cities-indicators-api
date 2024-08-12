@@ -3,7 +3,13 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.indicators import ListIndicatorsResponse, ListThemesResponse
+from app.schemas.indicators import (
+    CityResponse,
+    IndicatorResponse,
+    ListCitiesResponse,
+    ListIndicatorsResponse,
+    ListThemesResponse,
+)
 
 LIST_INDICATORS_RESPONSES = {
     200: {
@@ -20,7 +26,7 @@ LIST_INDICATORS_RESPONSES = {
                                 "Population density",
                             ],
                             "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
-                            "indicator": "ACC_1_OpenSpaceHectaresper1000people2022",
+                            "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
                             "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
                             "indicator_label": "Recreational space per capita",
                             "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
@@ -66,7 +72,7 @@ LIST_INDICATORS_THEMES_RESPONSES = {
 
 GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
     200: {
-        "model": ListThemesResponse,
+        "model": ListCitiesResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -388,6 +394,48 @@ GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
                             "indicator_version": 0,
                         },
                     ]
+                }
+            }
+        },
+    },
+    404: COMMON_404_ERROR_RESPONSE,
+    500: COMMON_500_ERROR_RESPONSE,
+}
+
+GET_METADATA_BY_INDICATOR_ID_RESPONSES = {
+    200: {
+        "model": IndicatorResponse,
+        "description": "Successful Response",
+        "content": {
+            "application/json": {
+                "example": {
+                    "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
+                    "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
+                    "methods": "The recreational services indicator is calculated as (total area of recreational space within the boundary) / (population within the boundary / 1000). Data on recreational areas were taken from the crowdsourced data initiative OpenStreetMap. Population data are 2020 estimates from WorldPop.  There are limitations to these methods and uncertainty regarding the resulting indicator values. There is uncertainty in the population estimates, especially the distribution of population within enumeration areas.",
+                    "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
+                    "data_sources": '<a href="https://www.openstreetmap.org">OpenStreetMap</a>, <a href="https://developers.google.com/earth-engine/datasets/catalog/WorldPop_GP_100m_pop_age_sex_cons_unadj">WorldPop</a> ',
+                }
+            }
+        },
+    },
+    404: COMMON_404_ERROR_RESPONSE,
+    500: COMMON_500_ERROR_RESPONSE,
+}
+
+GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES = {
+    200: {
+        "model": CityResponse,
+        "description": "Successful Response",
+        "content": {
+            "application/json": {
+                "example": {
+                    "geo_id": "BRA-Florianopolis_ADM-4-union_1",
+                    "geo_name": "BRA-Florianopolis",
+                    "geo_level": "ADM4union",
+                    "geo_parent_name": "BRA-Florianopolis",
+                    "indicator": "ACC_1_OpenSpaceHectaresper1000people2022",
+                    "value": 13.008957821430275,
+                    "indicator_version": 0,
                 }
             }
         },

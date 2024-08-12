@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.dependencies import get_expected_params
 from app.responses.indicators import (
     GET_CITIES_BY_INDICATOR_ID_RESPONSES,
+    GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES,
+    GET_METADATA_BY_INDICATOR_ID_RESPONSES,
     LIST_INDICATORS_RESPONSES,
     LIST_INDICATORS_THEMES_RESPONSES,
 )
@@ -65,3 +67,45 @@ def get_cities_by_indicator_id(indicator_id: str):
         raise HTTPException(status_code=404, detail="No cities found.")
 
     return {"cities": indicators_list}
+
+
+@router.get(
+    "/metadata/{indicator_id}",
+    responses=GET_METADATA_BY_INDICATOR_ID_RESPONSES,
+)
+def get_metadata_by_indicator_id(indicator_id: str):
+    """
+    Retrieve all metadata for a single indicator by indicator_id.
+    """
+    try:
+        indicators_metadata_list = indicators_service.get_metadata_by_indicator_id(
+            indicator_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not indicators_metadata_list:
+        raise HTTPException(status_code=404, detail="No indicators metadata found.")
+
+    return indicators_metadata_list
+
+
+@router.get(
+    "/{indicator_id}/{city_id}",
+    responses=GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES,
+)
+def get_city_indicator_by_indicator_id_and_city_id(indicator_id: str, city_id: str):
+    """
+    Retrieve a single city indicator specified by indicator_id and city_id.
+    """
+    try:
+        indicator = indicators_service.get_city_indicator_by_indicator_id_and_city_id(
+            indicator_id, city_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not indicator:
+        raise HTTPException(status_code=404, detail="No indicator found.")
+
+    return indicator

@@ -29,7 +29,7 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "data_sources",
     "data_sources_link",
     "importance",
-    "indicator",
+    "indicator_id",
     "indicator_definition",
     "indicator_label",
     "indicator_legend",
@@ -52,6 +52,22 @@ DATASETS_LIST_RESPONSE_KEYS = [
     "Storage",
     "Theme",
     "visualization_endpoint",
+]
+INDICATORS_RESPONSE_KEYS = [
+    "geo_id",
+    "geo_name",
+    "geo_level",
+    "geo_parent_name",
+    "indicator",
+    "value",
+    "indicator_version",
+]
+INDICATORS_METADATA_RESPONSE_KEYS = [
+    "indicator_id",
+    "indicator_definition",
+    "methods",
+    "importance",
+    "data_sources",
 ]
 
 COMMON_500_ERROR_RESPONSE = {
