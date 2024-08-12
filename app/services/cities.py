@@ -1,22 +1,40 @@
 import json
+import logging
+from typing import List, Optional
+
+import pandas as pd
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
-import pandas as pd
-from app.const import CARTO_API_KEY, CARTO_USERNAME, cities_table, CITY_RESPONSE_KEYS
-from app.utils.filters import generate_search_query
+from fastapi import HTTPException
+
+from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS, cities_table
+from app.utils.filters import construct_filter_formula
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
 
-def get_cities(project: str = None, country_code_iso3: str = None):
-    filters = []
-    if project:
-        filters.append(generate_search_query("projects", project))
-    if country_code_iso3:
-        filters.append(f"{{country_code_iso3}} = '{country_code_iso3}'")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    filter_formula = f"AND({', '.join(filters)})" if filters else ""
-    cities_list = cities_table.all(view="api", formula=filter_formula)
+
+def get_cities(projects: Optional[List[str]], country_code_iso3: Optional[str]):
+    filters = {}
+
+    if projects:
+        filters["projects"] = projects
+    if country_code_iso3:
+        filters["country_code_iso3"] = country_code_iso3
+
+    filter_formula = construct_filter_formula(filters)
+
+    try:
+        cities_list = cities_table.all(view="api", formula=filter_formula)
+    except Exception as e:
+        logger.error("An Airtable error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving cities failed."
+        ) from e
+
     cities = [
         {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         for city in cities_list

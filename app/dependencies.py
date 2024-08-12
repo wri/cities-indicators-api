@@ -1,17 +1,18 @@
+from typing import Optional
 from fastapi import HTTPException, Request
 
 from app.const import datasets_table, indicators_table, projects_table
 
 
-def fetch_datasets():
-    return datasets_table.all(view="api", formula="")
+def fetch_datasets(filter_formula: Optional[str] = None):
+    return datasets_table.all(view="api", formula=filter_formula)
 
 
-def fetch_projects():
-    return projects_table.all(view="api", formula="")
+def fetch_projects(filter_formula: Optional[str] = None):
+    return projects_table.all(view="api", formula=filter_formula)
 
 
-def fetch_indicators(filter_formula):
+def fetch_indicators(filter_formula: Optional[str] = None):
     return indicators_table.all(view="api", formula=filter_formula)
 
 

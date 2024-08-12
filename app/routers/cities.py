@@ -1,3 +1,4 @@
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.dependencies import get_expected_params
@@ -15,17 +16,24 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("project", "country_code_iso3"))],
+    dependencies=[Depends(get_expected_params("projects", "country_code_iso3"))],
     responses=LIST_CITIES_RESPONSES,
 )
-# Return all cities metadata from Airtable
 def list_cities(
-    project: str = Query(None, description="Project ID"),
-    country_code_iso3: str = Query(None, description="ISO 3166-1 alpha-3 country code"),
+    projects: List[str] = Query(
+        None,
+        description="Filter by multiple Project IDs",
+    ),
+    country_code_iso3: Optional[str] = Query(
+        None, description="Filter by ISO 3166-1 alpha-3 country code"
+    ),
 ):
+    """
+    Retrieve a list of cities based on provided filter parameters.
+    """
     try:
         cities_list = cities_service.get_cities(
-            project=project, country_code_iso3=country_code_iso3
+            projects=projects, country_code_iso3=country_code_iso3
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
@@ -37,8 +45,10 @@ def list_cities(
 
 
 @router.get("/{city_id}", responses=GET_CITY_BY_CITY_ID_RESPONSES)
-# Return one city metadata from Airtable
 def get_city_by_city_id(city_id: str):
+    """
+    Retrieve a single city by its ID.
+    """
     try:
         city = cities_service.get_city_by_city_id(city_id=city_id)
     except Exception as e:
@@ -51,8 +61,10 @@ def get_city_by_city_id(city_id: str):
 
 
 @router.get("/{city_id}/{admin_level}", responses=GET_CITY_INDICATORS_RESPONSES)
-# Return one city all indicators values from Carto
 def get_city_indicators(city_id: str, admin_level: str):
+    """
+    Retrieve all indicators for a single city and admin level.
+    """
     try:
         city_indicators = cities_service.get_city_indicators(
             city_id=city_id, admin_level=admin_level
@@ -60,18 +72,26 @@ def get_city_indicators(city_id: str, admin_level: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
 
+    if not city_indicators:
+        raise HTTPException(status_code=404, detail="No indicators found.")
+
     return {"city_indicators": city_indicators}
 
 
 @router.get("/{city_id}/{admin_level}/geojson", responses=GET_CITY_GEOMETRY_RESPONSES)
-# Return one city's geometry from Carto
 def get_city_geometry(city_id: str, admin_level: str):
+    """
+    Retrieve the geometry of a single city and admin level.
+    """
     try:
         city_geojson = cities_service.get_city_geometry(
             city_id=city_id, admin_level=admin_level
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not city_geojson["features"]:
+        raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_geojson
 
@@ -80,13 +100,18 @@ def get_city_geometry(city_id: str, admin_level: str):
     "/{city_id}/{admin_level}/geojson/indicators",
     responses=GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES,
 )
-# Return one city’s geometry and indicator values from Carto
 def get_city_geometry_with_indicators(city_id: str, admin_level: str):
+    """
+    Retrieve the indicators and geometry of a single city and admin level.
+    """
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
             city_id=city_id, admin_level=admin_level
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+
+    if not city_indicators["features"]:
+        raise HTTPException(status_code=404, detail="No indicators found.")
 
     return city_indicators

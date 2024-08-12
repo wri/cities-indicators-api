@@ -1,4 +1,8 @@
-from app.const import COMMON_400_ERROR_RESPONSE, COMMON_500_ERROR_RESPONSE
+from app.const import (
+    COMMON_400_ERROR_RESPONSE,
+    COMMON_404_ERROR_RESPONSE,
+    COMMON_500_ERROR_RESPONSE,
+)
 from app.schemas.cities import (
     CityResponse,
     GeoJSONResponse,
@@ -29,6 +33,7 @@ LIST_CITIES_RESPONSES = {
         },
     },
     400: COMMON_400_ERROR_RESPONSE,
+    404: COMMON_404_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }
 
@@ -39,17 +44,18 @@ GET_CITY_BY_CITY_ID_RESPONSES = {
         "content": {
             "application/json": {
                 "example": {
-                    "city_id": "ARG-Buenos_Aires",
-                    "city_name": "Buenos Aires",
-                    "country_name": "Argentina",
-                    "country_code_iso3": "ARG",
-                    "admin_levels": ["ADM2union ", "ADM2"],
-                    "aoi_boundary_level": "ADM2union",
-                    "project": ["urbanshift", "dataforcoolcities"],
+                    "city_id": "BRA-Florianopolis",
+                    "city_name": "Florianopolis",
+                    "country_name": "Brazil",
+                    "country_code_iso3": "BRA",
+                    "admin_levels": ["ADM4union", "ADM4"],
+                    "aoi_boundary_level": "ADM4union",
+                    "project": ["urbanshift"],
                 }
             }
         },
     },
+    404: COMMON_404_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }
 
@@ -104,6 +110,7 @@ GET_CITY_INDICATORS_RESPONSES = {
             }
         },
     },
+    404: COMMON_404_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }
 
@@ -150,6 +157,7 @@ GET_CITY_GEOMETRY_RESPONSES = {
             }
         },
     },
+    404: COMMON_404_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }
 
@@ -227,5 +235,6 @@ GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES = {
             }
         },
     },
+    404: COMMON_404_ERROR_RESPONSE,
     500: COMMON_500_ERROR_RESPONSE,
 }

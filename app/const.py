@@ -26,7 +26,6 @@ CITY_RESPONSE_KEYS = [
     "project",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
-    "code",
     "data_sources",
     "data_sources_link",
     "importance",
@@ -39,6 +38,20 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "projects",
     "theme",
     "unit",
+]
+DATASETS_LIST_RESPONSE_KEYS = [
+    "city_ids",
+    "Data source",
+    "Data source website",
+    "dataset_id",
+    "dataset_name",
+    "Indicators",
+    "Provider",
+    "Spatial Coverage",
+    "Spatial resolution",
+    "Storage",
+    "Theme",
+    "visualization_endpoint",
 ]
 
 COMMON_500_ERROR_RESPONSE = {
@@ -59,4 +72,10 @@ COMMON_400_ERROR_RESPONSE = {
             "example": {"detail": "Invalid query parameter: <query_parameter>"}
         }
     },
+}
+
+COMMON_404_ERROR_RESPONSE = {
+    "model": ErrorResponse,
+    "description": "Not found.",
+    "content": {"application/json": {"example": {"detail": "No <entities> found."}}},
 }

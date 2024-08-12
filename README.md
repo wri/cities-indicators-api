@@ -82,3 +82,7 @@ By following these best practices, you will help maintain a high-quality and con
 The API is deployed to [https://citiesapi-1-x4387694.deta.app/](https://citiesapi-1-x4387694.deta.app/). We followed this tutorial to get it working: [FastAPI Deta Deployment](https://fastapi.tiangolo.com/deployment/deta/).
 
 If you want to deploy your own copy, follow the instructions starting at [Create a Free Deta Space Account](https://fastapi.tiangolo.com/deployment/deta/#create-a-free-deta-space-account). You will also need to add the `CITIES_API_AIRTABLE_KEY` to the app settings under Settings > Configuration.
+
+## Best Practices
+Adhere to our [API Best Practices](/docs/best-practices.md) to ensure high-quality and consistent development.
+

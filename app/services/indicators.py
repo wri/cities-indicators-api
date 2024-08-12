@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
 
+from cartoframes import read_carto
 from fastapi import HTTPException
 
 from app.const import INDICATORS_LIST_RESPONSE_KEYS
@@ -76,9 +78,21 @@ def list_indicators(project: str = None):
     return indicators
 
 
-def get_indicator(indicator_name: str):
+def list_indicators_themes():
+    indicators = fetch_indicators()
+    themes_set = set()
+
+    for indicator in indicators:
+        theme = indicator["fields"].get("theme")
+        if theme:
+            themes_set.add(theme)
+
+    return themes_set
+
+
+def get_cities_by_indicator_id(indicator_id: str):
     indicator_df = read_carto(
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_name}' and indicators.geo_name=indicators.geo_parent_name"
+        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' and indicators.geo_name=indicators.geo_parent_name"
     )
     # Object of type Timestamp is not JSON serializable. Need to convert to string first.
     indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
@@ -101,4 +115,4 @@ def get_indicator(indicator_name: str):
         for city_indicator in indicator
     ]
 
-    return {"indicator_values": indicator}
+    return indicator
