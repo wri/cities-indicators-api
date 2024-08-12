@@ -57,6 +57,7 @@ class CityIndicatorsResponse(BaseModel):
     LND_7_percentKBAsProtected: Optional[float]
     LND_8_percentKBAsBuiltup: Optional[float]
 
+
 # Geometry Schema
 class GeometryResponse(BaseModel):
     type: str

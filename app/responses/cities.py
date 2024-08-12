@@ -1,7 +1,14 @@
-from app.const import (COMMON_400_ERROR_RESPONSE, COMMON_404_ERROR_RESPONSE,
-                       COMMON_500_ERROR_RESPONSE)
-from app.schemas.cities import (CityIndicatorsResponse, CityResponse,
-                                GeoJSONResponse, ListCitiesResponse)
+from app.const import (
+    COMMON_400_ERROR_RESPONSE,
+    COMMON_404_ERROR_RESPONSE,
+    COMMON_500_ERROR_RESPONSE,
+)
+from app.schemas.cities import (
+    CityIndicatorsResponse,
+    CityResponse,
+    GeoJSONResponse,
+    ListCitiesResponse,
+)
 
 LIST_CITIES_RESPONSES = {
     200: {

@@ -7,7 +7,13 @@ from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 from fastapi import HTTPException
 
-from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS, INDICATORS_RESPONSE_KEYS, cities_table
+from app.const import (
+    CARTO_API_KEY,
+    CARTO_USERNAME,
+    CITY_RESPONSE_KEYS,
+    INDICATORS_RESPONSE_KEYS,
+    cities_table,
+)
 from app.utils.filters import construct_filter_formula
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
