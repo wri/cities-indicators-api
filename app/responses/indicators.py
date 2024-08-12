@@ -4,16 +4,16 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.schemas.indicators import (
-    CityResponse,
-    IndicatorResponse,
-    ListCitiesResponse,
-    ListIndicatorsResponse,
-    ListThemesResponse,
+    CitiesByIndicatorIdResponse,
+    IndicatorValueResponse,
+    MetadataByIndicatorIdResponse,
+    IndicatorsResponse,
+    IndicatorsThemesResponse,
 )
 
 LIST_INDICATORS_RESPONSES = {
     200: {
-        "model": ListIndicatorsResponse,
+        "model": IndicatorsResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -29,12 +29,13 @@ LIST_INDICATORS_RESPONSES = {
                             "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
                             "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
                             "indicator_label": "Recreational space per capita",
-                            "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
+                            "indicator_legend": "Key Biodiversity Area land within built-up areas (%)",
                             "methods": "The recreational services indicator is calculated as (total area of recreational space within the boundary) / (population within the boundary / 1000). Data on recreational areas were taken from the crowdsourced data initiative OpenStreetMap. Population data are 2020 estimates from WorldPop.  There are limitations to these methods and uncertainty regarding the resulting indicator values. There is uncertainty in the population estimates, especially the distribution of population within enumeration areas.",
                             "Notebook": "https://github.com/wri/cities-indicators/blob/emackres-patch-1/notebooks/compute-indicators/compute-indicator-ACC-1-openspace-per-capita.ipynb",
                             "projects": ["urbanshift", "cities4forests", "deepdive"],
-                            "theme": "Greenspace access",
-                        }
+                            "theme": ["Greenspace access"],
+                            "unit": "%",
+                        },
                     ]
                 }
             }
@@ -47,7 +48,7 @@ LIST_INDICATORS_RESPONSES = {
 
 LIST_INDICATORS_THEMES_RESPONSES = {
     200: {
-        "model": ListThemesResponse,
+        "model": IndicatorsThemesResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -72,7 +73,7 @@ LIST_INDICATORS_THEMES_RESPONSES = {
 
 GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
     200: {
-        "model": ListCitiesResponse,
+        "model": CitiesByIndicatorIdResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -404,7 +405,7 @@ GET_CITIES_BY_INDICATOR_ID_RESPONSES = {
 
 GET_METADATA_BY_INDICATOR_ID_RESPONSES = {
     200: {
-        "model": IndicatorResponse,
+        "model": MetadataByIndicatorIdResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -424,7 +425,7 @@ GET_METADATA_BY_INDICATOR_ID_RESPONSES = {
 
 GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES = {
     200: {
-        "model": CityResponse,
+        "model": IndicatorValueResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {

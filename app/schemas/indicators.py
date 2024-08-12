@@ -3,11 +3,10 @@ from typing import List, Optional
 
 
 class Indicator(BaseModel):
-    code: str
     data_sources: str
     data_sources_link: List[str]
     importance: str
-    indicator: str
+    indicator_id: str
     indicator_definition: str
     indicator_label: str
     indicator_legend: str
@@ -15,17 +14,18 @@ class Indicator(BaseModel):
     Notebook: HttpUrl
     projects: List[str]
     theme: str
+    unit: str
 
 
-class ListIndicatorsResponse(BaseModel):
-    List[str]
+class IndicatorsResponse(BaseModel):
+    indicators: List[Indicator]
 
 
-class ListThemesResponse(BaseModel):
+class IndicatorsThemesResponse(BaseModel):
     themes: List[str]
 
 
-class CityResponse(BaseModel):
+class IndicatorValueResponse(BaseModel):
     geo_id: str
     geo_name: str
     geo_level: str
@@ -35,11 +35,11 @@ class CityResponse(BaseModel):
     indicator_version: Optional[int] = 0
 
 
-class ListCitiesResponse(BaseModel):
-    cities: List[CityResponse]
+class CitiesByIndicatorIdResponse(BaseModel):
+    cities: List[IndicatorValueResponse]
 
 
-class IndicatorResponse(BaseModel):
+class MetadataByIndicatorIdResponse(BaseModel):
     indicator_id: str
     indicator_definition: str
     methods: str

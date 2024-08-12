@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 
 # City Schema
-class CityResponse(BaseModel):
+class CityDetail(BaseModel):
     city_id: str
     city_name: str
     country_name: str
@@ -14,12 +14,12 @@ class CityResponse(BaseModel):
 
 
 # Response for listing cities
-class ListCitiesResponse(BaseModel):
-    cities: List[CityResponse]
+class CityListResponse(BaseModel):
+    cities: List[CityDetail]
 
 
 # Indicator Schema
-class CityIndicatorsResponse(BaseModel):
+class CityIndicatorsDetail(BaseModel):
     geo_id: str
     geo_name: str
     geo_level: str
@@ -59,20 +59,20 @@ class CityIndicatorsResponse(BaseModel):
 
 
 # Geometry Schema
-class GeometryResponse(BaseModel):
+class Geometry(BaseModel):
     type: str
     coordinates: List[List[List[List[float]]]]
 
 
 # Feature Schema
-class FeatureResponse(BaseModel):
+class GeoFeature(BaseModel):
     id: str
     type: str
-    properties: CityIndicatorsResponse
-    geometry: GeometryResponse
+    properties: CityIndicatorsDetail
+    geometry: Geometry
 
 
 # GeoJSON Response
-class GeoJSONResponse(BaseModel):
+class GeoJSONFeatureCollection(BaseModel):
     type: str
-    features: List[FeatureResponse]
+    features: List[GeoFeature]

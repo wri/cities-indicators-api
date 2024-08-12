@@ -1,10 +1,10 @@
 from app.const import COMMON_500_ERROR_RESPONSE
-from app.schemas.datasets import ListDatasetsResponse
+from app.schemas.datasets import DatasetsResponse
 
 
 LIST_DATASETS_RESPONSES = {
     200: {
-        "model": ListDatasetsResponse,
+        "model": DatasetsResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {

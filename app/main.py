@@ -1,17 +1,30 @@
+import logging
+import os
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
+from app.const import API_VERSION
 from app.middlewares.strip_api_prefix import StripApiPrefixMiddleware
-from app.routers import cities, indicators, projects, datasets
+from app.routers import cities, datasets, indicators, projects
 
-DESCRIPTION = """
-You can use this API to get the value of various indicators for a number of cities at multiple admin levels.
-"""
+# ----------------------------------------
+# Logging Configuration
+# ----------------------------------------
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ----------------------------------------
+# Application Initialization
+# ----------------------------------------
 
 app = FastAPI(
     title="WRI Cities Indicators API",
-    description=DESCRIPTION,
+    description="You can use this API to get the value of various indicators for a number of cities at multiple admin levels.",
     summary="An indicators API",
-    version="v0",
+    version=API_VERSION,
     terms_of_service="TBD",
     contact={
         "name": "WRI Cities Data Team",
@@ -24,17 +37,33 @@ app = FastAPI(
     },
 )
 
-# Middlewares
+# ----------------------------------------
+# Middleware Configuration
+# ----------------------------------------
+
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(StripApiPrefixMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+)
 
-# Routers
-app.include_router(cities.router, prefix="/cities", tags=["Cities"])
-app.include_router(datasets.router, prefix="/datasets", tags=["Datasets"])
-app.include_router(indicators.router, prefix="/indicators", tags=["Indicators"])
-app.include_router(projects.router, prefix="/projects", tags=["Projects"])
+# ----------------------------------------
+# Routes
+# ----------------------------------------
+
+app.include_router(cities.router, prefix=f"/{API_VERSION}/cities", tags=["Cities"])
+app.include_router(
+    datasets.router, prefix=f"/{API_VERSION}/datasets", tags=["Datasets"]
+)
+app.include_router(
+    indicators.router, prefix=f"/{API_VERSION}/indicators", tags=["Indicators"]
+)
+app.include_router(
+    projects.router, prefix=f"/{API_VERSION}/projects", tags=["Projects"]
+)
 
 
-# Health check
 @app.get(
     "/health",
     tags=["Default"],
@@ -50,3 +79,8 @@ def health_check():
     Health check endpoint to verify if the API is running.
     """
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+async def docs_redirect():
+    return RedirectResponse(url="/docs")

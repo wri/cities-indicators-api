@@ -4,15 +4,15 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.schemas.cities import (
-    CityIndicatorsResponse,
-    CityResponse,
-    GeoJSONResponse,
-    ListCitiesResponse,
+    CityDetail,
+    CityIndicatorsDetail,
+    CityListResponse,
+    GeoJSONFeatureCollection,
 )
 
 LIST_CITIES_RESPONSES = {
     200: {
-        "model": ListCitiesResponse,
+        "model": CityListResponse,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -39,7 +39,7 @@ LIST_CITIES_RESPONSES = {
 
 GET_CITY_BY_CITY_ID_RESPONSES = {
     200: {
-        "model": CityResponse,
+        "model": CityDetail,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -61,7 +61,7 @@ GET_CITY_BY_CITY_ID_RESPONSES = {
 
 GET_CITY_INDICATORS_RESPONSES = {
     200: {
-        "model": CityIndicatorsResponse,
+        "model": CityIndicatorsDetail,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -112,7 +112,7 @@ GET_CITY_INDICATORS_RESPONSES = {
 
 GET_CITY_GEOMETRY_RESPONSES = {
     200: {
-        "model": GeoJSONResponse,
+        "model": GeoJSONFeatureCollection,
         "description": "Successful Response",
         "content": {
             "application/json": {
@@ -159,7 +159,7 @@ GET_CITY_GEOMETRY_RESPONSES = {
 
 GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES = {
     200: {
-        "model": GeoJSONResponse,
+        "model": GeoJSONFeatureCollection,
         "description": "Successful Response",
         "content": {
             "application/json": {

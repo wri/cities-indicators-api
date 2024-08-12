@@ -1,78 +1,73 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
-from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, List, Optional
 
 from cartoframes import read_carto
+from cartoframes.auth import set_default_credentials
 
-from app.const import (
-    INDICATORS_LIST_RESPONSE_KEYS,
-    INDICATORS_METADATA_RESPONSE_KEYS,
-    INDICATORS_RESPONSE_KEYS,
-    indicators_table,
-)
+from app.const import (CARTO_API_KEY, CARTO_USERNAME,
+                       INDICATORS_LIST_RESPONSE_KEYS,
+                       INDICATORS_METADATA_RESPONSE_KEYS,
+                       INDICATORS_RESPONSE_KEYS, indicators_table)
 from app.dependencies import fetch_datasets, fetch_indicators, fetch_projects
 from app.utils.filters import generate_search_query
 
+set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
-def list_indicators(project: Optional[str]):
+def list_indicators(project: Optional[str]) -> List[Dict]:
     filter_formula = generate_search_query("projects", project)
 
     with ThreadPoolExecutor() as executor:
-        future_to_func = {
+        futures = {
             executor.submit(fetch_datasets): "datasets",
             executor.submit(fetch_projects): "projects",
             executor.submit(fetch_indicators, filter_formula): "indicators",
         }
 
-        results = {}
-        for future in as_completed(future_to_func):
-            func_name = future_to_func[future]
-            result = future.result()
-            results[func_name] = result
+        results = {
+            name: future.result()
+            for future in as_completed(futures)
+            for name, future in futures.items()
+        }
 
     datasets_list = results["datasets"]
     projects_list = results["projects"]
     indicators_filtered_list = results["indicators"]
 
-    # Fetch indicators and datasets as dictionaries for quick lookup
-    indicators_dict = {
-        indicator["id"]: indicator["fields"] for indicator in indicators_filtered_list
-    }
-    datasets_dict = {
-        dataset["id"]: dataset["fields"]["dataset_name"] for dataset in datasets_list
-    }
-    projects_dict = {
-        project["id"]: project["fields"]["project_id"] for project in projects_list
-    }
+    def extract_dicts(data_list: List[Dict], key: str, value: str) -> Dict[str, str]:
+        return {item["id"]: item["fields"][value] for item in data_list}
 
-    # Update data_sources_link for each indicator
-    for indicator in indicators_dict.values():
+    indicators_dict = extract_dicts(indicators_filtered_list, "id", "fields")
+    datasets_dict = extract_dicts(datasets_list, "id", "dataset_name")
+    projects_dict = extract_dicts(projects_list, "id", "project_id")
+
+    def process_indicator(indicator: Dict) -> Dict:
         data_sources_link = indicator.get("data_sources_link", [])
         indicator_projects = indicator.get("projects", [])
 
-        # Ensure data_sources_link and projects are lists
         if not isinstance(data_sources_link, list):
             data_sources_link = [data_sources_link]
         if not isinstance(indicator_projects, list):
             indicator_projects = [indicator_projects]
 
-        indicator["data_sources_link"] = [
-            datasets_dict.get(data_source, data_source)
-            for data_source in data_sources_link
-        ]
-        indicator["projects"] = [
-            projects_dict.get(project, project) for project in indicator_projects
-        ]
+        return {
+            **indicator,
+            "data_sources_link": [
+                datasets_dict.get(data_source, data_source)
+                for data_source in data_sources_link
+            ],
+            "projects": [
+                projects_dict.get(project, project) for project in indicator_projects
+            ]
+        }
 
-    indicators = list(indicators_dict.values())
-    # Reorder indicators fields
     indicators = [
         {
-            key: indicator[key]
+            key: processed_indicator[key]
             for key in INDICATORS_LIST_RESPONSE_KEYS
-            if key in indicator
+            if key in processed_indicator
         }
-        for indicator in indicators
+        for processed_indicator in (process_indicator(ind) for ind in indicators_dict.values())
     ]
 
     return indicators

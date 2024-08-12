@@ -43,7 +43,7 @@ To ensure the maintainability and quality of the codebase, please adhere to the 
 2. **Linting**:
    - Use `pylint` to check for potential errors and enforce coding standards. Run `pylint` on your Python files with:
      ```sh
-     pylint $(git ls-files '*.py')
+     pylint $(git ls-files 'app/*.py')
      ```
    - Configure `.pylintrc` as needed for project-specific settings.
 

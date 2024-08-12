@@ -1,11 +1,9 @@
 import json
-import logging
 from typing import List, Optional
 
 import pandas as pd
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
-from fastapi import HTTPException
 
 from app.const import (
     CARTO_API_KEY,
@@ -19,10 +17,6 @@ from app.utils.filters import construct_filter_formula
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
 def get_cities(projects: Optional[List[str]], country_code_iso3: Optional[str]):
     filters = {}
 
@@ -32,14 +26,10 @@ def get_cities(projects: Optional[List[str]], country_code_iso3: Optional[str]):
         filters["country_code_iso3"] = country_code_iso3
 
     filter_formula = construct_filter_formula(filters)
+    cities_list = cities_table.all(view="api", formula=filter_formula)
 
-    try:
-        cities_list = cities_table.all(view="api", formula=filter_formula)
-    except Exception as e:
-        logger.error("An Airtable error occurred: %s", e)
-        raise HTTPException(
-            status_code=500, detail="An error occurred: Retrieving cities failed."
-        ) from e
+    if not cities_list:
+        return []
 
     cities = [
         {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}

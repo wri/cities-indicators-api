@@ -1,4 +1,6 @@
+import logging
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.dependencies import get_expected_params
@@ -10,6 +12,9 @@ from app.responses.cities import (
     LIST_CITIES_RESPONSES,
 )
 from app.services import cities as cities_service
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -34,7 +39,10 @@ def list_cities(
     try:
         cities_list = cities_service.get_cities(projects, country_code_iso3)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500, detail="An error occurred: Retrieving cities failed."
+        ) from e
 
     if not cities_list:
         raise HTTPException(status_code=404, detail="No cities found.")
@@ -50,7 +58,11 @@ def get_city_by_city_id(city_id: str):
     try:
         city = cities_service.get_city_by_city_id(city_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving city by city_id failed.",
+        ) from e
 
     if not city:
         raise HTTPException(status_code=404, detail="No city found.")
@@ -66,7 +78,11 @@ def get_city_indicators(city_id: str, admin_level: str):
     try:
         city_indicators = cities_service.get_city_indicators(city_id, admin_level)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving all indicators for a single city and admin level failed.",
+        ) from e
 
     if not city_indicators:
         raise HTTPException(status_code=404, detail="No indicators found.")
@@ -82,7 +98,11 @@ def get_city_geometry(city_id: str, admin_level: str):
     try:
         city_geojson = cities_service.get_city_geometry(city_id, admin_level)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving the geometry of a single city and admin level failed.",
+        ) from e
 
     if not city_geojson["features"]:
         raise HTTPException(status_code=404, detail="No geometry found.")
@@ -103,7 +123,11 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str):
             city_id, admin_level
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving the indicators and geometry of a single city and admin level failed.",
+        ) from e
 
     if not city_indicators["features"]:
         raise HTTPException(status_code=404, detail="No indicators found.")

@@ -16,5 +16,5 @@ class Dataset(BaseModel):
     Theme: List[str]
 
 
-class ListDatasetsResponse(BaseModel):
+class DatasetsResponse(BaseModel):
     datasets: List[Dataset]

@@ -3,6 +3,9 @@ from pyairtable import Table
 
 from app.responses.common import ErrorResponse
 
+# API
+API_VERSION = os.getenv("API_VERSION", "v1")
+
 # Carto
 CARTO_API_KEY = os.getenv("CARTO_API_KEY")
 CARTO_USERNAME = os.getenv("CARTO_USERNAME")
@@ -70,6 +73,7 @@ INDICATORS_METADATA_RESPONSE_KEYS = [
     "data_sources",
 ]
 
+# Common HTTP responses
 COMMON_500_ERROR_RESPONSE = {
     "model": ErrorResponse,
     "description": "Internal Server Error",

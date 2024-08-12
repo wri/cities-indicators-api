@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -11,6 +12,10 @@ from app.responses.indicators import (
 )
 from app.services import indicators as indicators_service
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 router = APIRouter()
 
 
@@ -21,12 +26,16 @@ router = APIRouter()
 )
 def list_indicators(project: Optional[str] = Query(None, description="Project ID")):
     """
-    Retrieve a list of indicators.
+    Retrieve list of indicators.
     """
     try:
         indicators_list = indicators_service.list_indicators(project)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving list of indicators failed.",
+        ) from e
 
     if not indicators_list:
         raise HTTPException(status_code=404, detail="No indicators found.")
@@ -45,7 +54,11 @@ def list_indicators_themes():
     try:
         themes = indicators_service.list_indicators_themes()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving the list of indicators themes failed.",
+        ) from e
 
     return {"themes": themes}
 
@@ -61,7 +74,11 @@ def get_cities_by_indicator_id(indicator_id: str):
     try:
         indicators_list = indicators_service.get_cities_by_indicator_id(indicator_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving all the cities indicators specified by indicator_id failed.",
+        ) from e
 
     if not indicators_list:
         raise HTTPException(status_code=404, detail="No cities found.")
@@ -82,7 +99,11 @@ def get_metadata_by_indicator_id(indicator_id: str):
             indicator_id
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving all metadata for a single indicator by indicator_id failed.",
+        ) from e
 
     if not indicators_metadata_list:
         raise HTTPException(status_code=404, detail="No indicators metadata found.")
@@ -103,7 +124,11 @@ def get_city_indicator_by_indicator_id_and_city_id(indicator_id: str, city_id: s
             indicator_id, city_id
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}") from e
+        logger.error("An error occurred: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving a single city indicator specified by indicator_id and city_id failed.",
+        ) from e
 
     if not indicator:
         raise HTTPException(status_code=404, detail="No indicator found.")

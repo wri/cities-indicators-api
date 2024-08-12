@@ -1,56 +1,48 @@
-import logging
-from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Optional, Dict, Any, List
 
-from fastapi import HTTPException
-from app.const import DATASETS_LIST_RESPONSE_KEYS, datasets_table, cities_table
-from app.dependencies import fetch_indicators
+from app.const import DATASETS_LIST_RESPONSE_KEYS
+from app.dependencies import fetch_cities, fetch_datasets, fetch_indicators
 from app.utils.filters import generate_search_query
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-
-def list_datasets(city_id: Optional[str]):
+def list_datasets(city_id: Optional[str]) -> List[Dict[str, Any]]:
     filter_formula = generate_search_query("city_id", city_id)
+    future_to_func = {
+        fetch_cities: "cities",
+        fetch_indicators: "indicators",
+        lambda: fetch_datasets(filter_formula): "datasets",
+    }
 
-    try:
-        indicators_list = fetch_indicators()
-        cities_list = cities_table.all(view="api", formula="{city_id}")
-        datasets_filter_list = datasets_table.all(view="api", formula=filter_formula)
-    except Exception as e:
-        logger.error("An Airtable error occurred: %s", e)
-        raise HTTPException(
-            status_code=500, detail="An error occurred: Retrieving indicators failed."
-        ) from e
+    results = {}
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            results[func_name] = future.result()
 
-    # Fetch cities, datasets and indicators as dictionaries for quick lookup
-    cities_dict = {city["id"]: city["fields"] for city in cities_list}
+    # Create dictionaries for quick lookup
+    cities_dict = {city["id"]: city["fields"] for city in results["cities"]}
     datasets_dict = {
-        dataset["id"]: dataset["fields"] for dataset in datasets_filter_list
+        dataset["id"]: dataset["fields"] for dataset in results["datasets"]
     }
     indicators_dict = {
         indicator["id"]: indicator["fields"]["indicator_label"]
-        for indicator in indicators_list
+        for indicator in results["indicators"]
     }
 
-    # Update Indicators for each dataset
+    # Update indicators and cities for each dataset
     for dataset in datasets_dict.values():
-        indicator_ids = dataset.get("Indicators", [])
-        cities_ids = dataset.get("city_id", [])
         dataset["Indicators"] = [
             indicators_dict.get(indicator_id, indicator_id)
-            for indicator_id in indicator_ids
+            for indicator_id in dataset.get("Indicators", [])
         ]
         dataset["city_ids"] = [
-            cities_dict[city_id]["city_id"] for city_id in cities_ids
+            cities_dict[city_id]["city_id"] for city_id in dataset.get("city_id", [])
         ]
 
-    datasets = list(datasets_dict.values())
-    # Reorder and select indicators fields
-
-    datasets = [
+    # Reorder and select dataset fields
+    return [
         {key: dataset[key] for key in DATASETS_LIST_RESPONSE_KEYS if key in dataset}
-        for dataset in datasets
+        for dataset in datasets_dict.values()
     ]
-
-    return datasets

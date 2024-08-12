@@ -1,7 +1,11 @@
 from typing import Optional
 from fastapi import HTTPException, Request
 
-from app.const import datasets_table, indicators_table, projects_table
+from app.const import datasets_table, indicators_table, projects_table, cities_table
+
+
+def fetch_cities(filter_formula: Optional[str] = None):
+    return cities_table.all(view="api", formula=filter_formula)
 
 
 def fetch_datasets(filter_formula: Optional[str] = None):
