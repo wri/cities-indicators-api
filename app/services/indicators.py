@@ -1,6 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional
+from typing import Optional
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
@@ -14,60 +14,56 @@ from app.utils.filters import generate_search_query
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
-def list_indicators(project: Optional[str]) -> List[Dict]:
+
+def list_indicators(project: Optional[str]):
     filter_formula = generate_search_query("projects", project)
+    future_to_func = {
+        fetch_projects: "projects",
+        fetch_datasets: "datasets",
+        lambda: fetch_indicators(filter_formula): "indicators",
+    }
 
+    results = {}
     with ThreadPoolExecutor() as executor:
-        futures = {
-            executor.submit(fetch_datasets): "datasets",
-            executor.submit(fetch_projects): "projects",
-            executor.submit(fetch_indicators, filter_formula): "indicators",
-        }
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            results[func_name] = future.result()
 
-        results = {
-            name: future.result()
-            for future in as_completed(futures)
-            for name, future in futures.items()
-        }
+    # Fetch indicators and datasets as dictionaries for quick lookup
+    indicators_dict = {
+        indicator["id"]: indicator["fields"] for indicator in results["indicators"]
+    }
+    datasets_dict = {
+        dataset["id"]: dataset["fields"]["dataset_name"]
+        for dataset in results["datasets"]
+    }
+    projects_dict = {
+        project["id"]: project["fields"]["project_id"]
+        for project in results["projects"]
+    }
 
-    datasets_list = results["datasets"]
-    projects_list = results["projects"]
-    indicators_filtered_list = results["indicators"]
-
-    def extract_dicts(data_list: List[Dict], key: str, value: str) -> Dict[str, str]:
-        return {item["id"]: item["fields"][value] for item in data_list}
-
-    indicators_dict = extract_dicts(indicators_filtered_list, "id", "fields")
-    datasets_dict = extract_dicts(datasets_list, "id", "dataset_name")
-    projects_dict = extract_dicts(projects_list, "id", "project_id")
-
-    def process_indicator(indicator: Dict) -> Dict:
+    # Update data_sources_link for each indicator
+    for indicator in indicators_dict.values():
         data_sources_link = indicator.get("data_sources_link", [])
         indicator_projects = indicator.get("projects", [])
+        indicator["data_sources_link"] = [
+            datasets_dict.get(data_source, data_source)
+            for data_source in data_sources_link
+        ]
+        indicator["projects"] = [
+            projects_dict.get(project, project) for project in indicator_projects
+        ]
 
-        if not isinstance(data_sources_link, list):
-            data_sources_link = [data_sources_link]
-        if not isinstance(indicator_projects, list):
-            indicator_projects = [indicator_projects]
-
-        return {
-            **indicator,
-            "data_sources_link": [
-                datasets_dict.get(data_source, data_source)
-                for data_source in data_sources_link
-            ],
-            "projects": [
-                projects_dict.get(project, project) for project in indicator_projects
-            ]
-        }
+    indicators = list(indicators_dict.values())
 
     indicators = [
         {
-            key: processed_indicator[key]
+            key: indicator[key]
             for key in INDICATORS_LIST_RESPONSE_KEYS
-            if key in processed_indicator
+            if key in indicator
         }
-        for processed_indicator in (process_indicator(ind) for ind in indicators_dict.values())
+        for indicator in indicators
     ]
 
     return indicators
