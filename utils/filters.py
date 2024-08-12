@@ -26,8 +26,8 @@ def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str
     if isinstance(value, list):
         search_clauses = [f"SEARCH('{v}', {{{column_name}}})" for v in value]
         return f"AND({', '.join(search_clauses)})" if search_clauses else ""
-    else:
-        return f"SEARCH('{value}', {{{column_name}}})" if value else ""
+    
+    return f"SEARCH('{value}', {{{column_name}}})" if value else ""
 
 
 def construct_filter_formula(filters: dict) -> str:
