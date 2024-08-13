@@ -83,12 +83,14 @@ app.add_middleware(
 # Cities
 # Define the desired keys to extract from each city's data
 city_keys = [
+    "admin_levels",
+    "aoi_boundary_level",
     "city_id",
     "city_name",
     "country_name",
     "country_code_iso3",
-    "admin_levels",
-    "aoi_boundary_level",
+    "latitude",
+    "longitude",
     "project",
 ]
 
@@ -113,14 +115,16 @@ def health_check():
                     "example": {
                         "cities": [
                             {
+                                "admin_levels": ["ADM2union ", "ADM2"],
+                                "aoi_boundary_level": "ADM2union",
                                 "city_id": "ARG-Buenos_Aires",
                                 "city_name": "Buenos Aires",
                                 "country_name": "Argentina",
                                 "country_code_iso3": "ARG",
-                                "admin_levels": ["ADM2union ", "ADM2"],
-                                "aoi_boundary_level": "ADM2union",
+                                "latitude": -34.6073387,
+                                "longitude": -58.4432852,
                                 "project": ["urbanshift", "data4coolcities"],
-                            }
+                            },
                         ]
                     }
                 }
