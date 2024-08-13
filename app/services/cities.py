@@ -18,13 +18,13 @@ set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
 
 def get_cities(
-    projects: Optional[List[str]], country_code_iso3: Optional[str]
+    project: Optional[List[str]], country_code_iso3: Optional[str]
 ) -> List[dict]:
     """
     Retrieve a list of cities based on the provided filters.
 
     Args:
-        projects (Optional[List[str]]): List of Project IDs to filter by.
+        project (Optional[List[str]]): List of Project IDs to filter by.
         country_code_iso3 (Optional[str]): ISO 3166-1 alpha-3 country code to filter by.
 
     Returns:
@@ -32,8 +32,8 @@ def get_cities(
     """
     filters = {}
 
-    if projects:
-        filters["projects"] = projects
+    if project:
+        filters["project"] = project
     if country_code_iso3:
         filters["country_code_iso3"] = country_code_iso3
 
