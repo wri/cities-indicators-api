@@ -89,7 +89,7 @@ city_keys = [
     "country_code_iso3",
     "admin_levels",
     "aoi_boundary_level",
-    "project",
+    "projects",
 ]
 
 
@@ -119,7 +119,7 @@ def health_check():
                                 "country_code_iso3": "ARG",
                                 "admin_levels": ["ADM2union ", "ADM2"],
                                 "aoi_boundary_level": "ADM2union",
-                                "project": ["urbanshift", "data4coolcities"],
+                                "projects": ["urbanshift", "data4coolcities"],
                             }
                         ]
                     }
@@ -137,7 +137,7 @@ def health_check():
     },
 )
 def list_cities(
-    projects: List[str] = Query(
+    project: List[str] = Query(
         None,
         description="Filter by multiple Project IDs",
     ),
@@ -150,8 +150,8 @@ def list_cities(
     """
     filters = {}
 
-    if projects:
-        filters["projects"] = projects
+    if project:
+        filters["project"] = project
     if country_code_iso3:
         filters["country_code_iso3"] = country_code_iso3
 
