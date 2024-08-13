@@ -20,6 +20,10 @@ def fetch_indicators(filter_formula: Optional[str] = None):
     return indicators_table.all(view="api", formula=filter_formula)
 
 
+def fetch_first_indicator(filter_formula: Optional[str] = None):
+    return indicators_table.first(view="api", formula=filter_formula)
+
+
 def validate_query_params(request: Request, expected_params: list[str]):
     query_params = request.query_params
     for param in query_params:

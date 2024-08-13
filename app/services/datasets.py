@@ -7,6 +7,15 @@ from app.utils.filters import generate_search_query
 
 
 def list_datasets(city_id: Optional[str]) -> List[Dict[str, Any]]:
+    """
+    Retrieve a list of datasets, optionally filtered by city ID.
+
+    Args:
+        city_id (Optional[str]): The city ID to filter datasets by.
+
+    Returns:
+        List[Dict[str, Any]]: A list of datasets with selected fields.
+    """
     filter_formula = generate_search_query("city_id", city_id)
     future_to_func = {
         fetch_cities: "cities",

@@ -13,8 +13,8 @@ class Indicator(BaseModel):
     methods: str
     Notebook: HttpUrl
     projects: List[str]
-    theme: str
-    unit: str
+    theme: List[str]
+    unit: Optional[str] = None
 
 
 class IndicatorsResponse(BaseModel):
