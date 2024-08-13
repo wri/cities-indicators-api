@@ -84,7 +84,7 @@ def get_city_indicators(
     admin_level: str = Path(
         description="The administrative level to filter indicators by"
     ),
-) -> CityIndicatorsDetail:
+):
     """
     Retrieve all indicators for a specific city and administrative level.
     """
