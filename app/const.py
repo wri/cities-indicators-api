@@ -4,7 +4,7 @@ from pyairtable import Table
 from app.responses.common import ErrorResponse
 
 # API
-API_VERSION = os.getenv("API_VERSION", "v1")
+API_VERSION = "v1"
 
 # Carto
 CARTO_API_KEY = os.getenv("CARTO_API_KEY")
