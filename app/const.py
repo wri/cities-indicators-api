@@ -21,21 +21,25 @@ projects_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Projects")
 # Response keys
 CITY_RESPONSE_KEYS = [
     "city_id",
+    "admin_levels",
+    "aoi_boundary_level",
     "city_name",
     "country_name",
     "country_code_iso3",
-    "admin_levels",
-    "aoi_boundary_level",
+    "latitude",
+    "longitude",
     "project",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
+    "indicator_id",
     "data_sources",
     "data_sources_link",
+    "data_views",
     "importance",
-    "indicator_id",
     "indicator_definition",
     "indicator_label",
     "indicator_legend",
+    "layer_id",
     "methods",
     "Notebook",
     "projects",
