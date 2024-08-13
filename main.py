@@ -89,7 +89,7 @@ city_keys = [
     "country_code_iso3",
     "admin_levels",
     "aoi_boundary_level",
-    "projects",
+    "project",
 ]
 
 
@@ -119,7 +119,7 @@ def health_check():
                                 "country_code_iso3": "ARG",
                                 "admin_levels": ["ADM2union ", "ADM2"],
                                 "aoi_boundary_level": "ADM2union",
-                                "projects": ["urbanshift", "data4coolcities"],
+                                "project": ["urbanshift", "data4coolcities"],
                             }
                         ]
                     }
