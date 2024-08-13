@@ -98,7 +98,6 @@ async def docs_redirect():
     return RedirectResponse(url="/docs")
 
 
-
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -354,11 +353,13 @@ def list_projects():
                                     "Open spaces for public use",
                                     "Population density",
                                 ],
+                                "data_views": ["map", "table", "chart"],
                                 "importance": "Parks, natural areas and other green spaces provide city residents with invaluable recreational, spiritual, cultural, and educational services. They have been shown to improve human physical and psychological health. ",
                                 "indicator_id": "ACC_1_OpenSpaceHectaresper1000people2022",
                                 "indicator_definition": "Hectares of recreational space (open space for public use) per 1000 people",
                                 "indicator_label": "Recreational space per capita",
-                                "indicator_legend": "Key Biodiversity Area land <br> within built-up areas (%)",
+                                "indicator_legend": "Key Biodiversity Area land within built-up areas (%)",
+                                "layer_id": ["world_pop", "open_space"],
                                 "methods": "The recreational services indicator is calculated as (total area of recreational space within the boundary) / (population within the boundary / 1000). Data on recreational areas were taken from the crowdsourced data initiative OpenStreetMap. Population data are 2020 estimates from WorldPop.  There are limitations to these methods and uncertainty regarding the resulting indicator values. There is uncertainty in the population estimates, especially the distribution of population within enumeration areas.",
                                 "Notebook": "https://github.com/wri/cities-indicators/blob/emackres-patch-1/notebooks/compute-indicators/compute-indicator-ACC-1-openspace-per-capita.ipynb",
                                 "projects": [
@@ -366,9 +367,9 @@ def list_projects():
                                     "cities4forests",
                                     "deepdive",
                                 ],
-                                "theme": "Greenspace access",
+                                "theme": ["Greenspace access"],
                                 "unit": "%",
-                            }
+                            },
                         ]
                     }
                 }
@@ -434,11 +435,13 @@ def list_indicators(
         "code",
         "data_sources",
         "data_sources_link",
+        "data_views",
         "importance",
         "indicator_id",
         "indicator_definition",
         "indicator_label",
         "indicator_legend",
+        "layer_id",
         "methods",
         "Notebook",
         "projects",
@@ -720,7 +723,6 @@ def list_boundaries():
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred: %s", e)
         return {"error": "An error occurred: Retrieving boundaries failed."}
-
 
 
 @app.get("/boundaries/{geography}")
