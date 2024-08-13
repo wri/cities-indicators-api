@@ -14,11 +14,11 @@ def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str
              an empty string is returned.
 
     Examples:
-        >>> generate_search_query("projects", "data4coolcities")
-        "SEARCH('data4coolcities', {projects})"
+        >>> generate_search_query("project", "data4coolcities")
+        "SEARCH('data4coolcities', {project})"
 
         >>> generate_search_query("theme", ["Biodiversity", "Climate Change"])
-        "AND(SEARCH('Biodiversity', {theme}), SEARCH('Climate Change', {theme}))"
+        "OR(SEARCH('Biodiversity', {theme}), SEARCH('Climate Change', {theme}))"
 
         >>> generate_search_query("theme", "")
         ""

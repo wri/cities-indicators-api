@@ -28,7 +28,7 @@ CITY_RESPONSE_KEYS = [
     "country_code_iso3",
     "latitude",
     "longitude",
-    "projects",
+    "project",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "indicator_id",
