@@ -83,12 +83,14 @@ app.add_middleware(
 # Cities
 # Define the desired keys to extract from each city's data
 city_keys = [
+    "admin_levels",
+    "aoi_boundary_level",
     "city_id",
     "city_name",
     "country_name",
     "country_code_iso3",
-    "admin_levels",
-    "aoi_boundary_level",
+    "latitude",
+    "longitude",
     "project",
 ]
 
@@ -96,7 +98,6 @@ city_keys = [
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     return RedirectResponse(url="/docs")
-
 
 
 @app.get("/health")
@@ -114,14 +115,16 @@ def health_check():
                     "example": {
                         "cities": [
                             {
+                                "admin_levels": ["ADM2union ", "ADM2"],
+                                "aoi_boundary_level": "ADM2union",
                                 "city_id": "ARG-Buenos_Aires",
                                 "city_name": "Buenos Aires",
                                 "country_name": "Argentina",
                                 "country_code_iso3": "ARG",
-                                "admin_levels": ["ADM2union ", "ADM2"],
-                                "aoi_boundary_level": "ADM2union",
+                                "latitude": -34.6073387,
+                                "longitude": -58.4432852,
                                 "project": ["urbanshift", "data4coolcities"],
-                            }
+                            },
                         ]
                     }
                 }
@@ -720,7 +723,6 @@ def list_boundaries():
     except requests.exceptions.RequestException as e:
         logger.error("An error occurred: %s", e)
         return {"error": "An error occurred: Retrieving boundaries failed."}
-
 
 
 @app.get("/boundaries/{geography}")
