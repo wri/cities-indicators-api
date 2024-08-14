@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional, Union
+from typing import List, Optional
 
 
 # City Schema
