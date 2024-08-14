@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
@@ -78,7 +78,7 @@ def get_city_indicators(
     admin_level: str = Path(
         description="The administrative level to filter indicators by"
     ),
-) -> CityIndicatorsDetail:
+):
     """
     Retrieve all indicators for a specific city and administrative level.
     """
