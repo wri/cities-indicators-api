@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.responses.projects import LIST_PROJECTS_RESPONSES
-from app.schemas.projects import ListProjectsResponse
 from app.services import projects as projects_service
 
 
@@ -13,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("", responses=LIST_PROJECTS_RESPONSES)
-def list_projects() -> ListProjectsResponse:
+def list_projects():
     """
     Retrieve the list of projects.
     """
