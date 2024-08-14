@@ -4,11 +4,13 @@ from pydantic import ValidationError
 
 from app.const import API_VERSION
 from app.main import app
-from app.schemas.indicators import (CitiesByIndicatorIdResponse,
-                                    IndicatorsResponse,
-                                    IndicatorsThemesResponse,
-                                    IndicatorValueResponse,
-                                    MetadataByIndicatorIdResponse)
+from app.schemas.indicators import (
+    CitiesByIndicatorIdResponse,
+    IndicatorsResponse,
+    IndicatorsThemesResponse,
+    IndicatorValueResponse,
+    MetadataByIndicatorIdResponse,
+)
 
 client = TestClient(app)
 
@@ -46,9 +48,8 @@ def test_list_indicators_with_project_filter():
 
     indicators = response_data.get("projects", [])
     for indicator in indicators:
-        assert any(
-            MOCK_PROJECT in indicator.get("projects", [])
-        )
+        assert any(MOCK_PROJECT in indicator.get("projects", []))
+
 
 def test_list_indicators_themes():
     response = client.get(f"/{API_VERSION}/indicators/themes")
@@ -76,7 +77,9 @@ def test_get_cities_by_indicator_id():
 
     cities = response_data.get("cities", [])
     for city in cities:
-        assert MOCK_INDICATOR_ID == city.get("indicator"), f"City {city.get('geo_parent_name')} does not contain the indicator {MOCK_INDICATOR_ID}"
+        assert MOCK_INDICATOR_ID == city.get(
+            "indicator"
+        ), f"City {city.get('geo_parent_name')} does not contain the indicator {MOCK_INDICATOR_ID}"
 
 
 def test_list_indicators_with_unknown_project_filter():
@@ -108,7 +111,9 @@ def test_get_metadata_with_unknown_indicator_id():
 def get_city_indicator_by_indicator_id_and_city_id():
     MOCK_INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
     MOCK_CITY_ID = "ARG-Mendoza"
-    response = client.get(f"/{API_VERSION}/indicators/{MOCK_INDICATOR_ID}/{MOCK_CITY_ID}")
+    response = client.get(
+        f"/{API_VERSION}/indicators/{MOCK_INDICATOR_ID}/{MOCK_CITY_ID}"
+    )
     assert response.status_code == 200
 
     response_data = response.json()

@@ -59,11 +59,12 @@ def list_cities(
         return []
 
     city_ids = [city["fields"]["city_id"] for city in cities_list]
-    project_filter_formula = construct_filter_formula({"cities": city_ids})
 
     # Asynchronously fetch all projects related to the cities
     with ThreadPoolExecutor() as executor:
-        all_projects = executor.submit(fetch_projects, project_filter_formula).result()
+        all_projects = executor.submit(
+            fetch_projects, construct_filter_formula({"cities": city_ids})
+        ).result()
 
     project_id_map = {
         project["id"]: project["fields"]["project_id"] for project in all_projects

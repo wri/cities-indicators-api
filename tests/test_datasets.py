@@ -40,9 +40,8 @@ def test_list_indicators_with_city_id_filter():
 
     datasets = response_data.get("datasets", [])
     for dataset in datasets:
-        assert any(
-            city_id in MOCK_CITY_ID for city_id in dataset.get("city_ids", [])
-        )
+        assert any(city_id in MOCK_CITY_ID for city_id in dataset.get("city_ids", []))
+
 
 def test_list_indicators_with_city_id_filter():
     MOCK_CITY_ID = "BRA-Florianopolis"
@@ -57,6 +56,4 @@ def test_list_indicators_with_city_id_filter():
 
     datasets = response_data.get("datasets", [])
     for dataset in datasets:
-        assert any(
-            city_id in MOCK_CITY_ID for city_id in dataset.get("city_ids", [])
-        )
+        assert any(city_id in MOCK_CITY_ID for city_id in dataset.get("city_ids", []))
