@@ -24,6 +24,8 @@ def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str
         ""
     """
     if isinstance(value, list):
+        if len(value) == 1:
+            return f"SEARCH('{value[0]}', {{{column_name}}})"
         search_clauses = [f"SEARCH('{v}', {{{column_name}}})" for v in value]
         return f"OR({', '.join(search_clauses)})" if search_clauses else ""
 

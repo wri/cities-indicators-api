@@ -1,5 +1,5 @@
 import os
-from pyairtable import Table
+from pyairtable import Api
 
 from app.responses.common import ErrorResponse
 
@@ -13,10 +13,11 @@ CARTO_USERNAME = os.getenv("CARTO_USERNAME")
 # Airtable tables
 AIRTABLE_API_KEY = os.getenv("CITIES_API_AIRTABLE_KEY")
 AIRTABLE_BASE_ID = os.getenv("CITIES_API_AIRTABLE_BASE_ID")
-cities_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Cities")
-datasets_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Datasets")
-indicators_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Indicators")
-projects_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Projects")
+airtable_api = Api(AIRTABLE_API_KEY)
+cities_table = airtable_api.table(AIRTABLE_BASE_ID, "Cities")
+datasets_table = airtable_api.table(AIRTABLE_BASE_ID, "Datasets")
+indicators_table = airtable_api.table(AIRTABLE_BASE_ID, "Indicators")
+projects_table = airtable_api.table(AIRTABLE_BASE_ID, "Projects")
 
 # Response keys
 CITY_RESPONSE_KEYS = [
@@ -28,7 +29,7 @@ CITY_RESPONSE_KEYS = [
     "country_code_iso3",
     "latitude",
     "longitude",
-    "project",
+    "projects",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "indicator_id",

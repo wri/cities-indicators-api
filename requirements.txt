@@ -1,8 +1,11 @@
 black
 cartoframes
 fastapi
+httpx
 mypy
 pre-commit
 pyairtable
 pylint
+pytest
+python-dotenv
 uvicorn[standard]

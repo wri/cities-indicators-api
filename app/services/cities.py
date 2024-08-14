@@ -1,5 +1,6 @@
 import json
-from typing import Dict, List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from cartoframes import read_carto
@@ -11,44 +12,73 @@ from app.const import (
     CITY_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
-from app.dependencies import fetch_cities
+from app.dependencies import fetch_cities, fetch_projects
 from app.utils.filters import construct_filter_formula
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
 
 
-def get_cities(
-    project: Optional[List[str]], country_code_iso3: Optional[str]
-) -> List[dict]:
+def list_cities(
+    projects: Optional[List[str]], country_code_iso3: Optional[str]
+) -> List[Dict[str, Any]]:
     """
     Retrieve a list of cities based on the provided filters.
 
     Args:
-        project (Optional[List[str]]): List of Project IDs to filter by.
+        projects (Optional[List[str]]): List of Project IDs to filter by.
         country_code_iso3 (Optional[str]): ISO 3166-1 alpha-3 country code to filter by.
 
     Returns:
-        List[dict]: A list of dictionaries containing the filtered cities' data.
+        List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
     filters = {}
 
-    if project:
-        filters["project"] = project
+    if projects:
+        filters["projects"] = projects
     if country_code_iso3:
         filters["country_code_iso3"] = country_code_iso3
 
     filter_formula = construct_filter_formula(filters)
-    cities_list = fetch_cities(filter_formula)
+
+    # Define the tasks to be executed asynchronously
+    future_to_func = {
+        lambda: fetch_cities(filter_formula): "cities",
+    }
+
+    cities_list = []
+    all_projects = []
+
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            if func_name == "cities":
+                cities_list = future.result()
 
     if not cities_list:
         return []
 
-    cities = [
+    city_ids = [city["fields"]["city_id"] for city in cities_list]
+    project_filter_formula = construct_filter_formula({"cities": city_ids})
+
+    # Asynchronously fetch all projects related to the cities
+    with ThreadPoolExecutor() as executor:
+        all_projects = executor.submit(fetch_projects, project_filter_formula).result()
+
+    project_id_map = {
+        project["id"]: project["fields"]["project_id"] for project in all_projects
+    }
+
+    for city in cities_list:
+        city_projects = [
+            project_id_map.get(project) for project in city["fields"]["projects"]
+        ]
+        city["fields"]["projects"] = city_projects
+
+    return [
         {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         for city in cities_list
     ]
-
-    return cities
 
 
 def get_city_by_city_id(city_id: str) -> Dict:
@@ -62,12 +92,39 @@ def get_city_by_city_id(city_id: str) -> Dict:
         dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
     """
     filter_formula = f'"{city_id}" = {{city_id}}'
-    city_data = fetch_cities(filter_formula)
+
+    # Define the tasks to be executed asynchronously
+    future_to_func = {
+        lambda: fetch_cities(filter_formula): "city_data",
+    }
+
+    city_data = []
+    all_projects = []
+
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            if func_name == "city_data":
+                city_data = future.result()
 
     if not city_data:
-        return []
+        return {}
 
     city = city_data[0]["fields"]
+    project_filter_formula = construct_filter_formula({"cities": [city_id]})
+
+    # Asynchronously fetch all projects related to the city
+    with ThreadPoolExecutor() as executor:
+        all_projects = executor.submit(fetch_projects, project_filter_formula).result()
+
+    project_id_map = {
+        project["id"]: project["fields"]["project_id"] for project in all_projects
+    }
+
+    city_projects = [project_id_map.get(project) for project in city["projects"]]
+    city["projects"] = city_projects
+
     city_response = {key: city[key] for key in CITY_RESPONSE_KEYS if key in city}
 
     return city_response

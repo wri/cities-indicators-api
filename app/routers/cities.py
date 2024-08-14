@@ -27,11 +27,11 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("project", "country_code_iso3"))],
+    dependencies=[Depends(get_expected_params("projects", "country_code_iso3"))],
     responses=LIST_CITIES_RESPONSES,
 )
 def list_cities(
-    project: Optional[List[str]] = Query(
+    projects: Optional[List[str]] = Query(
         None,
         description="A list of Project IDs to filter by",
     ),
@@ -43,7 +43,7 @@ def list_cities(
     Retrieve a list of cities filtered by project IDs and/or country code.
     """
     try:
-        cities_list = cities_service.get_cities(project, country_code_iso3)
+        cities_list = cities_service.list_cities(projects, country_code_iso3)
     except Exception as e:
         logger.error("An error occurred: %s", e)
         raise HTTPException(
@@ -84,7 +84,7 @@ def get_city_indicators(
     admin_level: str = Path(
         description="The administrative level to filter indicators by"
     ),
-) -> CityIndicatorsDetail:
+):
     """
     Retrieve all indicators for a specific city and administrative level.
     """
