@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.dependencies import get_expected_params
 from app.responses.datasets import LIST_DATASETS_RESPONSES
-from app.schemas.datasets import DatasetsResponse
 from app.services import datasets as datasets_service
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +20,7 @@ router = APIRouter()
 )
 def list_datasets(
     city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
-) -> DatasetsResponse:
+):
     """
     Retrieve the list of datasets
     """

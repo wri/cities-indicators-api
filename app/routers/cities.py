@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
@@ -10,12 +10,6 @@ from app.responses.cities import (
     GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES,
     GET_CITY_INDICATORS_RESPONSES,
     LIST_CITIES_RESPONSES,
-)
-from app.schemas.cities import (
-    CityDetail,
-    CityIndicatorsDetail,
-    CityListResponse,
-    GeoJSONFeatureCollection,
 )
 from app.services import cities as cities_service
 
@@ -38,7 +32,7 @@ def list_cities(
     country_code_iso3: Optional[str] = Query(
         None, description="An ISO 3166-1 alpha-3 country code to filter by"
     ),
-) -> CityListResponse:
+):
     """
     Retrieve a list of cities filtered by project IDs and/or country code.
     """
@@ -59,7 +53,7 @@ def list_cities(
 @router.get("/{city_id}", responses=GET_CITY_BY_CITY_ID_RESPONSES)
 def get_city_by_city_id(
     city_id: str = Path(description="The ID of the city to retrieve."),
-) -> CityDetail:
+):
     """
     Retrieve information about a specific city by its ID.
     """
@@ -100,7 +94,7 @@ def get_city_indicators(
     if not city_indicators:
         raise HTTPException(status_code=404, detail="No indicators found.")
 
-    return city_indicators
+    return city_indicators[0]
 
 
 @router.get("/{city_id}/{admin_level}/geojson", responses=GET_CITY_GEOMETRY_RESPONSES)
@@ -109,7 +103,7 @@ def get_city_geometry(
     admin_level: str = Path(
         description="The administrative level to filter geometry by"
     ),
-) -> GeoJSONFeatureCollection:
+):
     """
     Retrieve the geometry of a specific city and administrative level in GeoJSON format.
     """
@@ -139,7 +133,7 @@ def get_city_geometry_with_indicators(
     admin_level: str = Path(
         description="The administrative level to filter geometry and indicators by"
     ),
-) -> GeoJSONFeatureCollection:
+):
     """
     Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
     """

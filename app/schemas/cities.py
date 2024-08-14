@@ -20,15 +20,12 @@ class CityListResponse(BaseModel):
 
 # Indicator Schema
 class CityIndicatorsDetail(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     geo_id: str
     geo_name: str
     geo_level: str
     geo_parent_name: str
-    indicator_version: int
-
-    __config__ = ConfigDict(
-        extra="allow",
-    )
 
 
 # Geometry Schema

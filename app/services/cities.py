@@ -130,7 +130,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
     return city_response
 
 
-def get_city_indicators(city_id: str, admin_level: str) -> List[dict]:
+def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     """
     Retrieve indicators for a specific city and administrative level.
 
@@ -139,7 +139,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> List[dict]:
         admin_level (str): The administrative level to filter by.
 
     Returns:
-        List[dict]: A list of dictionaries containing the city's indicators.
+        Dict: A dictionary containing the city's indicators.
     """
     city_indicators_df = read_carto(
         f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"

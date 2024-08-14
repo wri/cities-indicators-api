@@ -11,13 +11,6 @@ from app.responses.indicators import (
     LIST_INDICATORS_RESPONSES,
     LIST_INDICATORS_THEMES_RESPONSES,
 )
-from app.schemas.indicators import (
-    CitiesByIndicatorIdResponse,
-    IndicatorsResponse,
-    IndicatorsThemesResponse,
-    IndicatorValueResponse,
-    MetadataByIndicatorIdResponse,
-)
 from app.services import indicators as indicators_service
 
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +29,7 @@ def list_indicators(
     project: Optional[str] = Query(
         None, description="The project ID to filter indicators by"
     ),
-) -> IndicatorsResponse:
+):
     """
     Retrieve a list of indicators based on the provided project filter.
     """
@@ -59,7 +52,7 @@ def list_indicators(
     "/themes",
     responses=LIST_INDICATORS_THEMES_RESPONSES,
 )
-def list_indicators_themes() -> IndicatorsThemesResponse:
+def list_indicators_themes():
     """
     Retrieve a set of unique themes from all indicators.
     """
@@ -81,7 +74,7 @@ def list_indicators_themes() -> IndicatorsThemesResponse:
 )
 def get_cities_by_indicator_id(
     indicator_id: str = Path(description="The ID of the indicator to filter cities by"),
-) -> CitiesByIndicatorIdResponse:
+):
     """
     Retrieve a list of cities associated with a specific indicator.
     """
@@ -108,7 +101,7 @@ def get_metadata_by_indicator_id(
     indicator_id: str = Path(
         description="The ID of the indicator to retrieve metadata for"
     ),
-) -> MetadataByIndicatorIdResponse:
+):
     """
     Retrieve metadata for a specific indicator.
     """
@@ -136,7 +129,7 @@ def get_metadata_by_indicator_id(
 def get_city_indicator_by_indicator_id_and_city_id(
     indicator_id: str = Path(description="The ID of the indicator to filter by"),
     city_id: str = Path(description="The ID of the city to filter by"),
-) -> IndicatorValueResponse:
+):
     """
     Retrieve indicator data for a specific city and indicator.
     """

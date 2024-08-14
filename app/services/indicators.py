@@ -62,6 +62,7 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         for project in results["projects"]
     }
 
+    indicators = []
     # Update data_sources_link and projects for each indicator
     for indicator in indicators_dict.values():
         data_sources_link = indicator.get("data_sources_link", [])
@@ -73,14 +74,15 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         indicator["projects"] = [
             projects_dict.get(project, project) for project in indicator_projects
         ]
-        indicators = [
+
+        indicators.append(
             {
                 key: indicator[key]
                 for key in INDICATORS_LIST_RESPONSE_KEYS
                 if key in indicator
             }
-            for indicator in indicators_dict.values()
-        ]
+        )
+
 
     return indicators
 
