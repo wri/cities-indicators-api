@@ -1,8 +1,0 @@
-black
-cartoframes
-fastapi
-mypy
-pre-commit
-pyairtable
-pylint
-uvicorn[standard]

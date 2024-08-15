@@ -1,15 +1,18 @@
 FROM python:3.10
 
-RUN apt-get update
-RUN apt-get install -y libgdal-dev
+RUN apt-get update && apt-get install -y libgdal-dev
 
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
+# Copy Pipfile and Pipfile.lock
+COPY ./Pipfile ./Pipfile.lock /code/
 
+# Install pipenv and use it to install dependencies
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install pipenv
+RUN pipenv install --deploy --ignore-pipfile
 
+# Copy the rest of the application code
 COPY ./ /code/
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

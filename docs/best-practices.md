@@ -3,7 +3,7 @@
 Building a REST API requires careful planning and adherence to best practices to ensure that the API is robust, scalable, and easy to use. Here are some key best practices:
 
 ## 1. **Use Proper HTTP Methods**
-   - **GET**: Retrieve data.I’d like to propose an approach that prioritizes the development of new features while simultaneously emphasizing optimization, scalability, maintainability, and adherence to code quality best practices. By balancing innovation with a strong foundation in these areas, we can ensure that our product not only meets current demands but is also well-prepared for future growth and long-term success.
+   - **GET**: Retrieve data.
    - **POST**: Create new resources.
    - **PUT**: Update or replace existing resources.
    - **PATCH**: Partially update existing resources.
@@ -13,10 +13,9 @@ Building a REST API requires careful planning and adherence to best practices to
    - Use **nouns** to represent resources (e.g., `/cities`, `/indicators`).
    - Use **plural** names (e.g., `/cities` instead of `/city`).
    - Use **sub-resources** to represent relationships (e.g., `/cities/{city_id}/{admin_level}/geojson/indicators`).
-   - Use only underscores and lower case in column names
-   - Avoid spaces and capitals in values that will be used as filters in urls. Default to underscores instead of spaces.
-   - URL file path should have no spaces or capital letters. Default to dashes instead  of spaces.
-   
+   - Use only underscores and lower case in column names.
+   - Avoid spaces and capitals in values that will be used as filters in URLs. Default to underscores instead of spaces.
+   - URL file paths should have no spaces or capital letters. Default to dashes instead of spaces.
 
 ## 3. **Use Proper HTTP Status Codes**
    - **200 OK**: Successful GET, PUT, or DELETE operations.
@@ -35,7 +34,7 @@ Building a REST API requires careful planning and adherence to best practices to
 
 ## 5. **Version the API**
    - Include versioning in the URL (e.g., `/v1/cities`).
-   - Use semantic versioning (`MAJOR.MINOR.PATCH`)
+   - Use semantic versioning (`MAJOR.MINOR.PATCH`).
    - Create changelogs for each version.
 
 ## 6. **Secure the API**
@@ -80,12 +79,48 @@ Building a REST API requires careful planning and adherence to best practices to
    - Consider load balancing, horizontal scaling, and database optimization.
 
 ## 16. **Test the API**
-
    - Write unit and integration tests to ensure the API behaves as expected.
    - Test for edge cases, error conditions, and performance under load.
+   - Use `pytest` for testing to ensure your application behaves as expected. Install `pytest` (if not already installed) and run tests with:
+     ```sh
+     pipenv install --dev pytest
+     pytest
+     ```
 
 ## 17. **API Lifecycle Management**
    - Plan for versioning and deprecating endpoints.
    - Provide clear communication to clients when endpoints or versions are deprecated.
+
+## 18. **Code Formatting**
+   - Use `black` for consistent code formatting. Run `black` using:
+     ```sh
+     black .
+     ```
+
+## 19. **Linting**
+   - Use `pylint` to check for potential errors and enforce coding standards. Run `pylint` on your Python files with:
+     ```sh
+     pylint $(git ls-files 'app/*.py')
+     ```
+   - Configure `.pylintrc` as needed for project-specific settings.
+
+## 20. **Type Checking**
+   - Use `mypy` for type checking to catch type-related bugs. Run it using:
+     ```sh
+     mypy .
+     ```
+
+## 21. **Dependency Management**
+   - Use `pipenv` to manage dependencies and ensure consistency across environments. If you add or update dependencies, make sure to lock them with:
+     ```sh
+     pipenv lock
+     ```
+   - Install dependencies from the `Pipfile.lock` to ensure a consistent environment:
+     ```sh
+     pipenv install --ignore-pipfile
+     ```
+
+## 22. **Code Review**
+   - Participate in code reviews to ensure code quality and share knowledge with team members.
 
 By following these best practices, we can build a REST API that is robust, easy to maintain, and provides a great experience for developers who use it.
