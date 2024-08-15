@@ -10,7 +10,7 @@ class CityDetail(BaseModel):
     country_code_iso3: str
     admin_levels: Optional[List[str]]
     aoi_boundary_level: Optional[str]
-    project: List[str]
+    projects: List[str]
 
 
 # Response for listing cities
