@@ -7,12 +7,12 @@ from app.responses.common import ErrorResponse
 API_VERSION = "v1"
 
 # Carto
-CARTO_API_KEY = os.getenv("CARTO_API_KEY")
-CARTO_USERNAME = os.getenv("CARTO_USERNAME")
+CARTO_API_KEY = "default_public"
+CARTO_USERNAME = "wri-cities"
 
 # Airtable tables
 AIRTABLE_API_KEY = os.getenv("CITIES_API_AIRTABLE_KEY")
-AIRTABLE_BASE_ID = os.getenv("CITIES_API_AIRTABLE_BASE_ID")
+AIRTABLE_BASE_ID = "appDWCVIQlVnLLaW2"
 cities_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Cities")
 datasets_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Datasets")
 indicators_table = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, "Indicators")

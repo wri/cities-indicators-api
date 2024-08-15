@@ -83,7 +83,6 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
             }
         )
 
-
     return indicators
 
 
