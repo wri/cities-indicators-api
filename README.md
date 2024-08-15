@@ -22,7 +22,7 @@ Docs: [http://44.201.179.158:8000/docs](http://44.201.179.158:8000/docs)
         ```
     4. Run the server:
         ```sh
-        uvicorn main:app --env-file '.env' --reload
+        uvicorn app.main:app --env-file '.env' --reload
         ```
 4. If you are on a Debian/Ubuntu system, install the `python3-venv` package using the following command:
     ```sh
