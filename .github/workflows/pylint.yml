@@ -35,4 +35,4 @@ jobs:
 
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files 'app/*.py')
+        pipenv run pylint $(git ls-files 'app/*.py')
