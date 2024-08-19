@@ -3,13 +3,19 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
+from app.const import (
+    COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_404_ERROR_RESPONSE,
+    COMMON_500_ERROR_RESPONSE,
+)
+
 from app.dependencies import get_expected_params
-from app.responses.cities import (
-    GET_CITY_BY_CITY_ID_RESPONSES,
-    GET_CITY_GEOMETRY_RESPONSES,
-    GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES,
-    GET_CITY_INDICATORS_RESPONSES,
-    LIST_CITIES_RESPONSES,
+from app.schemas.common import ErrorResponse
+from app.schemas.cities import (
+    CityDetail,
+    CityIndicatorsDetail,
+    CityListResponse,
+    GeoJSONFeatureCollection,
 )
 from app.services import cities as cities_service
 
@@ -22,7 +28,20 @@ router = APIRouter()
 @router.get(
     "",
     dependencies=[Depends(get_expected_params("projects", "country_code_iso3"))],
-    responses=LIST_CITIES_RESPONSES,
+    response_model=CityListResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query parameter",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
+                }
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def list_cities(
     projects: Optional[List[str]] = Query(
@@ -45,12 +64,23 @@ def list_cities(
         ) from e
 
     if not cities_list:
-        raise HTTPException(status_code=404, detail="No cities found.")
+        raise HTTPException(status_code=404, detail="No cities found")
 
     return {"cities": cities_list}
 
 
-@router.get("/{city_id}", responses=GET_CITY_BY_CITY_ID_RESPONSES)
+@router.get(
+    "/{city_id}",
+    response_model=CityDetail,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {"application/json": {"example": {"detail": "No city found"}}},
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
 def get_city_by_city_id(
     city_id: str = Path(description="The ID of the city to retrieve."),
 ):
@@ -67,12 +97,25 @@ def get_city_by_city_id(
         ) from e
 
     if not city:
-        raise HTTPException(status_code=404, detail="No city found.")
+        raise HTTPException(status_code=404, detail="No city found")
 
     return city
 
 
-@router.get("/{city_id}/{admin_level}", responses=GET_CITY_INDICATORS_RESPONSES)
+@router.get(
+    "/{city_id}/{admin_level}",
+    response_model=CityIndicatorsDetail,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicators found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
 def get_city_indicators(
     city_id: str = Path(description="The ID of the city to retrieve indicators for"),
     admin_level: str = Path(
@@ -92,12 +135,25 @@ def get_city_indicators(
         ) from e
 
     if not city_indicators:
-        raise HTTPException(status_code=404, detail="No indicators found.")
+        raise HTTPException(status_code=404, detail="No indicators found")
 
     return city_indicators[0]
 
 
-@router.get("/{city_id}/{admin_level}/geojson", responses=GET_CITY_GEOMETRY_RESPONSES)
+@router.get(
+    "/{city_id}/{admin_level}/geojson",
+    response_model=GeoJSONFeatureCollection,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No geometry found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
 def get_city_geometry(
     city_id: str = Path(description="The ID of the city to retrieve geometry for"),
     admin_level: str = Path(
@@ -117,14 +173,24 @@ def get_city_geometry(
         ) from e
 
     if not city_geojson["features"]:
-        raise HTTPException(status_code=404, detail="No geometry found.")
+        raise HTTPException(status_code=404, detail="No geometry found")
 
     return city_geojson
 
 
 @router.get(
     "/{city_id}/{admin_level}/geojson/indicators",
-    responses=GET_CITY_GEOMETRY_WITH_INDICATORS_RESPONSES,
+    response_model=GeoJSONFeatureCollection,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicators found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(
@@ -149,6 +215,6 @@ def get_city_geometry_with_indicators(
         ) from e
 
     if not city_indicators["features"]:
-        raise HTTPException(status_code=404, detail="No indicators found.")
+        raise HTTPException(status_code=404, detail="No indicators found")
 
     return city_indicators

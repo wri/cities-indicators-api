@@ -3,8 +3,10 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.const import COMMON_200_SUCCESSFUL_RESPONSE, COMMON_500_ERROR_RESPONSE
 from app.dependencies import get_expected_params
-from app.responses.datasets import LIST_DATASETS_RESPONSES
+from app.schemas.common import ErrorResponse
+from app.schemas.datasets import DatasetsResponse
 from app.services import datasets as datasets_service
 
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +18,20 @@ router = APIRouter()
 @router.get(
     "",
     dependencies=[Depends(get_expected_params("city_id"))],
-    responses=LIST_DATASETS_RESPONSES,
+    response_model=DatasetsResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query parameter",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
+                }
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def list_datasets(
     city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),

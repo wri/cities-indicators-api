@@ -3,13 +3,19 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
+from app.const import (
+    COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_404_ERROR_RESPONSE,
+    COMMON_500_ERROR_RESPONSE,
+)
 from app.dependencies import get_expected_params
-from app.responses.indicators import (
-    GET_CITIES_BY_INDICATOR_ID_RESPONSES,
-    GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES,
-    GET_METADATA_BY_INDICATOR_ID_RESPONSES,
-    LIST_INDICATORS_RESPONSES,
-    LIST_INDICATORS_THEMES_RESPONSES,
+from app.schemas.common import ErrorResponse
+from app.schemas.indicators import (
+    IndicatorValueResponse,
+    IndicatorsThemesResponse,
+    IndicatorsResponse,
+    MetadataByIndicatorIdResponse,
+    CitiesByIndicatorIdResponse,
 )
 from app.services import indicators as indicators_service
 
@@ -23,7 +29,26 @@ router = APIRouter()
 @router.get(
     "",
     dependencies=[Depends(get_expected_params("project"))],
-    responses=LIST_INDICATORS_RESPONSES,
+    response_model=IndicatorsResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query parameter",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
+                }
+            },
+        },
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicators found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def list_indicators(
     project: Optional[str] = Query(
@@ -50,7 +75,11 @@ def list_indicators(
 
 @router.get(
     "/themes",
-    responses=LIST_INDICATORS_THEMES_RESPONSES,
+    response_model=IndicatorsThemesResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def list_indicators_themes():
     """
@@ -70,7 +99,15 @@ def list_indicators_themes():
 
 @router.get(
     "/{indicator_id}",
-    responses=GET_CITIES_BY_INDICATOR_ID_RESPONSES,
+    response_model=CitiesByIndicatorIdResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {"application/json": {"example": {"detail": "No cities found"}}},
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def get_cities_by_indicator_id(
     indicator_id: str = Path(description="The ID of the indicator to filter cities by"),
@@ -95,7 +132,26 @@ def get_cities_by_indicator_id(
 
 @router.get(
     "/metadata/{indicator_id}",
-    responses=GET_METADATA_BY_INDICATOR_ID_RESPONSES,
+    response_model=MetadataByIndicatorIdResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query parameter",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
+                }
+            },
+        },
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicators found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def get_metadata_by_indicator_id(
     indicator_id: str = Path(
@@ -124,7 +180,17 @@ def get_metadata_by_indicator_id(
 
 @router.get(
     "/{indicator_id}/{city_id}",
-    responses=GET_INDICATOR_BY_INDICATOR_ID_CITY_ID_RESPONSES,
+    response_model=IndicatorValueResponse,
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicator found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
 )
 def get_city_indicator_by_indicator_id_and_city_id(
     indicator_id: str = Path(description="The ID of the indicator to filter by"),

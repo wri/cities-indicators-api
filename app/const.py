@@ -1,7 +1,7 @@
 import os
 from pyairtable import Api
 
-from app.responses.common import ErrorResponse
+from app.schemas.common import ErrorResponse
 
 # API
 API_VERSION = "v1"
@@ -79,6 +79,10 @@ INDICATORS_METADATA_RESPONSE_KEYS = [
 ]
 
 # Common HTTP responses
+COMMON_200_SUCCESSFUL_RESPONSE = {
+    "description": "Successful Response",
+}
+
 COMMON_500_ERROR_RESPONSE = {
     "model": ErrorResponse,
     "description": "Internal Server Error",
@@ -89,18 +93,7 @@ COMMON_500_ERROR_RESPONSE = {
     },
 }
 
-COMMON_400_ERROR_RESPONSE = {
-    "model": ErrorResponse,
-    "description": "Invalid query parameter:",
-    "content": {
-        "application/json": {
-            "example": {"detail": "Invalid query parameter: <query_parameter>"}
-        }
-    },
-}
-
 COMMON_404_ERROR_RESPONSE = {
     "model": ErrorResponse,
     "description": "Not found.",
-    "content": {"application/json": {"example": {"detail": "No <entities> found."}}},
 }
