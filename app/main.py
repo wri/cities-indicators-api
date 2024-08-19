@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.const import API_VERSION
-from app.middlewares.strip_api_prefix import StripApiPrefixMiddleware
 from app.routers import cities, datasets, indicators, projects
 
 # ----------------------------------------
@@ -42,7 +41,6 @@ app = FastAPI(
 # ----------------------------------------
 
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
-app.add_middleware(StripApiPrefixMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
