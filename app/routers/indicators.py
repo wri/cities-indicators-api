@@ -29,9 +29,11 @@ router = APIRouter()
 @router.get(
     "",
     dependencies=[Depends(get_expected_params("project"))],
-    response_model=IndicatorsResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": IndicatorsResponse
+        },
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -75,9 +77,11 @@ def list_indicators(
 
 @router.get(
     "/themes",
-    response_model=IndicatorsThemesResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": IndicatorsThemesResponse
+        },
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
@@ -99,9 +103,11 @@ def list_indicators_themes():
 
 @router.get(
     "/{indicator_id}",
-    response_model=CitiesByIndicatorIdResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": CitiesByIndicatorIdResponse
+        },
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {"application/json": {"example": {"detail": "No cities found"}}},
@@ -132,9 +138,11 @@ def get_cities_by_indicator_id(
 
 @router.get(
     "/metadata/{indicator_id}",
-    response_model=MetadataByIndicatorIdResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": MetadataByIndicatorIdResponse
+        },
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -180,9 +188,11 @@ def get_metadata_by_indicator_id(
 
 @router.get(
     "/{indicator_id}/{city_id}",
-    response_model=IndicatorValueResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": IndicatorValueResponse
+        },
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
