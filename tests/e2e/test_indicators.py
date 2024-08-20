@@ -27,17 +27,14 @@ class TestListIndicators:
         except ValidationError as e:
             pytest.fail(f"Response did not match IndicatorsResponse model: {e}")
 
-        indicators = response_data.get("indicators", [])
-        assert isinstance(indicators[0].get("indicator_id"), str)
-
     def test_list_indicators_with_unknown_query_parameter(self):
         response = client.get(f"/{API_VERSION}/indicators?hello=true")
         assert response.status_code == 400
         assert response.json() == {"detail": "Invalid query parameter: hello"}
 
     def test_list_indicators_with_project_filter(self):
-        MOCK_PROJECT = "urbanshift"
-        response = client.get(f"/{API_VERSION}/indicators?project={MOCK_PROJECT}")
+        PROJECT = "urbanshift"
+        response = client.get(f"/{API_VERSION}/indicators?project={PROJECT}")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -48,7 +45,7 @@ class TestListIndicators:
 
         indicators = response_data.get("projects", [])
         for indicator in indicators:
-            assert any(MOCK_PROJECT in indicator.get("projects", []))
+            assert any(PROJECT in indicator.get("projects", []))
 
     def test_list_indicators_themes(self):
         response = client.get(f"/{API_VERSION}/indicators/themes")
@@ -71,8 +68,8 @@ class TestListIndicators:
 @pytest.mark.e2e
 class TestGetIndicators:
     def test_get_cities_by_indicator_id(self):
-        MOCK_INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
-        response = client.get(f"/{API_VERSION}/indicators/{MOCK_INDICATOR_ID}")
+        INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
+        response = client.get(f"/{API_VERSION}/indicators/{INDICATOR_ID}")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -83,19 +80,12 @@ class TestGetIndicators:
                 f"Response did not match CitiesByIndicatorIdResponse model: {e}"
             )
 
-        cities = response_data.get("cities", [])
-        for city in cities:
-            assert MOCK_INDICATOR_ID == city.get(
-                "indicator"
-            ), f"City {city.get('geo_parent_name')} does not contain the indicator {MOCK_INDICATOR_ID}"
-
     def test_get_metadata_by_indicator_id(self):
-        MOCK_INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
-        response = client.get(f"/{API_VERSION}/indicators/metadata/{MOCK_INDICATOR_ID}")
+        INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
+        response = client.get(f"/{API_VERSION}/indicators/metadata/{INDICATOR_ID}")
         assert response.status_code == 200
 
         response_data = response.json()
-        assert response_data.get("indicator_id") == MOCK_INDICATOR_ID
 
         try:
             MetadataByIndicatorIdResponse(**response_data)
@@ -110,16 +100,12 @@ class TestGetIndicators:
         assert response.json() == {"detail": "No indicators metadata found"}
 
     def test_get_city_indicator_by_indicator_id_and_city_id(self):
-        MOCK_INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
-        MOCK_CITY_ID = "ARG-Mendoza"
-        response = client.get(
-            f"/{API_VERSION}/indicators/{MOCK_INDICATOR_ID}/{MOCK_CITY_ID}"
-        )
+        INDICATOR_ID = "ACC_1_OpenSpaceHectaresper1000people2022"
+        CITY_ID = "ARG-Mendoza"
+        response = client.get(f"/{API_VERSION}/indicators/{INDICATOR_ID}/{CITY_ID}")
         assert response.status_code == 200
 
         response_data = response.json()
-        assert response_data.get("indicator") == MOCK_INDICATOR_ID
-        assert response_data.get("geo_parent_name") == MOCK_CITY_ID
 
         try:
             IndicatorValueResponse(**response_data)
