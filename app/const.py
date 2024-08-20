@@ -92,5 +92,5 @@ COMMON_500_ERROR_RESPONSE = {
 
 COMMON_404_ERROR_RESPONSE = {
     "model": ErrorResponse,
-    "description": "Not found.",
+    "description": "Not found",
 }

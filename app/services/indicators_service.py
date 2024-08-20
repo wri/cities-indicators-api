@@ -33,8 +33,6 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
     Returns:
         List[Dict]: A list of indicators with selected fields.
 
-    Raises:
-        Exception: If there is an error fetching data from the underlying sources.
     """
     filter_formula = generate_search_query("projects", project)
     future_to_func = {
@@ -148,8 +146,6 @@ def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
     Returns:
         Dict: A dictionary containing metadata for the specified indicator.
 
-    Raises:
-        Exception: If the indicator is not found.
     """
     filter_formula = generate_search_query("indicator_id", indicator_id)
     filtered_indicator = fetch_first_indicator(filter_formula)
@@ -179,8 +175,6 @@ def get_city_indicator_by_indicator_id_and_city_id(
     Returns:
         Dict: A dictionary containing the indicator data for the specified city.
 
-    Raises:
-        Exception: If the city indicator is not found.
     """
     query = (
         f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' "

@@ -67,7 +67,7 @@ def list_indicators(
         ) from e
 
     if not indicators_list:
-        raise HTTPException(status_code=404, detail="No indicators found.")
+        raise HTTPException(status_code=404, detail="No indicators found")
 
     return {"indicators": indicators_list}
 
@@ -122,7 +122,7 @@ def get_cities_by_indicator_id(
         ) from e
 
     if not indicators_list:
-        raise HTTPException(status_code=404, detail="No cities found.")
+        raise HTTPException(status_code=404, detail="No cities found")
 
     return {"cities": indicators_list}
 
@@ -169,7 +169,7 @@ def get_metadata_by_indicator_id(
         ) from e
 
     if not indicators_metadata_list:
-        raise HTTPException(status_code=404, detail="No indicators metadata found.")
+        raise HTTPException(status_code=404, detail="No indicators metadata found")
 
     return indicators_metadata_list
 
@@ -206,6 +206,6 @@ def get_city_indicator_by_indicator_id_and_city_id(
         ) from e
 
     if not indicator:
-        raise HTTPException(status_code=404, detail="No indicator found.")
+        raise HTTPException(status_code=404, detail="No indicator found")
 
     return indicator
