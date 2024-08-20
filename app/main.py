@@ -5,12 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from app.routers import (
-    cities_router,
-    datasets_router,
-    indicators_router,
-    projects_router,
-)
+from app.const import API_VERSION
+from app.routers import cities_router, datasets_router, indicators_router, projects_router
 
 # ----------------------------------------
 # Logging Configuration
@@ -53,10 +49,16 @@ app.add_middleware(
 # Routes
 # ----------------------------------------
 
-app.include_router(cities_router.router, prefix="/cities", tags=["Cities"])
-app.include_router(datasets_router.router, prefix="/datasets", tags=["Datasets"])
-app.include_router(indicators_router.router, prefix="/indicators", tags=["Indicators"])
-app.include_router(projects_router.router, prefix="/projects", tags=["Projects"])
+app.include_router(cities_router.router, prefix=f"/{API_VERSION}/cities", tags=["Cities"])
+app.include_router(
+    datasets_router.router, prefix=f"/{API_VERSION}/datasets", tags=["Datasets"]
+)
+app.include_router(
+    indicators_router.router, prefix=f"/{API_VERSION}/indicators", tags=["Indicators"]
+)
+app.include_router(
+    projects_router.router, prefix=f"/{API_VERSION}/projects", tags=["Projects"]
+)
 
 
 @app.get(
