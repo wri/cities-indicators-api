@@ -12,7 +12,8 @@ from app.const import (
     CITY_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
-from app.dependencies import fetch_cities, fetch_projects
+from app.repositories.cities_repository import fetch_cities
+from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import construct_filter_formula
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)

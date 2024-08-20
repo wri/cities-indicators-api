@@ -12,12 +12,9 @@ from app.const import (
     INDICATORS_METADATA_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
-from app.dependencies import (
-    fetch_datasets,
-    fetch_first_indicator,
-    fetch_indicators,
-    fetch_projects,
-)
+from app.repositories.datasets_repository import fetch_datasets
+from app.repositories.projects_repository import fetch_projects
+from app.repositories.indicators_repository import fetch_indicators, fetch_first_indicator
 from app.utils.filters import generate_search_query
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
