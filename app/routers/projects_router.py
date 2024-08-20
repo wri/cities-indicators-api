@@ -7,7 +7,7 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.schemas.common_schema import ErrorResponse
-from app.services import projects_service
+from app.services import projects_service as projects_service
 from app.schemas.projects_schema import ListProjectsResponse
 
 logging.basicConfig(level=logging.INFO)
