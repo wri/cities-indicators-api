@@ -85,7 +85,7 @@ def test_get_cities_by_indicator_id():
 def test_list_indicators_with_unknown_project_filter():
     response = client.get(f"/{API_VERSION}/indicators?project=unknownproject")
     assert response.status_code == 404
-    assert response.json() == {"detail": "No indicators found."}
+    assert response.json() == {"detail": "No indicators found"}
 
 
 def test_get_metadata_by_indicator_id():
@@ -105,7 +105,7 @@ def test_get_metadata_by_indicator_id():
 def test_get_metadata_with_unknown_indicator_id():
     response = client.get(f"/{API_VERSION}/indicators/metadata/unknownindicatorid")
     assert response.status_code == 404
-    assert response.json() == {"detail": "No indicators metadata found."}
+    assert response.json() == {"detail": "No indicators metadata found"}
 
 
 def get_city_indicator_by_indicator_id_and_city_id():
