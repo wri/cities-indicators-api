@@ -1,7 +1,7 @@
 import os
 from pyairtable import Api
 
-from app.schemas.common import ErrorResponse
+from app.schemas.common_schema import ErrorResponse
 
 # API
 API_VERSION = "v1"

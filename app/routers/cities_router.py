@@ -10,14 +10,14 @@ from app.const import (
 )
 
 from app.utils.dependencies import validate_query_params
-from app.schemas.common import ErrorResponse
-from app.schemas.cities import (
+from app.schemas.common_schema import ErrorResponse
+from app.schemas.cities_schema import (
     CityDetail,
     CityIndicatorsDetail,
     CityListResponse,
     GeoJSONFeatureCollection,
 )
-from app.services import cities as cities_service
+from app.services import cities_service as cities_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
