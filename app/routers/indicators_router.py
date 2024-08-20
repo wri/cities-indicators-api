@@ -9,8 +9,8 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.utils.dependencies import validate_query_params
-from app.schemas.common_schema import ErrorResponse
-from app.schemas.indicators_schema import (
+from app.schemas.common import ErrorResponse
+from app.schemas.indicators import (
     IndicatorValueResponse,
     IndicatorsThemesResponse,
     IndicatorsResponse,
