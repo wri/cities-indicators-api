@@ -22,7 +22,7 @@ Docs: [http://44.201.179.158/docs](http://44.201.179.158/docs)
         ```
     4. Run the server:
         ```sh
-        uvicorn app.main:app --env-file '.env' --reload
+        uvicorn app.main:app --reload
         ```
 4. If you are on a Debian/Ubuntu system, ensure that you have Python and pip installed. You can install the `python3-pip` package using the following command:
     ```sh
