@@ -12,7 +12,10 @@ from app.const import (
 )
 from app.repositories.datasets_repository import fetch_datasets
 from app.repositories.projects_repository import fetch_projects
-from app.repositories.indicators_repository import fetch_indicators, fetch_first_indicator
+from app.repositories.indicators_repository import (
+    fetch_indicators,
+    fetch_first_indicator,
+)
 from app.utils.filters import generate_search_query
 from app.utils.settings import Settings
 
