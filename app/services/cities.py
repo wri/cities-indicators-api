@@ -7,15 +7,18 @@ from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import (
-    CARTO_API_KEY,
-    CARTO_USERNAME,
     CITY_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
 from app.dependencies import fetch_cities, fetch_projects
 from app.utils.filters import construct_filter_formula
+from app.utils.settings import Settings
 
-set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
+settings = Settings()
+
+set_default_credentials(
+    username=settings.carto_username, api_key=settings.carto_api_key
+)
 
 
 def list_cities(

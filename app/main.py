@@ -1,12 +1,17 @@
 import logging
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from app.utils.settings import Settings
 
-from app.const import API_VERSION
 from app.routers import cities, datasets, indicators, projects
+
+# ----------------------------------------
+# Load settings
+# ----------------------------------------
+settings = Settings()
+API_VERSION = settings.api_version
 
 # ----------------------------------------
 # Logging Configuration
@@ -39,11 +44,10 @@ app = FastAPI(
 # ----------------------------------------
 # Middleware Configuration
 # ----------------------------------------
-
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+print(settings)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
 )
 
 # ----------------------------------------
