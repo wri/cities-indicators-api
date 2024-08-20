@@ -1,6 +1,6 @@
 from typing import List
 
-from app.dependencies import fetch_projects
+from app.repositories.projects_repository import fetch_projects
 
 
 def list_projects() -> List[str]:

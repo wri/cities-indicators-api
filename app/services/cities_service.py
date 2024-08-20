@@ -10,7 +10,8 @@ from app.const import (
     CITY_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
-from app.dependencies import fetch_cities, fetch_projects
+from app.repositories.cities_repository import fetch_cities
+from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import construct_filter_formula
 from app.utils.settings import Settings
 

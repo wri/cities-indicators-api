@@ -2,7 +2,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Dict, Any, List
 
 from app.const import DATASETS_LIST_RESPONSE_KEYS
-from app.dependencies import fetch_cities, fetch_datasets, fetch_indicators
+from app.repositories.cities_repository import fetch_cities
+from app.repositories.datasets_repository import fetch_datasets
+from app.repositories.indicators_repository import fetch_indicators
 from app.utils.filters import generate_search_query
 
 
