@@ -1,6 +1,7 @@
 from pyairtable import Api
 
 from app.schemas.common_schema import ErrorResponse
+from app.utils.settings import Settings
 
 # Load settings
 settings = Settings()

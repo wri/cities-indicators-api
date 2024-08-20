@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from app.utils.settings import Settings
 
-from app.const import API_VERSION
 from app.routers import cities_router, datasets_router, indicators_router, projects_router
 
 # ----------------------------------------
@@ -29,7 +28,7 @@ app = FastAPI(
     title="WRI Cities Indicators API",
     description="You can use this API to get the value of various indicators for a number of cities at multiple admin levels.",
     summary="An indicators API",
-    version=API_VERSION,
+    version="v1",
     terms_of_service="TBD",
     contact={
         "name": "WRI Cities Data Team",
@@ -55,15 +54,15 @@ app.add_middleware(
 # Routes
 # ----------------------------------------
 
-app.include_router(cities_router.router, prefix=f"/{API_VERSION}/cities", tags=["Cities"])
+app.include_router(cities_router.router, prefix=f"/cities", tags=["Cities"])
 app.include_router(
-    datasets_router.router, prefix=f"/{API_VERSION}/datasets", tags=["Datasets"]
+    datasets_router.router, prefix=f"/datasets", tags=["Datasets"]
 )
 app.include_router(
-    indicators_router.router, prefix=f"/{API_VERSION}/indicators", tags=["Indicators"]
+    indicators_router.router, prefix=f"/indicators", tags=["Indicators"]
 )
 app.include_router(
-    projects_router.router, prefix=f"/{API_VERSION}/projects", tags=["Projects"]
+    projects_router.router, prefix=f"/projects", tags=["Projects"]
 )
 
 
