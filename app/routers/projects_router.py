@@ -19,7 +19,10 @@ router = APIRouter()
 @router.get(
     "",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": ListProjectsResponse},
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": ListProjectsResponse
+        },
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
