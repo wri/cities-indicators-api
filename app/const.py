@@ -2,6 +2,7 @@ import os
 from pyairtable import Api
 
 from app.schemas.common_schema import ErrorResponse
+from app.utils.settings import Settings
 
 # Carto
 CARTO_API_KEY = "default_public"
