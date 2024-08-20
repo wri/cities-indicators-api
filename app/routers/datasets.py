@@ -18,9 +18,11 @@ router = APIRouter()
 @router.get(
     "",
     dependencies=[Depends(get_expected_params("city_id"))],
-    response_model=DatasetsResponse,
     responses={
-        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        200: {
+            **COMMON_200_SUCCESSFUL_RESPONSE,
+            "model": DatasetsResponse
+        },
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
