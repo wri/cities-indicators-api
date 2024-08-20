@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.const import COMMON_200_SUCCESSFUL_RESPONSE, COMMON_500_ERROR_RESPONSE
-from app.dependencies import get_expected_params
+from app.utils.dependencies import validate_query_params
 from app.schemas.common import ErrorResponse
 from app.schemas.datasets import DatasetsResponse
 from app.services import datasets as datasets_service
@@ -17,12 +17,9 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("city_id"))],
+    dependencies=[Depends(validate_query_params("city_id"))],
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": DatasetsResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": DatasetsResponse},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",

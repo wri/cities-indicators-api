@@ -9,7 +9,7 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 
-from app.dependencies import get_expected_params
+from app.utils.dependencies import validate_query_params
 from app.schemas.common import ErrorResponse
 from app.schemas.cities import (
     CityDetail,
@@ -27,12 +27,9 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("projects", "country_code_iso3"))],
+    dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": CityListResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityListResponse},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -74,10 +71,7 @@ def list_cities(
 @router.get(
     "/{city_id}",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": CityDetail
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityDetail},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {"application/json": {"example": {"detail": "No city found"}}},
@@ -109,10 +103,7 @@ def get_city_by_city_id(
 @router.get(
     "/{city_id}/{admin_level}",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": CityIndicatorsDetail
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorsDetail},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -149,10 +140,7 @@ def get_city_indicators(
 @router.get(
     "/{city_id}/{admin_level}/geojson",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": GeoJSONFeatureCollection
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -189,10 +177,7 @@ def get_city_geometry(
 @router.get(
     "/{city_id}/{admin_level}/geojson/indicators",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": GeoJSONFeatureCollection
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
