@@ -17,7 +17,5 @@ class Settings(BaseSettings):
     airtable_base_id: str = "appDWCVIQlVnLLaW2"
 
     model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra='ignore'
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

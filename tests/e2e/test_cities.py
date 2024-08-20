@@ -12,9 +12,10 @@ from app.schemas.cities import (
 
 client = TestClient(app)
 
+
 @pytest.mark.e2e
 class TestListCities:
-    def no_filter():
+    def test_list_cities_no_filter(self):
         response = client.get(f"/{API_VERSION}/cities")
         assert response.status_code == 200
 
@@ -27,14 +28,12 @@ class TestListCities:
         cities = response_data.get("cities", [])
         assert isinstance(cities[0].get("city_id"), str)
 
-
-    def with_unknown_query_parameter():
+    def test_list_cities_with_unknown_query_parameter(self):
         response = client.get(f"/{API_VERSION}/cities?something=true")
         assert response.status_code == 400
         assert response.json() == {"detail": "Invalid query parameter: something"}
 
-
-    def with_single_projects_filter():
+    def test_list_cities_with_single_projects_filter(self):
         MOCK_PROJECTS = ["cities4forests"]
         response = client.get(f"/{API_VERSION}/cities?projects={MOCK_PROJECTS[0]}")
         assert response.status_code == 200
@@ -51,8 +50,7 @@ class TestListCities:
                 project in MOCK_PROJECTS for project in city.get("projects", [])
             ), f"City {city.get('city_id')} does not contain any of the projects in {MOCK_PROJECTS}"
 
-
-    def with_multiple_projects_filter():
+    def test_list_cities_with_multiple_projects_filter(self):
         MOCK_PROJECTS = ["deepdive", "urbanshift"]
         response = client.get(
             f"/{API_VERSION}/cities?projects={MOCK_PROJECTS[0]}&projects={MOCK_PROJECTS[1]}"
@@ -71,8 +69,7 @@ class TestListCities:
                 project in MOCK_PROJECTS for project in city.get("projects", [])
             ), f"City {city.get('city_id')} does not contain any of the projects in {MOCK_PROJECTS}"
 
-
-    def with_multiple_projects_and_country_code_filter():
+    def test_list_cities_with_multiple_projects_and_country_code_filter(self):
         MOCK_PROJECTS = ["deepdive", "urbanshift"]
         MOCK_COUNTRY_CODE_ISO3 = "MEX"
         response = client.get(
@@ -93,15 +90,15 @@ class TestListCities:
             ), f"City {city.get('city_id')} does not include any of the projects: {MOCK_PROJECTS}"
             assert city.get("country_code_iso3") == MOCK_COUNTRY_CODE_ISO3
 
-
-    def with_unknown_projects_filter():
+    def test_list_cities_with_unknown_projects_filter(self):
         response = client.get(f"/{API_VERSION}/cities?projects=unknownproject")
         assert response.status_code == 404
         assert response.json() == {"detail": "No cities found"}
 
+
 @pytest.mark.e2e
 class TestGetCities:
-    def city_by_city_id():
+    def test_get_city_by_city_id(self):
         MOCK_CITY_ID = "COD-Uvira"
         response = client.get(f"/{API_VERSION}/cities/{MOCK_CITY_ID}")
         assert response.status_code == 200
@@ -114,14 +111,12 @@ class TestGetCities:
         except ValidationError as e:
             pytest.fail(f"Response did not match CityDetail model: {e}")
 
-
-    def city_by_city_id_with_unknown_city_id():
+    def test_get_city_by_city_id_with_unknown_city_id(self):
         MOCK_CITY_ID = "unknowncityid"
         response = client.get(f"/{API_VERSION}/cities/{MOCK_CITY_ID}")
         assert response.status_code == 404
 
-
-    def city_indicators():
+    def test_get_city_indicators(self):
         MOCK_CITY_ID = "COD-Uvira"
         MOCK_ADM_LEVEL = "ADM3"
         response = client.get(f"/{API_VERSION}/cities/{MOCK_CITY_ID}/{MOCK_ADM_LEVEL}")
@@ -135,13 +130,11 @@ class TestGetCities:
         except ValidationError as e:
             pytest.fail(f"Response did not match CityIndicatorsDetail model: {e}")
 
-
-    def city_indicators_with_unknown_city_id_and_admin_level():
+    def test_get_city_indicators_with_unknown_city_id_and_admin_level(self):
         response = client.get(f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel")
         assert response.status_code == 404
 
-
-    def city_geometry():
+    def test_get_city_geometry(self):
         MOCK_CITY_ID = "COD-Uvira"
         MOCK_ADM_LEVEL = "ADM3"
         response = client.get(
@@ -162,15 +155,13 @@ class TestGetCities:
         except ValidationError as e:
             pytest.fail(f"Response did not match GeoJSONFeatureCollection model: {e}")
 
-
-    def city_geometry_with_unknown_city_id_and_admin_level():
+    def test_get_city_geometry_with_unknown_city_id_and_admin_level(self):
         response = client.get(
             f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel/geojson"
         )
         assert response.status_code == 404
 
-
-    def city_geometry():
+    def test_get_city_geometry(self):
         MOCK_CITY_ID = "COD-Uvira"
         MOCK_ADM_LEVEL = "ADM3"
         response = client.get(
@@ -191,8 +182,9 @@ class TestGetCities:
         except ValidationError as e:
             pytest.fail(f"Response did not match GeoJSONFeatureCollection model: {e}")
 
-
-    def city_geometry_with_indicators_with_unknown_city_id_and_admin_level():
+    def test_get_city_geometry_with_indicators_with_unknown_city_id_and_admin_level(
+        self,
+    ):
         response = client.get(
             f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel/geojson/indicators"
         )
