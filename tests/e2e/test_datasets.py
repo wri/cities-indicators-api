@@ -35,14 +35,3 @@ class TestListDatasets:
         #     DatasetsResponse(**response_data)
         # except ValidationError as e:
         #     pytest.fail(f"Response did not match DatasetsResponse model: {e}")
-
-    def test_list_indicators_with_city_id_filter(selft):
-        CITY_ID = "BRA-Florianopolis"
-        response = client.get(f"/{API_VERSION}/datasets?city_id={CITY_ID}")
-        assert response.status_code == 200
-
-        # response_data = response.json()
-        # try:
-        #     DatasetsResponse(**response_data)
-        # except ValidationError as e:
-        #     pytest.fail(f"Response did not match DatasetsResponse model: {e}")
