@@ -10,8 +10,8 @@ from app.const import (
 )
 
 from app.utils.dependencies import validate_query_params
-from app.schemas.common_schema import ErrorResponse
-from app.schemas.cities_schema import (
+from app.schemas.common import ErrorResponse
+from app.schemas.cities import (
     CityDetail,
     CityIndicatorsDetail,
     CityListResponse,
@@ -27,7 +27,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("projects", "country_code_iso3"))],
+    dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityListResponse},
         400: {

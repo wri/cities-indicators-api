@@ -9,8 +9,8 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.utils.dependencies import validate_query_params
-from app.schemas.common_schema import ErrorResponse
-from app.schemas.indicators_schema import (
+from app.schemas.common import ErrorResponse
+from app.schemas.indicators import (
     IndicatorValueResponse,
     IndicatorsThemesResponse,
     IndicatorsResponse,
@@ -28,7 +28,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(get_expected_params("project"))],
+    dependencies=[Depends(validate_query_params("project"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
         400: {
