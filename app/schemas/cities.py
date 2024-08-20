@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 
@@ -20,10 +20,7 @@ class CityListResponse(BaseModel):
 
 # Indicator Schema
 class CityIndicatorsDetail(BaseModel):
-    model_config = {
-        "extra": "allow",
-    }
-
+    model_configmodel_config = ConfigDict(extra="allow")
     geo_id: str
     geo_name: str
     geo_level: str
