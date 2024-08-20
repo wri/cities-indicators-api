@@ -44,7 +44,6 @@ app = FastAPI(
 # Middleware Configuration
 # ----------------------------------------
 
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
