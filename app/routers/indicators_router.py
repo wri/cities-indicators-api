@@ -9,15 +9,15 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.utils.dependencies import validate_query_params
-from app.schemas.common import ErrorResponse
-from app.schemas.indicators import (
+from app.schemas.common_schema import ErrorResponse
+from app.schemas.indicators_schema import (
     IndicatorValueResponse,
     IndicatorsThemesResponse,
     IndicatorsResponse,
     MetadataByIndicatorIdResponse,
     CitiesByIndicatorIdResponse,
 )
-from app.services import indicators_service
+from app.services import indicators_service as indicators_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
