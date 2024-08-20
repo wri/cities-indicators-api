@@ -3,9 +3,6 @@ from pyairtable import Api
 
 from app.schemas.common_schema import ErrorResponse
 
-# API
-API_VERSION = "v1"
-
 # Carto
 CARTO_API_KEY = "default_public"
 CARTO_USERNAME = "wri-cities"
