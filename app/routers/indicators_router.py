@@ -30,10 +30,7 @@ router = APIRouter()
     "",
     dependencies=[Depends(get_expected_params("project"))],
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": IndicatorsResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -78,10 +75,7 @@ def list_indicators(
 @router.get(
     "/themes",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": IndicatorsThemesResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsThemesResponse},
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
@@ -104,10 +98,7 @@ def list_indicators_themes():
 @router.get(
     "/{indicator_id}",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": CitiesByIndicatorIdResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CitiesByIndicatorIdResponse},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {"application/json": {"example": {"detail": "No cities found"}}},
@@ -139,10 +130,7 @@ def get_cities_by_indicator_id(
 @router.get(
     "/metadata/{indicator_id}",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": MetadataByIndicatorIdResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": MetadataByIndicatorIdResponse},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -189,10 +177,7 @@ def get_metadata_by_indicator_id(
 @router.get(
     "/{indicator_id}/{city_id}",
     responses={
-        200: {
-            **COMMON_200_SUCCESSFUL_RESPONSE,
-            "model": IndicatorValueResponse
-        },
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorValueResponse},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
