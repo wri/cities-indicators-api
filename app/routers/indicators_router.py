@@ -17,7 +17,7 @@ from app.schemas.indicators_schema import (
     MetadataByIndicatorIdResponse,
     CitiesByIndicatorIdResponse,
 )
-from app.services import indicators_service as indicators_service
+from app.services import indicators_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -17,7 +17,7 @@ from app.schemas.cities_schema import (
     CityListResponse,
     GeoJSONFeatureCollection,
 )
-from app.services import cities_service as cities_service
+from app.services import cities_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
