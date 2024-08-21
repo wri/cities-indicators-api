@@ -1,5 +1,3 @@
-from pyairtable import Api
-
 from app.schemas.common_schema import ErrorResponse
 
 # Response keys

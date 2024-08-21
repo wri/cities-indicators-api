@@ -1,7 +1,6 @@
 from typing import Optional
 
 from pyairtable import Api
-from app.const import indicators_table
 from app.utils.settings import Settings
 
 # Load settings
