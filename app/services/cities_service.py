@@ -202,19 +202,22 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     return city_geojson
 
 
-def get_city_geometry_with_indicators(city_id: str, admin_level: str) -> Dict:
+def get_city_geometry_with_indicators(city_id: str, indicator_id: str, admin_level: Optional[str]) -> Dict:
     """
-    Retrieve the geometry and indicators of a specific city and administrative level.
+    Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
 
     Args:
         city_id (str): The ID of the city to retrieve geometry and indicators for.
-        admin_level (str): The administrative level to filter by.
+        indicator_id (str): The ID of the indicator to retrieve.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators by, if provided.
 
     Returns:
-        dict: A GeoJSON dictionary representing the city's geometry along with its indicators.
+        Dict: A GeoJSON dictionary representing the city's geometry along with its indicators.
     """
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+
     city_geometry_df = read_carto(
-        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}"
     )
     city_geometry_df = city_geometry_df[
         [
@@ -228,7 +231,7 @@ def get_city_geometry_with_indicators(city_id: str, admin_level: str) -> Dict:
     ]
 
     city_indicators_df = read_carto(
-        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0"
     )
     city_indicators_df = city_indicators_df.pivot(
         index="geo_id", columns="indicator", values="value"
