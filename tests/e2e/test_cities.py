@@ -1,9 +1,9 @@
 from pydantic import ValidationError
 import pytest
 from fastapi.testclient import TestClient
-from app.const import API_VERSION
+
 from app.main import app
-from app.schemas.cities import (
+from app.schemas.cities_schema import (
     CityDetail,
     CityIndicatorsDetail,
     CityListResponse,
@@ -16,7 +16,7 @@ client = TestClient(app)
 @pytest.mark.e2e
 class TestListCities:
     def test_list_cities_no_filter(self):
-        response = client.get(f"/{API_VERSION}/cities")
+        response = client.get("/cities")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -26,12 +26,12 @@ class TestListCities:
             pytest.fail(f"Response did not match CityListResponse model: {e}")
 
     def test_list_cities_with_unknown_query_parameter(self):
-        response = client.get(f"/{API_VERSION}/cities?something=true")
+        response = client.get("/cities?something=true")
         assert response.status_code == 400
         assert response.json() == {"detail": "Invalid query parameter: something"}
 
     def test_list_cities_with_single_projects_filter(self):
-        response = client.get(f"/{API_VERSION}/cities?projects=cities4forests")
+        response = client.get("/cities?projects=cities4forests")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -41,9 +41,8 @@ class TestListCities:
             pytest.fail(f"Response did not match CityListResponse model: {e}")
 
     def test_list_cities_with_multiple_projects_filter(self):
-        response = client.get(
-            f"/{API_VERSION}/cities?projects=deepdive&projects=urbanshift"
-        )
+        PROJECTS = ["deepdive", "urbanshift"]
+        response = client.get(f"/cities?projects={PROJECTS[0]}&projects={PROJECTS[1]}")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -53,9 +52,10 @@ class TestListCities:
             pytest.fail(f"Response did not match CityListResponse model: {e}")
 
     def test_list_cities_with_multiple_projects_and_country_code_filter(self):
+        PROJECTS = ["deepdive", "urbanshift"]
         COUNTRY_CODE_ISO3 = "MEX"
         response = client.get(
-            f"/{API_VERSION}/cities?projects=deepdive&projects=urbanshift&country_code_iso3={COUNTRY_CODE_ISO3}"
+            f"/cities?projects={PROJECTS[0]}&projects={PROJECTS[1]}&country_code_iso3={COUNTRY_CODE_ISO3}"
         )
         assert response.status_code == 200
 
@@ -66,7 +66,7 @@ class TestListCities:
             pytest.fail(f"Response did not match CityListResponse model: {e}")
 
     def test_list_cities_with_unknown_projects_filter(self):
-        response = client.get(f"/{API_VERSION}/cities?projects=unknownproject")
+        response = client.get("/cities?projects=unknownproject")
         assert response.status_code == 404
         assert response.json() == {"detail": "No cities found"}
 
@@ -75,7 +75,7 @@ class TestListCities:
 class TestGetCities:
     def test_get_city_by_city_id(self):
         CITY_ID = "COD-Uvira"
-        response = client.get(f"/{API_VERSION}/cities/{CITY_ID}")
+        response = client.get(f"/cities/{CITY_ID}")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -87,14 +87,14 @@ class TestGetCities:
 
     def test_get_city_by_city_id_with_unknown_city_id(self):
         CITY_ID = "unknowncityid"
-        response = client.get(f"/{API_VERSION}/cities/{CITY_ID}")
+        response = client.get(f"/cities/{CITY_ID}")
         assert response.status_code == 404
         assert response.json() == {"detail": "No city found"}
 
     def test_get_city_indicators(self):
         CITY_ID = "COD-Uvira"
         ADM_LEVEL = "ADM3"
-        response = client.get(f"/{API_VERSION}/cities/{CITY_ID}/{ADM_LEVEL}")
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -105,14 +105,16 @@ class TestGetCities:
             pytest.fail(f"Response did not match CityIndicatorsDetail model: {e}")
 
     def test_get_city_indicators_with_unknown_city_id_and_admin_level(self):
-        response = client.get(f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel")
+        CITY_ID = "unknowncityid"
+        ADM_LEVEL = "unknownadminlevel"
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}")
         assert response.status_code == 404
         assert response.json() == {"detail": "No indicators found"}
 
     def test_get_city_geometry(self):
         CITY_ID = "COD-Uvira"
         ADM_LEVEL = "ADM3"
-        response = client.get(f"/{API_VERSION}/cities/{CITY_ID}/{ADM_LEVEL}/geojson")
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}/geojson")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -123,18 +125,16 @@ class TestGetCities:
             pytest.fail(f"Response did not match GeoJSONFeatureCollection model: {e}")
 
     def test_get_city_geometry_with_unknown_city_id_and_admin_level(self):
-        response = client.get(
-            f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel/geojson"
-        )
+        CITY_ID = "unknowncityid"
+        ADM_LEVEL = "unknownadminlevel"
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}/geojson")
         assert response.status_code == 404
         assert response.json() == {"detail": "No geometry found"}
 
     def test_get_city_geometry(self):
         CITY_ID = "COD-Uvira"
         ADM_LEVEL = "ADM3"
-        response = client.get(
-            f"/{API_VERSION}/cities/{CITY_ID}/{ADM_LEVEL}/geojson/indicators"
-        )
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}/geojson/indicators")
         assert response.status_code == 200
 
         response_data = response.json()
@@ -147,8 +147,8 @@ class TestGetCities:
     def test_get_city_geometry_with_indicators_with_unknown_city_id_and_admin_level(
         self,
     ):
-        response = client.get(
-            f"/{API_VERSION}/cities/unknowncityid/unknownadminlevel/geojson/indicators"
-        )
+        CITY_ID = "unknowncityid"
+        ADM_LEVEL = "unknownadminlevel"
+        response = client.get(f"/cities/{CITY_ID}/{ADM_LEVEL}/geojson/indicators")
         assert response.status_code == 404
         assert response.json() == {"detail": "No indicators found"}

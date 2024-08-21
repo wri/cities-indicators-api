@@ -2,20 +2,6 @@ import os
 from pyairtable import Api
 
 from app.schemas.common_schema import ErrorResponse
-from app.utils.settings import Settings
-
-# Carto
-CARTO_API_KEY = "default_public"
-CARTO_USERNAME = "wri-cities"
-
-# Airtable tables
-AIRTABLE_API_KEY = os.getenv("CITIES_API_AIRTABLE_KEY")
-AIRTABLE_BASE_ID = "appDWCVIQlVnLLaW2"
-airtable_api = Api(AIRTABLE_API_KEY)
-cities_table = airtable_api.table(AIRTABLE_BASE_ID, "Cities")
-datasets_table = airtable_api.table(AIRTABLE_BASE_ID, "Datasets")
-indicators_table = airtable_api.table(AIRTABLE_BASE_ID, "Indicators")
-projects_table = airtable_api.table(AIRTABLE_BASE_ID, "Projects")
 
 # Response keys
 CITY_RESPONSE_KEYS = [
