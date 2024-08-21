@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Basic
-    api_version: str = "v1"
     cors_origins: List[str] = ["*"]
 
     # Carto

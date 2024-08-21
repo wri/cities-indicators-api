@@ -16,7 +16,7 @@ from app.routers import (
 # Load settings
 # ----------------------------------------
 settings = Settings()
-API_VERSION = settings.api_version
+
 
 # ----------------------------------------
 # Logging Configuration
