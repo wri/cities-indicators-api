@@ -21,7 +21,6 @@ class CityListResponse(BaseModel):
 # Indicator Schema
 class CityIndicatorsDetail(BaseModel):
     model_config = ConfigDict(extra="allow")
-
     geo_id: str
     geo_name: str
     geo_level: str
