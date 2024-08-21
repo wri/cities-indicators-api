@@ -1,6 +1,5 @@
-from typing import List
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from typing import List, Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -15,4 +14,11 @@ class Settings(BaseSettings):
     cities_api_airtable_key: str
     airtable_base_id: str = "appDWCVIQlVnLLaW2"
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.cities_api_airtable_key:
+            raise ValueError("cities_api_airtable_key must be set")

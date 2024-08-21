@@ -205,9 +205,13 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     return city_geojson
 
 
+<<<<<<< HEAD
 def get_city_geometry_with_indicators(
     city_id: str, indicator_id: str, admin_level: Optional[str]
 ) -> Dict:
+=======
+def get_city_geometry_with_indicators(city_id: str, indicator_id: str, admin_level: Optional[str]) -> Dict:
+>>>>>>> 46f624c (alter cities geojson endpoint to filter by indicator and optionally by admin_level (#42))
     """
     Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
 
