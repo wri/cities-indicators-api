@@ -15,8 +15,5 @@ RUN pipenv install --deploy --ignore-pipfile --system
 # Copy the rest of the application code
 COPY ./ /code/
 
-# Set the environment variable for Pipenv's virtualenv location
-ENV PIPENV_VENV_IN_PROJECT=1
-
-# Use Pipenv to run Uvicorn
-CMD ["pipenv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
