@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+black = "*"
+cartoframes = "*"
+fastapi = "*"
+mypy = "*"
+pre-commit = "*"
+pyairtable = "*"
+pylint = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+
+[dev-packages]
+pylint = "*"
+black = "*"
+mypy = "*"
+
+[requires]
+python_version = "3.10"

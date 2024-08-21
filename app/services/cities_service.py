@@ -1,0 +1,241 @@
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+from cartoframes import read_carto
+from cartoframes.auth import set_default_credentials
+
+from app.const import (
+    CARTO_API_KEY,
+    CARTO_USERNAME,
+    CITY_RESPONSE_KEYS,
+    INDICATORS_RESPONSE_KEYS,
+)
+from app.repositories.cities_repository import fetch_cities
+from app.repositories.projects_repository import fetch_projects
+from app.utils.filters import construct_filter_formula
+
+set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
+
+
+def list_cities(
+    projects: Optional[List[str]], country_code_iso3: Optional[str]
+) -> List[Dict[str, Any]]:
+    """
+    Retrieve a list of cities based on the provided filters.
+
+    Args:
+        projects (Optional[List[str]]): List of Project IDs to filter by.
+        country_code_iso3 (Optional[str]): ISO 3166-1 alpha-3 country code to filter by.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
+    """
+    filters = {}
+
+    if projects:
+        filters["projects"] = projects
+    if country_code_iso3:
+        filters["country_code_iso3"] = country_code_iso3
+
+    filter_formula = construct_filter_formula(filters)
+
+    # Define the tasks to be executed asynchronously
+    future_to_func = {
+        lambda: fetch_cities(filter_formula): "cities",
+    }
+
+    cities_list = []
+    all_projects = []
+
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            if func_name == "cities":
+                cities_list = future.result()
+
+    if not cities_list:
+        return []
+
+    city_ids = [city["fields"]["city_id"] for city in cities_list]
+
+    # Asynchronously fetch all projects related to the cities
+    with ThreadPoolExecutor() as executor:
+        all_projects = executor.submit(
+            fetch_projects, construct_filter_formula({"cities": city_ids})
+        ).result()
+
+    project_id_map = {
+        project["id"]: project["fields"]["project_id"] for project in all_projects
+    }
+
+    for city in cities_list:
+        city_projects = [
+            project_id_map.get(project) for project in city["fields"]["projects"]
+        ]
+        city["fields"]["projects"] = city_projects
+
+    return [
+        {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
+        for city in cities_list
+    ]
+
+
+def get_city_by_city_id(city_id: str) -> Dict:
+    """
+    Retrieve city data for a specific city ID.
+
+    Args:
+        city_id (str): The ID of the city to retrieve.
+
+    Returns:
+        dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
+    """
+    filter_formula = f'"{city_id}" = {{city_id}}'
+
+    # Define the tasks to be executed asynchronously
+    future_to_func = {
+        lambda: fetch_cities(filter_formula): "city_data",
+    }
+
+    city_data = []
+    all_projects = []
+
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            if func_name == "city_data":
+                city_data = future.result()
+
+    if not city_data:
+        return {}
+
+    city = city_data[0]["fields"]
+    project_filter_formula = construct_filter_formula({"cities": [city_id]})
+
+    # Asynchronously fetch all projects related to the city
+    with ThreadPoolExecutor() as executor:
+        all_projects = executor.submit(fetch_projects, project_filter_formula).result()
+
+    project_id_map = {
+        project["id"]: project["fields"]["project_id"] for project in all_projects
+    }
+
+    city_projects = [project_id_map.get(project) for project in city["projects"]]
+    city["projects"] = city_projects
+
+    city_response = {key: city[key] for key in CITY_RESPONSE_KEYS if key in city}
+
+    return city_response
+
+
+def get_city_indicators(city_id: str, admin_level: str) -> Dict:
+    """
+    Retrieve indicators for a specific city and administrative level.
+
+    Args:
+        city_id (str): The ID of the city to retrieve indicators for.
+        admin_level (str): The administrative level to filter by.
+
+    Returns:
+        Dict: A dictionary containing the city's indicators.
+    """
+    city_indicators_df = read_carto(
+        f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
+    )
+    city_indicators_df = city_indicators_df[INDICATORS_RESPONSE_KEYS]
+    city_indicators_df = city_indicators_df.pivot(
+        index=[
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "indicator_version",
+        ],
+        columns="indicator",
+        values="value",
+    )
+    city_indicators_df.reset_index(inplace=True)
+
+    city_indicators = json.loads(city_indicators_df.to_json(orient="records"))
+
+    return city_indicators
+
+
+def get_city_geometry(city_id: str, admin_level: str) -> Dict:
+    """
+    Retrieve the geometry of a specific city and administrative level.
+
+    Args:
+        city_id (str): The ID of the city to retrieve geometry for.
+        admin_level (str): The administrative level to filter by.
+
+    Returns:
+        dict: A GeoJSON dictionary representing the city's geometry.
+    """
+    city_geometry_df = read_carto(
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+    )
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+            "the_geom",
+        ]
+    ]
+
+    city_indicators_df = read_carto(
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
+    )
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+
+    city_geojson = json.loads(city_geometry_df.to_json())
+
+    return city_geojson
+
+
+def get_city_geometry_with_indicators(city_id: str, admin_level: str) -> Dict:
+    """
+    Retrieve the geometry and indicators of a specific city and administrative level.
+
+    Args:
+        city_id (str): The ID of the city to retrieve geometry and indicators for.
+        admin_level (str): The administrative level to filter by.
+
+    Returns:
+        dict: A GeoJSON dictionary representing the city's geometry along with its indicators.
+    """
+    city_geometry_df = read_carto(
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+    )
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+            "the_geom",
+        ]
+    ]
+
+    city_indicators_df = read_carto(
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
+    )
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
+
+    city_geojson = json.loads(city_gdf.to_json())
+
+    return city_geojson

@@ -1,10 +1,13 @@
-def generate_search_query(column_name: str, value: str) -> str:
+from typing import Union, List
+
+
+def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str:
     """
     Generates a SEARCH query to filter string values from Multiple Select fields in Airtable.
 
     Args:
         column_name (str): The name of the column to search within.
-        value (str): The value to search for within the specified column.
+        value (Union[str, List[str]]): The value or list of values to search for within the specified column.
 
     Returns:
         str: A string representing the search query for Airtable. If the value is empty,
@@ -14,12 +17,18 @@ def generate_search_query(column_name: str, value: str) -> str:
         >>> generate_search_query("project", "data4coolcities")
         "SEARCH('data4coolcities', {project})"
 
-        >>> generate_search_query("theme", "Biodiversity")
-        "SEARCH('Biodiversity', {theme})"
+        >>> generate_search_query("theme", ["Biodiversity", "Climate Change"])
+        "OR(SEARCH('Biodiversity', {theme}), SEARCH('Climate Change', {theme}))"
 
         >>> generate_search_query("theme", "")
         ""
     """
+    if isinstance(value, list):
+        if len(value) == 1:
+            return f"SEARCH('{value[0]}', {{{column_name}}})"
+        search_clauses = [f"SEARCH('{v}', {{{column_name}}})" for v in value]
+        return f"OR({', '.join(search_clauses)})" if search_clauses else ""
+
     return f"SEARCH('{value}', {{{column_name}}})" if value else ""
 
 
@@ -35,10 +44,6 @@ def construct_filter_formula(filters: dict) -> str:
     """
     filter_clauses = []
     for column, value in filters.items():
-        if column.endswith("_in"):
-            actual_column = column[:-3]  # Remove '_in' to get the actual column name
-            filter_clauses.append(generate_search_query(actual_column, value))
-        else:
-            filter_clauses.append(f"{{{column}}} = '{value}'")
+        filter_clauses.append(generate_search_query(column, value))
 
     return f"AND({', '.join(filter_clauses)})" if filter_clauses else ""
