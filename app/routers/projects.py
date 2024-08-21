@@ -6,9 +6,9 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common import ErrorResponse
-from app.services import projects as projects_service
-from app.schemas.projects import ListProjectsResponse
+from app.schemas.common_schema import ErrorResponse
+from app.services import projects_service
+from app.schemas.projects_schema import ListProjectsResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
