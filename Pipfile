@@ -12,6 +12,7 @@ pre-commit = "*"
 pyairtable = "*"
 pylint = "*"
 uvicorn = {extras = ["standard"], version = "*"}
+pydantic-settings = "*"
 
 [dev-packages]
 pylint = "*"
