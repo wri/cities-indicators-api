@@ -19,9 +19,6 @@ pylint = "*"
 black = "*"
 mypy = "*"
 pydantic-settings = "*"
-pytest = "*"
-httpx = "*"
-pytest-mock = "*"
 
 [requires]
 python_version = "3.10"
