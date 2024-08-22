@@ -1,5 +1,4 @@
 import logging
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +10,7 @@ from app.routers import (
     indicators_router,
     projects_router,
 )
+from app.utils.settings import Settings
 
 # ----------------------------------------
 # Load settings
@@ -52,7 +52,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
 )
 
 # ----------------------------------------

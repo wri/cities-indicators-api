@@ -5,7 +5,7 @@ from app.services.cities_service import (
     get_city_by_city_id,
     get_city_indicators,
     get_city_geometry,
-    get_city_geometry_with_indicators
+    get_city_geometry_with_indicators,
 )
 from app.schemas.cities_schema import CityListResponse, GeoJSONFeatureCollection
 import pandas as pd
@@ -21,9 +21,11 @@ def mock_projects_response():
     return [{"id": "proj1", "fields": {"project_id": "Project 1"}}]
 
 
-@patch('app.services.cities_service.fetch_cities')
-@patch('app.services.cities_service.fetch_projects')
-def test_list_cities(mock_fetch_projects, mock_fetch_cities, mock_cities_response, mock_projects_response):
+@patch("app.services.cities_service.fetch_cities")
+@patch("app.services.cities_service.fetch_projects")
+def test_list_cities(
+    mock_fetch_projects, mock_fetch_cities, mock_cities_response, mock_projects_response
+):
     mock_fetch_cities.return_value = mock_cities_response
     mock_fetch_projects.return_value = mock_projects_response
 
@@ -33,13 +35,15 @@ def test_list_cities(mock_fetch_projects, mock_fetch_cities, mock_cities_respons
 
     assert isinstance(response, list)
     assert len(response) == 1
-    assert response[0]['city_id'] == "city1"
-    assert response[0]['projects'] == ["Project 1"]
+    assert response[0]["city_id"] == "city1"
+    assert response[0]["projects"] == ["Project 1"]
 
 
-@patch('app.services.cities_service.fetch_cities')
-@patch('app.services.cities_service.fetch_projects')
-def test_get_city_by_city_id(mock_fetch_projects, mock_fetch_cities, mock_cities_response, mock_projects_response):
+@patch("app.services.cities_service.fetch_cities")
+@patch("app.services.cities_service.fetch_projects")
+def test_get_city_by_city_id(
+    mock_fetch_projects, mock_fetch_cities, mock_cities_response, mock_projects_response
+):
     mock_fetch_cities.return_value = mock_cities_response
     mock_fetch_projects.return_value = mock_projects_response
 
@@ -47,21 +51,23 @@ def test_get_city_by_city_id(mock_fetch_projects, mock_fetch_cities, mock_cities
     response = get_city_by_city_id(city_id)
 
     assert isinstance(response, dict)
-    assert response['city_id'] == "city1"
-    assert response['projects'] == ["Project 1"]
+    assert response["city_id"] == "city1"
+    assert response["projects"] == ["Project 1"]
 
 
-@patch('app.services.cities_service.read_carto')
+@patch("app.services.cities_service.read_carto")
 def test_get_city_indicators(mock_read_carto):
-    mock_read_carto.return_value = pd.DataFrame({
-        "geo_id": ["geo1"],
-        "geo_name": ["City 1"],
-        "geo_level": ["admin"],
-        "geo_parent_name": ["city1"],
-        "indicator": ["Population"],
-        "indicator_version": 0,
-        "value": [1000]
-    })
+    mock_read_carto.return_value = pd.DataFrame(
+        {
+            "geo_id": ["geo1"],
+            "geo_name": ["City 1"],
+            "geo_level": ["admin"],
+            "geo_parent_name": ["city1"],
+            "indicator": ["Population"],
+            "indicator_version": 0,
+            "value": [1000],
+        }
+    )
 
     city_id = "city1"
     admin_level = "admin"
@@ -72,18 +78,20 @@ def test_get_city_indicators(mock_read_carto):
     assert response[0]["Population"] == 1000
 
 
-@patch('app.services.cities_service.read_carto')
+@patch("app.services.cities_service.read_carto")
 def test_get_city_geometry(mock_read_carto):
-    mock_read_carto.return_value = pd.DataFrame({
-        "geo_id": ["geo1"],
-        "geo_name": ["City 1"],
-        "geo_level": ["admin"],
-        "geo_parent_name": ["city1"],
-        "geo_version": [1],
-        "indicator": ["Population"],
-        "the_geom": [{}],
-        "value": [1000]
-    })
+    mock_read_carto.return_value = pd.DataFrame(
+        {
+            "geo_id": ["geo1"],
+            "geo_name": ["City 1"],
+            "geo_level": ["admin"],
+            "geo_parent_name": ["city1"],
+            "geo_version": [1],
+            "indicator": ["Population"],
+            "the_geom": [{}],
+            "value": [1000],
+        }
+    )
 
     city_id = "city1"
     admin_level = "admin"
@@ -93,22 +101,22 @@ def test_get_city_geometry(mock_read_carto):
     # assert "features" in response
 
 
-@patch('app.services.cities_service.read_carto')
+@patch("app.services.cities_service.read_carto")
 def test_get_city_geometry_with_indicators(mock_read_carto):
     mock_read_carto.side_effect = [
-        pd.DataFrame({
-            "geo_id": ["geo1"],
-            "geo_name": ["City 1"],
-            "geo_level": ["admin"],
-            "geo_parent_name": ["city1"],
-            "geo_version": [1],
-            "the_geom": [{}]
-        }),
-        pd.DataFrame({
-            "geo_id": ["geo1"],
-            "indicator": ["Population"],
-            "value": [1000]
-        })
+        pd.DataFrame(
+            {
+                "geo_id": ["geo1"],
+                "geo_name": ["City 1"],
+                "geo_level": ["admin"],
+                "geo_parent_name": ["city1"],
+                "geo_version": [1],
+                "the_geom": [{}],
+            }
+        ),
+        pd.DataFrame(
+            {"geo_id": ["geo1"], "indicator": ["Population"], "value": [1000]}
+        ),
     ]
 
     city_id = "city1"

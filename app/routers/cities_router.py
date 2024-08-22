@@ -191,11 +191,10 @@ def get_city_geometry_with_indicators(
     city_id: str = Path(
         description="The ID of the city to retrieve geometry and indicators for."
     ),
-    indicator_id: str = Path(
-        description="The ID of the indicator to retrieve."
-    ),
+    indicator_id: str = Path(description="The ID of the indicator to retrieve."),
     admin_level: Optional[str] = Query(
-        None, description="The administrative level to filter the geometry and indicators by, if provided."
+        None,
+        description="The administrative level to filter the geometry and indicators by, if provided.",
     ),
 ):
     """
