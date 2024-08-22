@@ -15,6 +15,4 @@ class Settings(BaseSettings):
     cities_api_airtable_key: str
     airtable_base_id: str = "appDWCVIQlVnLLaW2"
 
-    model_config = ConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = ConfigDict(extra="ignore")
