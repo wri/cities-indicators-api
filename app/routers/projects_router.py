@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-
 @router.get(
     "",
     responses={
@@ -32,7 +31,7 @@ router = APIRouter()
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
-                "application/json": {"example": {"detail": "No indicators found"}}
+                "application/json": {"example": {"detail": "No projects found"}}
             },
         },
         500: COMMON_500_ERROR_RESPONSE,
@@ -41,6 +40,16 @@ router = APIRouter()
 def list_projects():
     """
     Retrieve the list of projects.
+
+    ### Returns:
+    - ListProjectsResponse: A Pydantic model containing the list of projects. The response 
+      includes metadata such as project IDs, names, and descriptions.
+
+    ### Raises:
+    - HTTPException:
+        - 400: If the query parameter is invalid (although not applicable here since there are no query parameters).
+        - 404: If no projects are found (handled by the service layer, should be rare).
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         projects_list = projects_service.list_projects()
@@ -50,5 +59,8 @@ def list_projects():
             status_code=500,
             detail="An error occurred: Retrieving the list of projects failed.",
         ) from e
+
+    if not projects_list:
+        raise HTTPException(status_code=404, detail="No projects found")
 
     return {"projects": projects_list}
