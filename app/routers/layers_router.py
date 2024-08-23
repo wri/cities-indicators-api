@@ -38,23 +38,23 @@ def get_layer(
     layer information may include file paths, styling, and other metadata
     necessary for accessing the layer's data.
 
-    Args:
-        city_id (str): The unique identifier of the city. This ID is used to
-            locate the city's data within the database.
-        layer_id (str): The unique identifier of the layer. This ID corresponds
-            to a specific layer associated with the city, used to retrieve
-            the layer's metadata.
+    ### Args:
+    - city_id (str): The unique identifier of the city. This ID is used to
+        locate the city's data within the database.
+    - layer_id (str): The unique identifier of the layer. This ID corresponds
+        to a specific layer associated with the city, used to retrieve
+        the layer's metadata.
 
-    Returns:
-        LayerResponse: A Pydantic model containing the layer's details. If
+    ### Returns:
+    - LayerResponse: A Pydantic model containing the layer's details. If
         successful, the response will include metadata such as file paths,
         versioning, and styling.
 
-    Raises:
-        HTTPException:
-            - 404: If the layer corresponding to the provided `city_id` and
-              `layer_id` is not found.
-            - 500: If an error occurs during the retrieval process.
+    ### Raises:
+    - HTTPException:
+        - 404: If the layer corresponding to the provided `city_id` or
+            `layer_id` is not found.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         layer = layers_service.get_city_layer(city_id, layer_id)

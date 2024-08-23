@@ -1,5 +1,10 @@
+from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
 class LayerResponse(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    city_id: str
+    layer_id: str
+    layer_path: str
+    file_type: str
+    styling: Optional[str]
