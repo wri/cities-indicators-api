@@ -53,5 +53,6 @@ def get_city_layer(city_id: str, layer_id: str):
         "city_id": city_id,
         "layer_id": layer_id,
         "layer_path": layer_path,
+        "file_type": layer_fields["file_type"],
         "styling": layer_fields["vis_param"]
     }
