@@ -34,7 +34,9 @@ router = APIRouter()
 )
 def list_datasets(
     city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
-    layer_id: Optional[List[str]] = Query(None, description="A list of layer IDs to filter datasets by"),
+    layer_id: Optional[List[str]] = Query(
+        None, description="A list of layer IDs to filter datasets by"
+    ),
 ):
     """
     Retrieve a list of datasets, optionally filtered by a specific city and/or layer.

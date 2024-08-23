@@ -6,25 +6,27 @@ from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.layers_repository import fetch_layers
-from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.filters import construct_filter_formula
 
 
-def list_datasets(city_id: Optional[str], layer_id: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+def list_datasets(
+    city_id: Optional[str], layer_id: Optional[List[str]] = None
+) -> List[Dict[str, Any]]:
     """
     Retrieve a list of datasets, optionally filtered by city ID and/or layer IDs.
 
-    This function fetches datasets from various sources, filters them based on the provided 
-    city ID and/or layer IDs, and enriches the datasets with additional information like 
+    This function fetches datasets from various sources, filters them based on the provided
+    city ID and/or layer IDs, and enriches the datasets with additional information like
     indicators and city details.
 
     Args:
-        city_id (Optional[str]): The unique identifier of the city to filter datasets by. 
+        city_id (Optional[str]): The unique identifier of the city to filter datasets by.
             If None, datasets from all cities are retrieved.
-        layer_id (Optional[List[str]]): A list of unique layer identifiers to filter datasets by. 
+        layer_id (Optional[List[str]]): A list of unique layer identifiers to filter datasets by.
             If None, datasets from all layers are retrieved.
 
     Returns:
-        List[Dict[str, Any]]: A list of dictionaries containing the filtered datasets, 
+        List[Dict[str, Any]]: A list of dictionaries containing the filtered datasets,
             each enriched with selected fields like indicators, city IDs, and layers.
     """
     filters = {}
@@ -35,7 +37,7 @@ def list_datasets(city_id: Optional[str], layer_id: Optional[List[str]] = None) 
         filters["city_id"] = city_id
 
     formula = construct_filter_formula(filters)
-    
+
     future_to_func = {
         fetch_layers: "layers",
         fetch_cities: "cities",
