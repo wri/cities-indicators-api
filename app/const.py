@@ -35,6 +35,7 @@ DATASETS_LIST_RESPONSE_KEYS = [
     "dataset_id",
     "dataset_name",
     "Indicators",
+    "Layers",
     "Provider",
     "Spatial Coverage",
     "Spatial resolution",

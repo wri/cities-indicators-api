@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(validate_query_params("city_id"))],
+    dependencies=[Depends(validate_query_params("city_id", "layer_id"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": DatasetsResponse},
         400: {
@@ -34,16 +34,19 @@ router = APIRouter()
 )
 def list_datasets(
     city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
+    layer_id: Optional[List[str]] = Query(None, description="A list of layer IDs to filter datasets by"),
 ):
     """
-    Retrieve a list of datasets, optionally filtered by a specific city.
+    Retrieve a list of datasets, optionally filtered by a specific city and/or layer.
 
-    This endpoint fetches a list of datasets, with an option to filter the results by
-    a specific city's ID.
+    This endpoint fetches a list of datasets, with options to filter the results by
+    a specific city's ID and/or one or more layer IDs.
 
     ### Args:
     - city_id (Optional[str]): The unique identifier of the city to filter the datasets by.
         If not provided, the endpoint will return datasets for all cities.
+    - layer_id (Optional[List[str]]): A list of unique layer identifiers to filter the datasets by.
+        If not provided, the endpoint will return datasets for all layers.
 
     ### Returns:
     - DatasetsResponse: A Pydantic model containing the list of datasets. The response
@@ -55,7 +58,7 @@ def list_datasets(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        datasets = datasets_service.list_datasets(city_id)
+        datasets = datasets_service.list_datasets(city_id, layer_id)
     except Exception as e:
         logger.error("An error occurred: %s", e)
         raise HTTPException(
