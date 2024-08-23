@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.get(
     "",
     dependencies=[Depends(validate_query_params("project"))],
@@ -56,11 +57,11 @@ def list_indicators(
     Retrieve a list of indicators based on the provided project filter.
 
     ### Args:
-    - project (Optional[str]): The unique identifier of the project to filter the 
+    - project (Optional[str]): The unique identifier of the project to filter the
       indicators by. If not provided, the endpoint returns indicators for all projects.
 
     ### Returns:
-    - IndicatorsResponse: A Pydantic model containing the list of indicators. The response 
+    - IndicatorsResponse: A Pydantic model containing the list of indicators. The response
       includes metadata such as indicator IDs, names, and associated projects.
 
     ### Raises:
@@ -83,6 +84,7 @@ def list_indicators(
 
     return {"indicators": indicators_list}
 
+
 @router.get(
     "/themes",
     responses={
@@ -95,7 +97,7 @@ def list_indicators_themes():
     Retrieve a set of unique themes from all indicators.
 
     ### Returns:
-    - IndicatorsThemesResponse: A Pydantic model containing a set of unique indicator 
+    - IndicatorsThemesResponse: A Pydantic model containing a set of unique indicator
       themes.
 
     ### Raises:
@@ -112,6 +114,7 @@ def list_indicators_themes():
         ) from e
 
     return {"themes": themes}
+
 
 @router.get(
     "/{indicator_id}",
@@ -134,7 +137,7 @@ def get_cities_by_indicator_id(
     - indicator_id (str): The unique identifier of the indicator to filter cities by.
 
     ### Returns:
-    - CitiesByIndicatorIdResponse: A Pydantic model containing a list of cities 
+    - CitiesByIndicatorIdResponse: A Pydantic model containing a list of cities
       associated with the specified indicator.
 
     ### Raises:
@@ -155,6 +158,7 @@ def get_cities_by_indicator_id(
         raise HTTPException(status_code=404, detail="No cities found")
 
     return {"cities": indicators_list}
+
 
 @router.get(
     "/metadata/{indicator_id}",
@@ -190,7 +194,7 @@ def get_metadata_by_indicator_id(
     - indicator_id (str): The unique identifier of the indicator to retrieve metadata for.
 
     ### Returns:
-    - MetadataByIndicatorIdResponse: A Pydantic model containing metadata for the 
+    - MetadataByIndicatorIdResponse: A Pydantic model containing metadata for the
       specified indicator.
 
     ### Raises:
@@ -214,6 +218,7 @@ def get_metadata_by_indicator_id(
         raise HTTPException(status_code=404, detail="No indicators metadata found")
 
     return indicators_metadata_list
+
 
 @router.get(
     "/{indicator_id}/{city_id}",
@@ -240,7 +245,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
     - city_id (str): The unique identifier of the city to filter by.
 
     ### Returns:
-    - IndicatorValueResponse: A Pydantic model containing indicator data for the 
+    - IndicatorValueResponse: A Pydantic model containing indicator data for the
       specified city and indicator.
 
     ### Raises:

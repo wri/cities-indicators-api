@@ -1,3 +1,4 @@
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.repositories.cities_repository import fetch_first_city
@@ -11,15 +12,16 @@ def get_city_layer(city_id: str, layer_id: str):
     for the layer file stored on S3.
 
     Args:
-        city_id (str): The unique identifier of the city.
-        layer_id (str): The unique identifier of the layer.
+    - city_id (str): The unique identifier of the city.
+    - layer_id (str): The unique identifier of the layer.
 
     Returns:
-        Dict[str, str]: A dictionary containing:
+        - Dict[str, str]: A dictionary containing:
             - "city_id": The city ID.
             - "layer_id": The layer ID.
             - "layer_path": The full URL path to the layer file on S3.
-            - "styling": The styling parameters associated with the layer.
+            - "file_type": The file type of the layer.
+            - "styling": The styling parameters associated with the layer, if available, as a JSON object.
     """
     layer_filter = generate_search_query("layer_id", layer_id)
     city_filter = generate_search_query("city_id", city_id)
@@ -49,10 +51,12 @@ def get_city_layer(city_id: str, layer_id: str):
         f"{layer_fields['version']}.{layer_fields['file_type']}"
     )
 
+    vis_param = json.loads(layer_fields.get("vis_param", "{}"))
+
     return {
         "city_id": city_id,
         "layer_id": layer_id,
         "layer_path": layer_path,
         "file_type": layer_fields["file_type"],
-        "styling": layer_fields["vis_param"],
+        "styling": vis_param,
     }

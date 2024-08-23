@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.get(
     "",
     responses={
@@ -42,7 +43,7 @@ def list_projects():
     Retrieve the list of projects.
 
     ### Returns:
-    - ListProjectsResponse: A Pydantic model containing the list of projects. The response 
+    - ListProjectsResponse: A Pydantic model containing the list of projects. The response
       includes metadata such as project IDs, names, and descriptions.
 
     ### Raises:
