@@ -65,7 +65,7 @@ def list_indicators(
 
     ### Raises:
     - HTTPException:
-        - 400: If the query parameter `project` is invalid.
+        - 400: If there is an invalid query parameter.
         - 404: If no indicators are found for the given filter.
         - 500: If an error occurs during the retrieval process.
     """

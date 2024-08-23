@@ -47,7 +47,6 @@ def list_projects():
 
     ### Raises:
     - HTTPException:
-        - 400: If the query parameter is invalid (although not applicable here since there are no query parameters).
         - 404: If no projects are found (handled by the service layer, should be rare).
         - 500: If an error occurs during the retrieval process.
     """

@@ -50,7 +50,7 @@ def list_datasets(
 
     ### Raises:
     - HTTPException:
-        - 400: If the query parameter `city_id` is invalid.
+        - 400: If there is an invalid query parameter.
         - 500: If an error occurs during the retrieval process.
     """
     try:
