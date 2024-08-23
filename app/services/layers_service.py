@@ -7,7 +7,7 @@ from app.utils.filters import generate_search_query
 
 def get_city_layer(city_id: str, layer_id: str):
     """
-    Retrieve layer and city information, then construct a URL path 
+    Retrieve layer and city information, then construct a URL path
     for the layer file stored on S3.
 
     Args:
@@ -54,5 +54,5 @@ def get_city_layer(city_id: str, layer_id: str):
         "layer_id": layer_id,
         "layer_path": layer_path,
         "file_type": layer_fields["file_type"],
-        "styling": layer_fields["vis_param"]
+        "styling": layer_fields["vis_param"],
     }

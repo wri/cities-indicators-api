@@ -21,18 +21,14 @@ router = APIRouter()
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": LayerResponse},
         404: {
             **COMMON_404_ERROR_RESPONSE,
-            "content": {
-                "application/json": {"example": {"detail": "No layer found"}}
-            },
+            "content": {"application/json": {"example": {"detail": "No layer found"}}},
         },
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
 def get_layer(
     city_id: str = Path(description="The unique identifier of the city."),
-    layer_id: str = Path(
-        description="The unique identifier of the layer."
-    ),
+    layer_id: str = Path(description="The unique identifier of the layer."),
 ):
     """
     Retrieve information about a specific layer for a given city.
@@ -55,8 +51,8 @@ def get_layer(
         versioning, and styling.
 
     Raises:
-        HTTPException: 
-            - 404: If the layer corresponding to the provided `city_id` and 
+        HTTPException:
+            - 404: If the layer corresponding to the provided `city_id` and
               `layer_id` is not found.
             - 500: If an error occurs during the retrieval process.
     """
