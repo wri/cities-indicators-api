@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-
 @router.get(
     "",
     dependencies=[Depends(validate_query_params("city_id"))],
@@ -36,7 +35,23 @@ def list_datasets(
     city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
 ):
     """
-    Retrieve the list of datasets
+    Retrieve a list of datasets, optionally filtered by a specific city.
+
+    This endpoint fetches a list of datasets, with an option to filter the results by
+    a specific city's ID.
+
+    ### Args:
+    - city_id (Optional[str]): The unique identifier of the city to filter the datasets by. 
+        If not provided, the endpoint will return datasets for all cities.
+
+    ### Returns:
+    - DatasetsResponse: A Pydantic model containing the list of datasets. The response 
+        will include metadata such as dataset IDs, names, and associated cities.
+
+    ### Raises:
+    - HTTPException:
+        - 400: If the query parameter `city_id` is invalid.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         datasets = datasets_service.list_datasets(city_id)
@@ -46,4 +61,5 @@ def list_datasets(
             status_code=500,
             detail="An error occurred: Retrieving the list of datasets failed.",
         ) from e
+    
     return {"datasets": datasets}
