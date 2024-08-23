@@ -195,7 +195,7 @@ def get_metadata_by_indicator_id(
 
     ### Raises:
     - HTTPException:
-        - 400: If the query parameter is invalid.
+        - 400: If there is an invalid query parameter.
         - 404: If no metadata is found for the given indicator.
         - 500: If an error occurs during the retrieval process.
     """
