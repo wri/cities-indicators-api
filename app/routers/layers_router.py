@@ -39,9 +39,9 @@ def get_layer(
     necessary for accessing the layer's data.
 
     ### Args:
-    - **city_id** (str): The unique identifier of the city. This ID is used to
+    - **city_id** (`str`): The unique identifier of the city. This ID is used to
         locate the city's data within the database.
-    - **layer_id** (str): The unique identifier of the layer. This ID corresponds
+    - **layer_id** (`str`): The unique identifier of the layer. This ID corresponds
         to a specific layer associated with the city, used to retrieve
         the layer's metadata.
 

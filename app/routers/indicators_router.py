@@ -55,7 +55,7 @@ def list_indicators(
     Retrieve a list of indicators based on the provided project filter.
 
     ### Args:
-    - **project** (Optional[str]): The unique identifier of the project to filter the
+    - **project** (`Optional[str]`): The unique identifier of the project to filter the
       indicators by.
 
     ### Returns:
@@ -132,7 +132,7 @@ def get_cities_by_indicator_id(
     Retrieve a list of cities associated with a specific indicator.
 
     ### Args:
-    - **indicator_id** (str): The unique identifier of the indicator to filter cities by.
+    - **indicator_id** (`str`): The unique identifier of the indicator to filter cities by.
 
     ### Returns:
     - **CitiesByIndicatorIdResponse**: A Pydantic model containing a list of cities
@@ -187,7 +187,7 @@ def get_metadata_by_indicator_id(
     Retrieve metadata for a specific indicator.
 
     ### Args:
-    - **indicator_id** (str): The unique identifier of the indicator to retrieve metadata for.
+    - **indicator_id** (`str`): The unique identifier of the indicator to retrieve metadata for.
 
     ### Returns:
     - **MetadataByIndicatorIdResponse**: A Pydantic model containing metadata for the
@@ -237,8 +237,8 @@ def get_city_indicator_by_indicator_id_and_city_id(
     Retrieve indicator data for a specific city and indicator.
 
     ### Args:
-    - **indicator_id** (str): The unique identifier of the indicator to filter by.
-    - **city_id** (str): The unique identifier of the city to filter by.
+    - **indicator_id** (`str`): The unique identifier of the indicator to filter by.
+    - **city_id** (`str`): The unique identifier of the city to filter by.
 
     ### Returns:
     - **IndicatorValueResponse**: A Pydantic model containing indicator data for the

@@ -43,8 +43,8 @@ def list_datasets(
     a specific city's ID and/or one or more layer IDs.
 
     ### Args:
-    - **city_id** (Optional[str]): The unique identifier of the city to filter the datasets by.
-    - **layer_id** (Optional[List[str]]): A list of unique layer identifiers to filter the datasets by.
+    - **city_id** (`Optional[str]`): The unique identifier of the city to filter the datasets by.
+    - **layer_id** (`Optional[List[str]]`): A list of unique layer identifiers to filter the datasets by.
 
     ### Returns:
     - **DatasetsResponse**: A Pydantic model containing the list of datasets. The response
