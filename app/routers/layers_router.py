@@ -27,8 +27,8 @@ router = APIRouter()
     },
 )
 def get_layer(
-    city_id: str = Path(description="The unique identifier of the city."),
-    layer_id: str = Path(description="The unique identifier of the layer."),
+    city_id: str = Path(),
+    layer_id: str = Path(),
 ):
     """
     Retrieve information about a specific layer for a given city.
@@ -39,19 +39,19 @@ def get_layer(
     necessary for accessing the layer's data.
 
     ### Args:
-    - city_id (str): The unique identifier of the city. This ID is used to
+    - **city_id** (str): The unique identifier of the city. This ID is used to
         locate the city's data within the database.
-    - layer_id (str): The unique identifier of the layer. This ID corresponds
+    - **layer_id** (str): The unique identifier of the layer. This ID corresponds
         to a specific layer associated with the city, used to retrieve
         the layer's metadata.
 
     ### Returns:
-    - LayerResponse: A Pydantic model containing the layer's details. If
+    - **LayerResponse**: A Pydantic model containing the layer's details. If
         successful, the response will include metadata such as file paths,
         versioning, and styling.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 404: If the layer corresponding to the provided `city_id` or
             `layer_id` is not found.
         - 500: If an error occurs during the retrieval process.

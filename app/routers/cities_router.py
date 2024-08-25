@@ -43,13 +43,8 @@ router = APIRouter()
     },
 )
 def list_cities(
-    projects: Optional[List[str]] = Query(
-        None,
-        description="A list of Project IDs to filter by",
-    ),
-    country_code_iso3: Optional[str] = Query(
-        None, description="An ISO 3166-1 alpha-3 country code to filter by"
-    ),
+    projects: Optional[List[str]] = Query(None),
+    country_code_iso3: Optional[str] = Query(None),
 ):
     """
     Retrieve a list of cities filtered by project IDs and/or country code.
@@ -92,7 +87,7 @@ def list_cities(
     },
 )
 def get_city_by_city_id(
-    city_id: str = Path(description="The ID of the city to retrieve."),
+    city_id: str = Path(),
 ):
     """
     Retrieve information about a specific city by its ID.
@@ -137,10 +132,8 @@ def get_city_by_city_id(
     },
 )
 def get_city_indicators(
-    city_id: str = Path(description="The ID of the city to retrieve indicators for"),
-    admin_level: str = Path(
-        description="The administrative level to filter indicators by"
-    ),
+    city_id: str = Path(),
+    admin_level: str = Path(),
 ):
     """
     Retrieve all indicators for a specific city and administrative level.
@@ -186,10 +179,8 @@ def get_city_indicators(
     },
 )
 def get_city_geometry(
-    city_id: str = Path(description="The ID of the city to retrieve geometry for"),
-    admin_level: str = Path(
-        description="The administrative level to filter geometry by"
-    ),
+    city_id: str = Path(),
+    admin_level: str = Path(),
 ):
     """
     Retrieve the geometry of a specific city and administrative level in GeoJSON format.
@@ -235,14 +226,9 @@ def get_city_geometry(
     },
 )
 def get_city_geometry_with_indicators(
-    city_id: str = Path(
-        description="The ID of the city to retrieve geometry and indicators for."
-    ),
-    indicator_id: str = Path(description="The ID of the indicator to retrieve."),
-    admin_level: Optional[str] = Query(
-        None,
-        description="The administrative level to filter the geometry and indicators by, if provided.",
-    ),
+    city_id: str = Path(),
+    indicator_id: str = Path(),
+    admin_level: Optional[str] = Query(None),
 ):
     """
     Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.

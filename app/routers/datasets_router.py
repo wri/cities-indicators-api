@@ -33,10 +33,8 @@ router = APIRouter()
     },
 )
 def list_datasets(
-    city_id: Optional[str] = Query(None, description="The ID of the city to filter by"),
-    layer_id: Optional[List[str]] = Query(
-        None, description="A list of layer IDs to filter datasets by"
-    ),
+    city_id: Optional[str] = Query(None),
+    layer_id: Optional[List[str]] = Query(None),
 ):
     """
     Retrieve a list of datasets, optionally filtered by a specific city and/or layer.
@@ -45,15 +43,15 @@ def list_datasets(
     a specific city's ID and/or one or more layer IDs.
 
     ### Args:
-    - city_id (Optional[str]): The unique identifier of the city to filter the datasets by.
-    - layer_id (Optional[List[str]]): A list of unique layer identifiers to filter the datasets by.
+    - **city_id** (Optional[str]): The unique identifier of the city to filter the datasets by.
+    - **layer_id** (Optional[List[str]]): A list of unique layer identifiers to filter the datasets by.
 
     ### Returns:
-    - DatasetsResponse: A Pydantic model containing the list of datasets. The response
+    - **DatasetsResponse**: A Pydantic model containing the list of datasets. The response
         will include metadata such as dataset IDs, names, and associated cities.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 400: If there is an invalid query parameter.
         - 500: If an error occurs during the retrieval process.
     """

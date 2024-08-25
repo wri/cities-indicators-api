@@ -49,23 +49,21 @@ router = APIRouter()
     },
 )
 def list_indicators(
-    project: Optional[str] = Query(
-        None, description="The project ID to filter indicators by"
-    ),
+    project: Optional[str] = Query(None),
 ):
     """
     Retrieve a list of indicators based on the provided project filter.
 
     ### Args:
-    - project (Optional[str]): The unique identifier of the project to filter the
-      indicators by. If not provided, the endpoint returns indicators for all projects.
+    - **project** (Optional[str]): The unique identifier of the project to filter the
+      indicators by.
 
     ### Returns:
-    - IndicatorsResponse: A Pydantic model containing the list of indicators. The response
+    - **IndicatorsResponse**: A Pydantic model containing the list of indicators. The response
       includes metadata such as indicator IDs, names, and associated projects.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 400: If there is an invalid query parameter.
         - 404: If no indicators are found for the given filter.
         - 500: If an error occurs during the retrieval process.
@@ -97,11 +95,11 @@ def list_indicators_themes():
     Retrieve a set of unique themes from all indicators.
 
     ### Returns:
-    - IndicatorsThemesResponse: A Pydantic model containing a set of unique indicator
+    - **IndicatorsThemesResponse**: A Pydantic model containing a set of unique indicator
       themes.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 500: If an error occurs during the retrieval process.
     """
     try:
@@ -128,20 +126,20 @@ def list_indicators_themes():
     },
 )
 def get_cities_by_indicator_id(
-    indicator_id: str = Path(description="The ID of the indicator to filter cities by"),
+    indicator_id: str = Path(),
 ):
     """
     Retrieve a list of cities associated with a specific indicator.
 
     ### Args:
-    - indicator_id (str): The unique identifier of the indicator to filter cities by.
+    - **indicator_id** (str): The unique identifier of the indicator to filter cities by.
 
     ### Returns:
-    - CitiesByIndicatorIdResponse: A Pydantic model containing a list of cities
+    - **CitiesByIndicatorIdResponse**: A Pydantic model containing a list of cities
       associated with the specified indicator.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 404: If no cities are found for the given indicator.
         - 500: If an error occurs during the retrieval process.
     """
@@ -183,22 +181,20 @@ def get_cities_by_indicator_id(
     },
 )
 def get_metadata_by_indicator_id(
-    indicator_id: str = Path(
-        description="The ID of the indicator to retrieve metadata for"
-    ),
+    indicator_id: str = Path(),
 ):
     """
     Retrieve metadata for a specific indicator.
 
     ### Args:
-    - indicator_id (str): The unique identifier of the indicator to retrieve metadata for.
+    - **indicator_id** (str): The unique identifier of the indicator to retrieve metadata for.
 
     ### Returns:
-    - MetadataByIndicatorIdResponse: A Pydantic model containing metadata for the
+    - **MetadataByIndicatorIdResponse**: A Pydantic model containing metadata for the
       specified indicator.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 400: If there is an invalid query parameter.
         - 404: If no metadata is found for the given indicator.
         - 500: If an error occurs during the retrieval process.
@@ -234,22 +230,22 @@ def get_metadata_by_indicator_id(
     },
 )
 def get_city_indicator_by_indicator_id_and_city_id(
-    indicator_id: str = Path(description="The ID of the indicator to filter by"),
-    city_id: str = Path(description="The ID of the city to filter by"),
+    indicator_id: str = Path(),
+    city_id: str = Path(),
 ):
     """
     Retrieve indicator data for a specific city and indicator.
 
     ### Args:
-    - indicator_id (str): The unique identifier of the indicator to filter by.
-    - city_id (str): The unique identifier of the city to filter by.
+    - **indicator_id** (str): The unique identifier of the indicator to filter by.
+    - **city_id** (str): The unique identifier of the city to filter by.
 
     ### Returns:
-    - IndicatorValueResponse: A Pydantic model containing indicator data for the
+    - **IndicatorValueResponse**: A Pydantic model containing indicator data for the
       specified city and indicator.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 404: If no indicator data is found for the given city and indicator.
         - 500: If an error occurs during the retrieval process.
     """

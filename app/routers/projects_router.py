@@ -43,11 +43,11 @@ def list_projects():
     Retrieve the list of projects.
 
     ### Returns:
-    - ListProjectsResponse: A Pydantic model containing the list of projects. The response
+    - **ListProjectsResponse**: A Pydantic model containing the list of projects. The response
       includes metadata such as project IDs, names, and descriptions.
 
     ### Raises:
-    - HTTPException:
+    - **HTTPException**:
         - 404: If no projects are found (handled by the service layer, should be rare).
         - 500: If an error occurs during the retrieval process.
     """
