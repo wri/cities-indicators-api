@@ -11,6 +11,7 @@ from app.const import (
     INDICATORS_RESPONSE_KEYS,
 )
 from app.repositories.datasets_repository import fetch_datasets
+from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
 from app.repositories.indicators_repository import (
     fetch_indicators,
@@ -41,6 +42,7 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
     future_to_func = {
         fetch_projects: "projects",
         fetch_datasets: "datasets",
+        fetch_layers: "layers",
         lambda: fetch_indicators(filter_formula): "indicators",
     }
 
@@ -62,6 +64,9 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         project["id"]: project["fields"]["project_id"]
         for project in results["projects"]
     }
+    layers_dict = {
+        layer["fields"]["layer_id"]: layer["fields"] for layer in results["layers"]
+    }
 
     indicators = []
     # Update data_sources_link and projects for each indicator
@@ -75,7 +80,16 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         indicator["projects"] = [
             projects_dict.get(project, project) for project in indicator_projects
         ]
-
+        indicator["layers"] = [
+            {
+                "layer_id": layer_id,
+                "layer_legend": layers_dict[layer_id].get("layer_legend", ""),
+                "layer_name": layers_dict[layer_id]["layer_name"],
+            }
+            for layer_id in indicator.get("layer_id", [])
+            if isinstance(indicator.get("layer_id"), list)
+            and layer_id in layers_dict.keys()
+        ]
         indicators.append(
             {
                 key: indicator[key]

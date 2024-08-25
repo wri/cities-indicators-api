@@ -21,7 +21,7 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "indicator_definition",
     "indicator_label",
     "indicator_legend",
-    "layer_id",
+    "layers",
     "methods",
     "Notebook",
     "projects",
