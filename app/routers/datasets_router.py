@@ -46,9 +46,7 @@ def list_datasets(
 
     ### Args:
     - city_id (Optional[str]): The unique identifier of the city to filter the datasets by.
-        If not provided, the endpoint will return datasets for all cities.
     - layer_id (Optional[List[str]]): A list of unique layer identifiers to filter the datasets by.
-        If not provided, the endpoint will return datasets for all layers.
 
     ### Returns:
     - DatasetsResponse: A Pydantic model containing the list of datasets. The response
