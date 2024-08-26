@@ -7,4 +7,4 @@ class LayerResponse(BaseModel):
     layer_id: str
     layer_path: str
     file_type: str
-    styling: Optional[str]
+    styling: Optional[List[Dict]]
