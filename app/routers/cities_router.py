@@ -175,7 +175,7 @@ def get_city_geometry(
 
 
 @router.get(
-    "/{city_id}/{admin_level}/geojson/indicators",
+    "/{city_id}/indicators/{indicator_id}/geojson",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
         404: {
@@ -189,10 +189,13 @@ def get_city_geometry(
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(
-        description="The ID of the city to retrieve geometry and indicators for"
+        description="The ID of the city to retrieve geometry and indicators for."
     ),
-    admin_level: str = Path(
-        description="The administrative level to filter geometry and indicators by"
+    indicator_id: str = Path(
+        description="The ID of the indicator to retrieve."
+    ),
+    admin_level: Optional[str] = Query(
+        None, description="The administrative level to filter the geometry and indicators by, if provided."
     ),
 ):
     """
@@ -200,16 +203,16 @@ def get_city_geometry_with_indicators(
     """
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
-            city_id, admin_level
+            city_id, indicator_id, admin_level
         )
     except Exception as e:
         logger.error("An error occurred: %s", e)
         raise HTTPException(
             status_code=500,
-            detail="An error occurred: Retrieving the indicators and geometry of a single city and admin level failed.",
+            detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
         ) from e
 
     if not city_indicators["features"]:
-        raise HTTPException(status_code=404, detail="No indicators found")
+        raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_indicators
