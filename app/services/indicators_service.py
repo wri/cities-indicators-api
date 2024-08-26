@@ -76,9 +76,8 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
             datasets_dict.get(data_source, data_source)
             for data_source in data_sources_link
         ]
-        indicator_projects = indicator.get("projects", [])
         indicator["projects"] = [
-            projects_dict.get(project, project) for project in indicator_projects
+            projects_dict.get(project, project) for project in indicator.get("projects", [])
         ]
         indicator["layers"] = [
             {
