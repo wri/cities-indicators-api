@@ -185,7 +185,7 @@ def get_city_geometry(
             },
         },
         500: COMMON_500_ERROR_RESPONSE,
-    },
+    }
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(

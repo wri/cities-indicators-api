@@ -2,6 +2,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
+import geopandas as gpd
 import pandas as pd
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
@@ -204,7 +205,7 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
 
 def get_city_geometry_with_indicators(city_id: str, indicator_id: str, admin_level: Optional[str]) -> Dict:
     """
-    Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
+    Retrieve the geometry, bounding boxes, and indicators of a specific city and administrative level in GeoJSON format.
 
     Args:
         city_id (str): The ID of the city to retrieve geometry and indicators for.
@@ -212,7 +213,7 @@ def get_city_geometry_with_indicators(city_id: str, indicator_id: str, admin_lev
         admin_level (Optional[str]): The administrative level to filter the geometry and indicators by, if provided.
 
     Returns:
-        Dict: A GeoJSON dictionary representing the city's geometry along with its indicators.
+        Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
 
@@ -237,8 +238,16 @@ def get_city_geometry_with_indicators(city_id: str, indicator_id: str, admin_lev
         index="geo_id", columns="indicator", values="value"
     )
 
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
+    city_gdf = gpd.GeoDataFrame(pd.merge(city_geometry_df, city_indicators_df, on="geo_id"))
 
+    # Calculate the bounding box for each polygon
+    city_gdf['bbox'] = city_gdf['the_geom'].apply(lambda geom: geom.bounds)
+
+    # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_gdf.to_json())
+    
+    # Add bounding box information to each feature in the GeoJSON
+    for feature, bbox in zip(city_geojson['features'], city_gdf['bbox']):
+        feature['properties']['bbox'] = bbox
 
     return city_geojson
