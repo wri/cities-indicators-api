@@ -8,6 +8,7 @@ from cartoframes.auth import set_default_credentials
 from app.const import (
     CARTO_API_KEY,
     CARTO_USERNAME,
+    CITY_INDICATORS_RESPONSE_KEYS,
     INDICATORS_LIST_RESPONSE_KEYS,
     INDICATORS_METADATA_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
@@ -115,7 +116,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
         List[Dict]: A list of city indicators with selected fields.
     """
     query = (
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' "
+        f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
         f"AND indicators.geo_name=indicators.geo_parent_name"
     )
     indicator_df = read_carto(query)
@@ -128,14 +129,18 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     indicators = json.loads(indicator_df.to_json())
     indicators = [item["properties"] for item in indicators["features"]]
 
-    return [
-        {
-            key: city_indicator[key]
-            for key in INDICATORS_RESPONSE_KEYS
-            if key in city_indicator
-        }
-        for city_indicator in indicators
-    ]
+    return {
+        "indicator": indicators[0]["indicator"],
+        "indicator_version": indicators[0]["indicator_version"],
+        "cities": [
+            {
+                key: city_indicator[key]
+                for key in INDICATORS_RESPONSE_KEYS
+                if key in city_indicator
+            }
+            for city_indicator in indicators
+        ],
+    }
 
 
 def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
@@ -183,7 +188,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
         Exception: If the city indicator is not found.
     """
     query = (
-        f"SELECT * FROM indicators WHERE indicator = '{indicator_id}' "
+        f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
         f"AND geo_name = '{city_id}'"
     )
     city_indicator_df = read_carto(query)
@@ -198,6 +203,6 @@ def get_city_indicator_by_indicator_id_and_city_id(
 
     return {
         key: city_indicator[key]
-        for key in INDICATORS_RESPONSE_KEYS
+        for key in CITY_INDICATORS_RESPONSE_KEYS
         if key in city_indicator
     }
