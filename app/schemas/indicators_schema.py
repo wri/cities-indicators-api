@@ -30,12 +30,17 @@ class IndicatorValueResponse(BaseModel):
     geo_name: str
     geo_level: str
     geo_parent_name: str
-    indicator: str
     value: float
+
+
+class CityIndicatorValueResponse(IndicatorValueResponse):
+    indicator: str
     indicator_version: Optional[int] = 0
 
 
 class CitiesByIndicatorIdResponse(BaseModel):
+    indicator: str
+    indicator_version: Optional[int] = 0
     cities: List[IndicatorValueResponse]
 
 
