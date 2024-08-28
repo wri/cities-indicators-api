@@ -27,7 +27,7 @@ class IndicatorsThemesResponse(BaseModel):
 
 class IndicatorValueResponse(BaseModel):
     geo_id: str
-    geo_name: str
+    city_id: str
     geo_level: str
     geo_parent_name: str
     value: float

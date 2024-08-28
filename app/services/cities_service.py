@@ -14,6 +14,7 @@ from app.const import (
     INDICATORS_RESPONSE_KEYS,
 )
 from app.repositories.cities_repository import fetch_cities
+from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import construct_filter_formula
 
@@ -145,13 +146,13 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
         Dict: A dictionary containing the city's indicators.
     """
     city_indicators_df = read_carto(
-        f"SELECT * FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
+        f"SELECT *, geo_name as city_id FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
     )
     city_indicators_df = city_indicators_df[INDICATORS_RESPONSE_KEYS]
     city_indicators_df = city_indicators_df.pivot(
         index=[
             "geo_id",
-            "geo_name",
+            "city_id",
             "geo_level",
             "geo_parent_name",
             "indicator_version",
@@ -180,6 +181,8 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     city_geometry_df = read_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     )
+
+    # Select only necessary columns for GeoJSON response
     city_geometry_df = city_geometry_df[
         [
             "geo_id",
@@ -191,14 +194,15 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
         ]
     ]
 
-    city_indicators_df = read_carto(
-        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}' and indicator_version=0"
-    )
-    city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="value"
-    )
+    # Calculate the bounding box for each polygon
+    city_geometry_df['bbox'] = city_geometry_df['the_geom'].apply(lambda geom: geom.bounds)
 
+    # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
+
+    # Add bounding box information to each feature in the GeoJSON
+    for feature, bbox in zip(city_geojson['features'], city_geometry_df['bbox']):
+        feature['properties']['bbox'] = bbox
 
     return city_geojson
 
@@ -219,13 +223,23 @@ def get_city_geometry_with_indicators(
     """
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
 
-    city_geometry_df = read_carto(
-        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}"
-    )
+    # Fetch geometry and indicators in parallel
+    with ThreadPoolExecutor() as executor:
+        geometry_future = executor.submit(
+            read_carto,
+            f"SELECT *, geo_name as city_id FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+        )
+        indicators_future = executor.submit(
+            read_carto,
+            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
+        )
+        city_geometry_df = geometry_future.result()
+        city_indicators_df = indicators_future.result()
+
     city_geometry_df = city_geometry_df[
         [
+            "city_id",
             "geo_id",
-            "geo_name",
             "geo_level",
             "geo_parent_name",
             "geo_version",
@@ -233,23 +247,34 @@ def get_city_geometry_with_indicators(
         ]
     ]
 
-    city_indicators_df = read_carto(
-        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0"
-    )
-    city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="value"
+    # Fetch indicator metadata separately
+    all_indicators = fetch_indicators()
+    indicators_dict = {
+        indicator["fields"]["indicator_id"]: indicator["fields"]
+        for indicator in all_indicators
+    }
+
+    # Merge geometry and indicator data
+    city_geometry_df = city_geometry_df.merge(
+        city_indicators_df, on="geo_id", how="left"
     )
 
-    city_gdf = gpd.GeoDataFrame(pd.merge(city_geometry_df, city_indicators_df, on="geo_id"))
+    # Add indicator information from metadata
+    city_geometry_df["indicator_label"] = indicators_dict[indicator_id][
+        "indicator_label"
+    ]
+    city_geometry_df["indicator_unit"] = indicators_dict[indicator_id]["unit"]
 
     # Calculate the bounding box for each polygon
-    city_gdf['bbox'] = city_gdf['the_geom'].apply(lambda geom: geom.bounds)
+    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+        lambda geom: geom.bounds
+    )
 
     # Convert to GeoJSON and add bounding box to properties
-    city_geojson = json.loads(city_gdf.to_json())
-    
+    city_geojson = json.loads(city_geometry_df.to_json())
+
     # Add bounding box information to each feature in the GeoJSON
-    for feature, bbox in zip(city_geojson['features'], city_gdf['bbox']):
-        feature['properties']['bbox'] = bbox
+    for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
+        feature["properties"]["bbox"] = bbox
 
     return city_geojson

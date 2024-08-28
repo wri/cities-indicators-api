@@ -117,7 +117,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     """
     query = (
         f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
-        f"AND indicators.geo_name=indicators.geo_parent_name"
+        f"AND indicators.city_id=indicators.geo_parent_name"
     )
     indicator_df = read_carto(query)
     if indicator_df.empty:

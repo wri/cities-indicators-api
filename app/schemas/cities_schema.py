@@ -19,12 +19,22 @@ class CityListResponse(BaseModel):
 
 
 # Indicator Schema
-class CityIndicatorsDetail(BaseModel):
+class CityIndicatorsDetailBase(BaseModel):
     model_config = ConfigDict(extra="allow")
+    bbox: List[float]
     geo_id: str
     geo_name: str
     geo_level: str
     geo_parent_name: str
+
+
+class CityIndicatorsDetail(CityIndicatorsDetailBase):
+    bbox: List[float]
+    geo_version: int
+    indicator: str
+    indicator_name: str
+    indicator_unit: str
+    value: float
 
 
 # Geometry Schema
@@ -33,15 +43,29 @@ class Geometry(BaseModel):
     coordinates: List[List[List[List[float]]]]
 
 
-# Feature Schema
-class GeoFeature(BaseModel):
+# Feature Schema with detailed indicators
+class CityIndicatorFeature(BaseModel):
     id: str
     type: str
     properties: CityIndicatorsDetail
     geometry: Geometry
 
 
-# GeoJSON Response
-class GeoJSONFeatureCollection(BaseModel):
+# GeoJSON Response with detailed indicators
+class CityIndicatorGeoJSON(BaseModel):
     type: str
-    features: List[GeoFeature]
+    features: List[CityIndicatorFeature]
+
+
+# Feature Schema with basic city information
+class CityBoundaryFeature(BaseModel):
+    id: str
+    type: str
+    properties: CityIndicatorsDetailBase
+    geometry: Geometry
+
+
+# GeoJSON Response with basic city information
+class CityBoundaryGeoJSON(BaseModel):
+    type: str
+    features: List[CityBoundaryFeature]

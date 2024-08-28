@@ -12,10 +12,11 @@ from app.const import (
 from app.utils.dependencies import validate_query_params
 from app.schemas.common_schema import ErrorResponse
 from app.schemas.cities_schema import (
+    CityBoundaryGeoJSON,
     CityDetail,
+    CityIndicatorGeoJSON,
     CityIndicatorsDetail,
     CityListResponse,
-    GeoJSONFeatureCollection,
 )
 from app.services import cities_service
 
@@ -140,7 +141,7 @@ def get_city_indicators(
 @router.get(
     "/{city_id}/{admin_level}/geojson",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityBoundaryGeoJSON},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -177,7 +178,7 @@ def get_city_geometry(
 @router.get(
     "/{city_id}/indicators/{indicator_id}/geojson",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -185,7 +186,7 @@ def get_city_geometry(
             },
         },
         500: COMMON_500_ERROR_RESPONSE,
-    }
+    },
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(
