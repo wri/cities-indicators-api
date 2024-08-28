@@ -2,8 +2,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
-import geopandas as gpd
-import pandas as pd
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
