@@ -8,8 +8,7 @@ from cartoframes.auth import set_default_credentials
 from app.const import (
     CARTO_API_KEY,
     CARTO_USERNAME,
-    CITY_RESPONSE_KEYS,
-    INDICATORS_RESPONSE_KEYS,
+    CITY_RESPONSE_KEYS
 )
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.indicators_repository import fetch_indicators
@@ -187,14 +186,14 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
         dict: A GeoJSON dictionary representing the city's geometry.
     """
     city_geometry_df = read_carto(
-        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+        f"SELECT *, geo_name as city_name FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     )
 
     # Select only necessary columns for GeoJSON response
     city_geometry_df = city_geometry_df[
         [
             "geo_id",
-            "geo_name",
+            "city_name",
             "geo_level",
             "geo_parent_name",
             "geo_version",

@@ -13,10 +13,10 @@ from app.utils.dependencies import validate_query_params
 from app.schemas.common_schema import ErrorResponse
 from app.schemas.cities_schema import (
     CityBoundaryGeoJSON,
-    CityDetail,
+    City,
+    CityIndicatorAdmin,
     CityIndicatorGeoJSON,
-    CityIndicatorsDetail,
-    CityListResponse,
+    CityList,
 )
 from app.services import cities_service
 
@@ -30,7 +30,7 @@ router = APIRouter()
     "",
     dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityListResponse},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityList},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -72,7 +72,7 @@ def list_cities(
 @router.get(
     "/{city_id}",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityDetail},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": City},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {"application/json": {"example": {"detail": "No city found"}}},
@@ -104,7 +104,7 @@ def get_city_by_city_id(
 @router.get(
     "/{city_id}/{admin_level}",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorsDetail},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorAdmin},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
