@@ -60,18 +60,26 @@ DATASETS_LIST_RESPONSE_KEYS = [
 ]
 CITY_INDICATORS_RESPONSE_KEYS = [
     "city_id",
+    "city_name",
+    "country_name",
+    "country_code_iso3",
     "geo_id",
     "geo_level",
     "geo_parent_name",
     "indicator",
     "indicator_version",
+    "unit",
     "value",
 ]
 INDICATORS_RESPONSE_KEYS = [
     "city_id",
+    "city_name",
+    "country_name",
+    "country_code_iso3",
     "geo_id",
     "geo_level",
     "geo_parent_name",
+    "unit",
     "value",
 ]
 INDICATORS_METADATA_RESPONSE_KEYS = [

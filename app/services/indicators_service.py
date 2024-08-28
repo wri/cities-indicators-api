@@ -13,6 +13,7 @@ from app.const import (
     INDICATORS_METADATA_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
+from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
 from app.repositories.projects_repository import fetch_projects
 from app.repositories.indicators_repository import (
@@ -115,30 +116,61 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     Returns:
         List[Dict]: A list of city indicators with selected fields.
     """
-    query = (
-        f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
-        f"AND indicators.geo_name=indicators.geo_parent_name"
-    )
-    indicator_df = read_carto(query)
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(fetch_cities): "cities",
+            executor.submit(fetch_indicators): "indicators",
+            executor.submit(
+                read_carto,
+                f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
+                f"AND indicators.geo_name=indicators.geo_parent_name",
+            ): "indicator_df",
+        }
+
+        results = {}
+        for future in as_completed(futures):
+            key = futures[future]
+            results[key] = future.result()
+
+    indicator_df = results.get("indicator_df")
     if indicator_df.empty:
         return []
+
+    cities_dict = {
+        city["fields"]["city_id"]: city["fields"] for city in results["cities"]
+    }
+    indicators_dict = {
+        indicator["fields"]["indicator_id"]: indicator["fields"]
+        for indicator in results["indicators"]
+    }
 
     indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
-    indicators = json.loads(indicator_df.to_json())
-    indicators = [item["properties"] for item in indicators["features"]]
+    city_indicators = [
+        {
+            **item["properties"],
+            "unit": indicators_dict[indicator_id]["unit"],
+            "city_name": cities_dict.get(item["properties"]["city_id"], {}).get(
+                "city_name"
+            ),
+            "country_name": cities_dict.get(item["properties"]["city_id"], {}).get(
+                "country_name"
+            ),
+            "country_code_iso3": cities_dict.get(
+                item["properties"]["city_id"], {}
+            ).get("country_code_iso3"),
+        }
+        for item in json.loads(indicator_df.to_json())["features"]
+        if item["properties"]["city_id"] in cities_dict
+    ]
 
     return {
-        "indicator": indicators[0]["indicator"],
-        "indicator_version": indicators[0]["indicator_version"],
+        "indicator": city_indicators[0]["indicator"],
+        "indicator_version": city_indicators[0]["indicator_version"],
         "cities": [
-            {
-                key: city_indicator[key]
-                for key in INDICATORS_RESPONSE_KEYS
-                if key in city_indicator
-            }
-            for city_indicator in indicators
+            {key: city_indicator[key] for key in INDICATORS_RESPONSE_KEYS if key in city_indicator}
+            for city_indicator in city_indicators
         ],
     }
 
@@ -187,17 +219,37 @@ def get_city_indicator_by_indicator_id_and_city_id(
     Raises:
         Exception: If the city indicator is not found.
     """
-    query = (
-        f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
-        f"AND geo_name = '{city_id}'"
-    )
-    city_indicator_df = read_carto(query)
+    with ThreadPoolExecutor() as executor:
+        # Run fetch_indicators and read_carto in parallel
+        fetch_cities_future = executor.submit(fetch_cities)
+        fetch_indicators_future = executor.submit(fetch_indicators)
+        read_carto_future = executor.submit(
+            read_carto,
+            f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
+            f"AND geo_name = '{city_id}'",
+        )
+
+        # Get results
+        all_cities = fetch_cities_future.result()
+        all_indicators = fetch_indicators_future.result()
+        city_indicator_df = read_carto_future.result()
+
     if city_indicator_df.empty:
         return {}
+
+    cities_dict = {city["fields"]["city_id"]: city["fields"] for city in all_cities}
+    indicators_dict = {
+        indicator["fields"]["indicator_id"]: indicator["fields"]
+        for indicator in all_indicators
+    }
 
     city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
+    city_indicator_df["unit"] = indicators_dict[indicator_id]["unit"]
+    city_indicator_df["city_name"] = cities_dict[city_id]["city_name"]
+    city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
+    city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
     city_indicator = json.loads(city_indicator_df.to_json())
     city_indicator = city_indicator["features"][0]["properties"]
 
