@@ -150,7 +150,6 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     city_indicators = [
         {
             **item["properties"],
-            "unit": indicators_dict[indicator_id]["unit"],
             "city_name": cities_dict.get(item["properties"]["city_id"], {}).get(
                 "city_name"
             ),
@@ -168,6 +167,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     return {
         "indicator": city_indicators[0]["indicator"],
         "indicator_version": city_indicators[0]["indicator_version"],
+        "unit":  indicators_dict[indicator_id]["unit"],
         "cities": [
             {key: city_indicator[key] for key in INDICATORS_RESPONSE_KEYS if key in city_indicator}
             for city_indicator in city_indicators
