@@ -157,9 +157,9 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
             "country_name": cities_dict.get(item["properties"]["city_id"], {}).get(
                 "country_name"
             ),
-            "country_code_iso3": cities_dict.get(
-                item["properties"]["city_id"], {}
-            ).get("country_code_iso3"),
+            "country_code_iso3": cities_dict.get(item["properties"]["city_id"], {}).get(
+                "country_code_iso3"
+            ),
         }
         for item in json.loads(indicator_df.to_json())["features"]
         if item["properties"]["city_id"] in cities_dict
@@ -168,9 +168,13 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     return {
         "indicator": city_indicators[0]["indicator"],
         "indicator_version": city_indicators[0]["indicator_version"],
-        "unit":  indicators_dict[indicator_id]["unit"],
+        "unit": indicators_dict[indicator_id]["unit"],
         "cities": [
-            {key: city_indicator[key] for key in INDICATORS_RESPONSE_KEYS if key in city_indicator}
+            {
+                key: city_indicator[key]
+                for key in INDICATORS_RESPONSE_KEYS
+                if key in city_indicator
+            }
             for city_indicator in city_indicators
         ],
     }
