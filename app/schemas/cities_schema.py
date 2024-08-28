@@ -22,8 +22,8 @@ class CityListResponse(BaseModel):
 class CityIndicatorsDetailBase(BaseModel):
     model_config = ConfigDict(extra="allow")
     bbox: List[float]
+    city_name: str
     geo_id: str
-    geo_name: str
     geo_level: str
     geo_parent_name: str
 

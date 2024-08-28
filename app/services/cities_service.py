@@ -225,7 +225,7 @@ def get_city_geometry_with_indicators(
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
             read_carto,
-            f"SELECT *, geo_name as city_id FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+            f"SELECT *, geo_name as city_name FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
         )
         indicators_future = executor.submit(
             read_carto,
@@ -236,7 +236,7 @@ def get_city_geometry_with_indicators(
 
     city_geometry_df = city_geometry_df[
         [
-            "city_id",
+            "city_name",
             "geo_id",
             "geo_level",
             "geo_parent_name",
