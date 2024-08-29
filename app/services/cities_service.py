@@ -182,15 +182,15 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
         dict: A GeoJSON dictionary representing the city's geometry.
     """
     city_geometry_df = read_carto(
-        f"SELECT *, geo_name as city_name FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
+        f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     )
 
     # Select only necessary columns for GeoJSON response
     city_geometry_df = city_geometry_df[
         [
             "geo_id",
-            "city_name",
             "geo_level",
+            "geo_name",
             "geo_parent_name",
             "geo_version",
             "the_geom",
@@ -198,16 +198,31 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     ]
 
     # Calculate the bounding box for each polygon
-    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+    city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
-    # Convert to GeoJSON and add bounding box to properties
+    # ConminLon = 180vert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
+    minLon = 180
+    minLat = 90
+    maxLon = -180
+    maxLat = -90
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
+        if bbox[0] < minLon:
+            minLon = bbox[0]
+        if bbox[1] < minLat:
+            minLat = bbox[1]
+        if bbox[2] > maxLon:
+            maxLon = bbox[2]
+        if bbox[3] > maxLat:
+            maxLat = bbox[3]
+
         feature["properties"]["bbox"] = bbox
+
+    city_geojson = {"bbox": [minLon, minLat, maxLon, maxLat], **city_geojson}
 
     return city_geojson
 
@@ -234,7 +249,7 @@ def get_city_geometry_with_indicators(
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
             read_carto,
-            f"SELECT *, geo_name as city_name FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+            f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
         )
         indicators_future = executor.submit(
             read_carto,
@@ -245,8 +260,8 @@ def get_city_geometry_with_indicators(
 
     city_geometry_df = city_geometry_df[
         [
-            "city_name",
             "geo_id",
+            "geo_name",
             "geo_level",
             "geo_parent_name",
             "geo_version",
@@ -271,7 +286,7 @@ def get_city_geometry_with_indicators(
     city_geometry_df["indicator_unit"] = indicators_dict[indicator_id].get("unit")
 
     # Calculate the bounding box for each polygon
-    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+    city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
@@ -279,7 +294,22 @@ def get_city_geometry_with_indicators(
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
+    minLon = 180
+    minLat = 90
+    maxLon = -180
+    maxLat = -90
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
+        if bbox[0] < minLon:
+            minLon = bbox[0]
+        if bbox[1] < minLat:
+            minLat = bbox[1]
+        if bbox[2] > maxLon:
+            maxLon = bbox[2]
+        if bbox[3] > maxLat:
+            maxLat = bbox[3]
+
         feature["properties"]["bbox"] = bbox
 
+    city_geojson = {"bbox": [minLon, minLat, maxLon, maxLat], **city_geojson}
+    
     return city_geojson
