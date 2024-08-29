@@ -208,14 +208,14 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     # Add bounding box information to each feature in the GeoJSON
     bouding_box_coordinates = [180, 90, -180, -90]
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
-        if bbox[0] < min_lon:
-            min_lon = bbox[0]
-        if bbox[1] < min_lat:
-            min_lat = bbox[1]
-        if bbox[2] > max_lon:
-            max_lon = bbox[2]
-        if bbox[3] > max_lat:
-            max_lat = bbox[3]
+        if bbox[0] < bouding_box_coordinates[0]:
+            bouding_box_coordinates[0] = bbox[0]
+        if bbox[1] < bouding_box_coordinates[1]:
+            bouding_box_coordinates[1] = bbox[1]
+        if bbox[2] > bouding_box_coordinates[2]:
+            bouding_box_coordinates[2] = bbox[2]
+        if bbox[3] > bouding_box_coordinates[3]:
+            bouding_box_coordinates[3] = bbox[3]
 
         feature["properties"]["bbox"] = bbox
 
