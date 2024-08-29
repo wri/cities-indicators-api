@@ -5,11 +5,7 @@ from typing import Any, Dict, List, Optional
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
-from app.const import (
-    CARTO_API_KEY,
-    CARTO_USERNAME,
-    CITY_RESPONSE_KEYS
-)
+from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
@@ -58,7 +54,7 @@ def list_cities(
     if not cities_list:
         return []
 
-    city_ids = [city["fields"]["city_id"] for city in cities_list]
+    city_ids = [city["fields"]["id"] for city in cities_list]
 
     # Asynchronously fetch all projects related to the cities
     with ThreadPoolExecutor() as executor:
@@ -67,7 +63,7 @@ def list_cities(
         ).result()
 
     project_id_map = {
-        project["id"]: project["fields"]["project_id"] for project in all_projects
+        project["id"]: project["fields"]["id"] for project in all_projects
     }
 
     for city in cities_list:
@@ -120,7 +116,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
         all_projects = executor.submit(fetch_projects, project_filter_formula).result()
 
     project_id_map = {
-        project["id"]: project["fields"]["project_id"] for project in all_projects
+        project["id"]: project["fields"]["id"] for project in all_projects
     }
 
     city_projects = [project_id_map.get(project) for project in city["projects"]]
@@ -202,14 +198,16 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     ]
 
     # Calculate the bounding box for each polygon
-    city_geometry_df['bbox'] = city_geometry_df['the_geom'].apply(lambda geom: geom.bounds)
+    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+        lambda geom: geom.bounds
+    )
 
     # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
-    for feature, bbox in zip(city_geojson['features'], city_geometry_df['bbox']):
-        feature['properties']['bbox'] = bbox
+    for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
+        feature["properties"]["bbox"] = bbox
 
     return city_geojson
 
