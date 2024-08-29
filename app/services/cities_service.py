@@ -202,27 +202,24 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
         lambda geom: geom.bounds
     )
 
-    # ConminLon = 180vert to GeoJSON and add bounding box to properties
+    # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
-    minLon = 180
-    minLat = 90
-    maxLon = -180
-    maxLat = -90
+    bouding_box_coordinates = [180, 90, -180, -90]
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
-        if bbox[0] < minLon:
-            minLon = bbox[0]
-        if bbox[1] < minLat:
-            minLat = bbox[1]
-        if bbox[2] > maxLon:
-            maxLon = bbox[2]
-        if bbox[3] > maxLat:
-            maxLat = bbox[3]
+        if bbox[0] < min_lon:
+            min_lon = bbox[0]
+        if bbox[1] < min_lat:
+            min_lat = bbox[1]
+        if bbox[2] > max_lon:
+            max_lon = bbox[2]
+        if bbox[3] > max_lat:
+            max_lat = bbox[3]
 
         feature["properties"]["bbox"] = bbox
 
-    city_geojson = {"bbox": [minLon, minLat, maxLon, maxLat], **city_geojson}
+    city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
 
     return city_geojson
 
@@ -294,22 +291,19 @@ def get_city_geometry_with_indicators(
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
-    minLon = 180
-    minLat = 90
-    maxLon = -180
-    maxLat = -90
+    bouding_box_coordinates = [180, 90, -180, -90]
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
-        if bbox[0] < minLon:
-            minLon = bbox[0]
-        if bbox[1] < minLat:
-            minLat = bbox[1]
-        if bbox[2] > maxLon:
-            maxLon = bbox[2]
-        if bbox[3] > maxLat:
-            maxLat = bbox[3]
+        if bbox[0] < bouding_box_coordinates[0]:
+            bouding_box_coordinates[0] = bbox[0]
+        if bbox[1] < bouding_box_coordinates[1]:
+            bouding_box_coordinates[1] = bbox[1]
+        if bbox[2] > bouding_box_coordinates[2]:
+            bouding_box_coordinates[2] = bbox[2]
+        if bbox[3] > bouding_box_coordinates[3]:
+            bouding_box_coordinates[3] = bbox[3]
 
         feature["properties"]["bbox"] = bbox
 
-    city_geojson = {"bbox": [minLon, minLat, maxLon, maxLat], **city_geojson}
+    city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
     
     return city_geojson
