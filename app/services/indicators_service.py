@@ -1,23 +1,20 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List, Dict, Set
+from typing import Dict, List, Optional, Set
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
-from app.const import (
-    INDICATORS_LIST_RESPONSE_KEYS,
-    INDICATORS_METADATA_RESPONSE_KEYS,
-    INDICATORS_RESPONSE_KEYS,
-)
+from app.const import (CITY_INDICATORS_RESPONSE_KEYS,
+                       INDICATORS_LIST_RESPONSE_KEYS,
+                       INDICATORS_METADATA_RESPONSE_KEYS,
+                       INDICATORS_RESPONSE_KEYS)
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
+from app.repositories.indicators_repository import (fetch_first_indicator,
+                                                    fetch_indicators)
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
-from app.repositories.indicators_repository import (
-    fetch_indicators,
-    fetch_first_indicator,
-)
 from app.utils.filters import generate_search_query
 from app.utils.settings import Settings
 
