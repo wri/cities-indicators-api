@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from app.const import DATASETS_LIST_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
@@ -38,7 +38,7 @@ def list_datasets(city_id: Optional[str]) -> List[Dict[str, Any]]:
         dataset["id"]: dataset["fields"] for dataset in results["datasets"]
     }
     indicators_dict = {
-        indicator["id"]: indicator["fields"]["indicator_label"]
+        indicator["id"]: indicator["fields"]["name"]
         for indicator in results["indicators"]
     }
 
