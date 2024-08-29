@@ -1,6 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List, Dict, Set
+from typing import Dict, List, Optional, Set
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
@@ -15,11 +15,11 @@ from app.const import (
 )
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
-from app.repositories.projects_repository import fetch_projects
 from app.repositories.indicators_repository import (
-    fetch_indicators,
     fetch_first_indicator,
+    fetch_indicators,
 )
+from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import generate_search_query
 
 set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
@@ -56,12 +56,10 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         indicator["id"]: indicator["fields"] for indicator in results["indicators"]
     }
     datasets_dict = {
-        dataset["id"]: dataset["fields"]["dataset_name"]
-        for dataset in results["datasets"]
+        dataset["id"]: dataset["fields"]["name"] for dataset in results["datasets"]
     }
     projects_dict = {
-        project["id"]: project["fields"]["project_id"]
-        for project in results["projects"]
+        project["id"]: project["fields"]["id"] for project in results["projects"]
     }
 
     indicators = []
@@ -137,11 +135,9 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     if indicator_df.empty:
         return []
 
-    cities_dict = {
-        city["fields"]["city_id"]: city["fields"] for city in results["cities"]
-    }
+    cities_dict = {city["fields"]["id"]: city["fields"] for city in results["cities"]}
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
+        indicator["fields"]["id"]: indicator["fields"]
         for indicator in results["indicators"]
     }
 
@@ -151,18 +147,16 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     city_indicators = [
         {
             **item["properties"],
-            "city_name": cities_dict.get(item["properties"]["city_id"], {}).get(
-                "city_name"
-            ),
-            "country_name": cities_dict.get(item["properties"]["city_id"], {}).get(
+            "city_name": cities_dict.get(item["properties"]["id"], {}).get("city_name"),
+            "country_name": cities_dict.get(item["properties"]["id"], {}).get(
                 "country_name"
             ),
-            "country_code_iso3": cities_dict.get(item["properties"]["city_id"], {}).get(
+            "country_code_iso3": cities_dict.get(item["properties"]["id"], {}).get(
                 "country_code_iso3"
             ),
         }
         for item in json.loads(indicator_df.to_json())["features"]
-        if item["properties"]["city_id"] in cities_dict
+        if item["properties"]["id"] in cities_dict
     ]
 
     return {
@@ -193,7 +187,7 @@ def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
     Raises:
         Exception: If the indicator is not found.
     """
-    filter_formula = generate_search_query("indicator_id", indicator_id)
+    filter_formula = generate_search_query("id", indicator_id)
     filtered_indicator = fetch_first_indicator(filter_formula)
 
     if not filtered_indicator:
@@ -242,17 +236,16 @@ def get_city_indicator_by_indicator_id_and_city_id(
     if city_indicator_df.empty:
         return {}
 
-    cities_dict = {city["fields"]["city_id"]: city["fields"] for city in all_cities}
+    cities_dict = {city["fields"]["id"]: city["fields"] for city in all_cities}
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
-        for indicator in all_indicators
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
     city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
     city_indicator_df["unit"] = indicators_dict[indicator_id]["unit"]
-    city_indicator_df["city_name"] = cities_dict[city_id]["city_name"]
+    city_indicator_df["city_name"] = cities_dict[city_id]["name"]
     city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
     city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
     city_indicator = json.loads(city_indicator_df.to_json())
