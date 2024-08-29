@@ -43,14 +43,29 @@ DATASETS_LIST_RESPONSE_KEYS = [
     "Theme",
     "visualization_endpoint",
 ]
-INDICATORS_RESPONSE_KEYS = [
+CITY_INDICATORS_RESPONSE_KEYS = [
+    "city_id",
+    "city_name",
+    "country_name",
+    "country_code_iso3",
     "geo_id",
-    "geo_name",
     "geo_level",
     "geo_parent_name",
     "indicator",
-    "value",
     "indicator_version",
+    "unit",
+    "value",
+]
+INDICATORS_RESPONSE_KEYS = [
+    "city_id",
+    "city_name",
+    "country_name",
+    "country_code_iso3",
+    "geo_id",
+    "geo_level",
+    "geo_parent_name",
+    "unit",
+    "value",
 ]
 INDICATORS_METADATA_RESPONSE_KEYS = [
     "indicator_id",
