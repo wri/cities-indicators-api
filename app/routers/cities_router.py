@@ -189,24 +189,37 @@ def get_city_geometry(
     },
 )
 def get_city_geometry_with_indicators(
-    city_id: str = Path(
-        description="The ID of the city to retrieve geometry and indicators for."
-    ),
-    indicator_id: str = Path(description="The ID of the indicator to retrieve."),
-    admin_level: Optional[str] = Query(
-        None,
-        description="The administrative level to filter the geometry and indicators by, if provided.",
-    ),
+    city_id: str = Path(),
+    indicator_id: str = Path(),
+    admin_level: Optional[str] = Query("units_boundary_level"),
 ):
     """
     Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **indicator_id** (`str`): The unique identifier of the indicator.
+    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
+        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
+        - If no value is provided, **"units_boundary_level"** value will be used as the default.
+
+    ### Returns:
+    - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry and indicators.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no indicators or geometry are found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
     """
+    if admin_level is None:
+        admin_level = "units_boundary_level"
+
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
             city_id, indicator_id, admin_level
         )
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
