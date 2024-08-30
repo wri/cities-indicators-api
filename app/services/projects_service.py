@@ -1,9 +1,10 @@
-from typing import List
+from typing import Dict, List
 
 from app.repositories.projects_repository import fetch_projects
+from app.utils.filters import generate_search_query
 
 
-def list_projects() -> List[str]:
+def list_projects() -> List[Dict]:
     """
     Retrieve a list of unique project IDs from the projects table.
 
@@ -11,7 +12,14 @@ def list_projects() -> List[str]:
         List[str]: A list containing the unique project IDs.
 
     """
-    projects = fetch_projects()
-    projects_dict = {project["fields"]["project_id"] for project in projects}
+    filter_formula = generate_search_query("status", "Active")
+    projects = fetch_projects(filter_formula)
+    projects_list = [
+        {
+            "id": project["fields"]["project_id"],
+            "name": project["fields"]["project_name"][0],
+        }
+        for project in projects
+    ]
 
-    return projects_dict
+    return projects_list

@@ -26,16 +26,26 @@ class IndicatorsThemesResponse(BaseModel):
 
 
 class IndicatorValueResponse(BaseModel):
+    city_id: str
+    city_name: str
+    country_name: str
+    country_code_iso3: str
     geo_id: str
-    geo_name: str
     geo_level: str
     geo_parent_name: str
-    indicator: str
     value: float
-    indicator_version: Optional[int] = 0
+
+
+class CityIndicatorValueResponse(IndicatorValueResponse):
+    indicator: str
+    indicator_version: int
+    unit: str
 
 
 class CitiesByIndicatorIdResponse(BaseModel):
+    indicator: str
+    indicator_version: Optional[int] = 0
+    unit: str
     cities: List[IndicatorValueResponse]
 
 

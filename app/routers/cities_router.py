@@ -12,10 +12,11 @@ from app.const import (
 from app.utils.dependencies import validate_query_params
 from app.schemas.common_schema import ErrorResponse
 from app.schemas.cities_schema import (
-    CityDetail,
-    CityIndicatorsDetail,
-    CityListResponse,
-    GeoJSONFeatureCollection,
+    CityBoundaryGeoJSON,
+    City,
+    CityIndicatorAdmin,
+    CityIndicatorGeoJSON,
+    CityList,
 )
 from app.services import cities_service
 
@@ -29,7 +30,7 @@ router = APIRouter()
     "",
     dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityListResponse},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityList},
         400: {
             "model": ErrorResponse,
             "description": "Invalid query parameter",
@@ -71,7 +72,7 @@ def list_cities(
 @router.get(
     "/{city_id}",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityDetail},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": City},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {"application/json": {"example": {"detail": "No city found"}}},
@@ -103,7 +104,7 @@ def get_city_by_city_id(
 @router.get(
     "/{city_id}/{admin_level}",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorsDetail},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorAdmin},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -140,7 +141,7 @@ def get_city_indicators(
 @router.get(
     "/{city_id}/{admin_level}/geojson",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityBoundaryGeoJSON},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -177,7 +178,7 @@ def get_city_geometry(
 @router.get(
     "/{city_id}/indicators/{indicator_id}/geojson",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": GeoJSONFeatureCollection},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -191,11 +192,10 @@ def get_city_geometry_with_indicators(
     city_id: str = Path(
         description="The ID of the city to retrieve geometry and indicators for."
     ),
-    indicator_id: str = Path(
-        description="The ID of the indicator to retrieve."
-    ),
+    indicator_id: str = Path(description="The ID of the indicator to retrieve."),
     admin_level: Optional[str] = Query(
-        None, description="The administrative level to filter the geometry and indicators by, if provided."
+        None,
+        description="The administrative level to filter the geometry and indicators by, if provided.",
     ),
 ):
     """
