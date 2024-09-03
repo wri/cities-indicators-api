@@ -140,25 +140,23 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
         indicator["fields"]["id"]: indicator["fields"]
         for indicator in results["indicators"]
     }
-
     indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
     city_indicators = [
         {
             **item["properties"],
-            "city_name": cities_dict.get(item["properties"]["id"], {}).get("city_name"),
-            "country_name": cities_dict.get(item["properties"]["id"], {}).get(
+            "city_name": cities_dict.get(item["properties"]["city_id"], {}).get("name"),
+            "country_name": cities_dict.get(item["properties"]["city_id"], {}).get(
                 "country_name"
             ),
-            "country_code_iso3": cities_dict.get(item["properties"]["id"], {}).get(
+            "country_code_iso3": cities_dict.get(item["properties"]["city_id"], {}).get(
                 "country_code_iso3"
             ),
         }
         for item in json.loads(indicator_df.to_json())["features"]
-        if item["properties"]["id"] in cities_dict
+        if item["properties"]["city_id"] in cities_dict
     ]
-
     return {
         "indicator": city_indicators[0]["indicator"],
         "indicator_version": city_indicators[0]["indicator_version"],

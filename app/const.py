@@ -83,8 +83,8 @@ INDICATORS_RESPONSE_KEYS = [
     "value",
 ]
 INDICATORS_METADATA_RESPONSE_KEYS = [
-    "indicator_id",
-    "indicator_definition",
+    "id",
+    "definition",
     "methods",
     "importance",
     "data_sources",
