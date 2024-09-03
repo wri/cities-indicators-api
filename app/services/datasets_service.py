@@ -49,7 +49,7 @@ def list_datasets(city_id: Optional[str]) -> List[Dict[str, Any]]:
             for indicator_id in dataset.get("Indicators", [])
         ]
         dataset["city_ids"] = [
-            cities_dict[city_id]["city_id"] for city_id in dataset.get("city_id", [])
+            cities_dict[city_id]["id"] for city_id in dataset.get("city_id", [])
         ]
 
     # Reorder and select dataset fields
