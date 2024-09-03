@@ -53,7 +53,6 @@ def list_cities(
 
     if not cities_list:
         return []
-
     city_ids = [city["fields"]["id"] for city in cities_list]
 
     # Asynchronously fetch all projects related to the cities
@@ -88,7 +87,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
     Returns:
         dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
     """
-    filter_formula = f'"{city_id}" = {{city_id}}'
+    filter_formula = f'"{city_id}" = {{id}}'
 
     # Define the tasks to be executed asynchronously
     future_to_func = {
@@ -255,8 +254,7 @@ def get_city_geometry_with_indicators(
     # Fetch indicator metadata separately
     all_indicators = fetch_indicators()
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
-        for indicator in all_indicators
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
     # Merge geometry and indicator data
@@ -265,9 +263,7 @@ def get_city_geometry_with_indicators(
     )
 
     # Add indicator information from metadata
-    city_geometry_df["indicator_label"] = indicators_dict[indicator_id][
-        "indicator_label"
-    ]
+    city_geometry_df["indicator_label"] = indicators_dict[indicator_id]["name"]
     city_geometry_df["indicator_unit"] = indicators_dict[indicator_id]["unit"]
 
     # Calculate the bounding box for each polygon
