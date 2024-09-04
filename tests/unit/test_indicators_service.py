@@ -10,7 +10,10 @@ from app.services.indicators_service import (
     get_metadata_by_indicator_id,
     get_city_indicator_by_indicator_id_and_city_id,
 )
-from app.repositories.indicators_repository import fetch_indicators, fetch_first_indicator
+from app.repositories.indicators_repository import (
+    fetch_indicators,
+    fetch_first_indicator,
+)
 
 
 # Fixtures
@@ -166,9 +169,7 @@ class TestGetCitiesByIndicatorId:
 @pytest.mark.unit
 class TestGetMetadataByIndicatorId:
     @patch("app.services.indicators_service.fetch_first_indicator")
-    def test_get_metadata_by_indicator_id_not_found(
-        self, mock_fetch_first_indicator
-    ):
+    def test_get_metadata_by_indicator_id_not_found(self, mock_fetch_first_indicator):
         mock_fetch_first_indicator.return_value = None
         result = get_metadata_by_indicator_id("nonexistent_indicator")
         assert result == {}

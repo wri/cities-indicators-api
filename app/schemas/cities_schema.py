@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
+
 class City(BaseModel):
     """A single city."""
 
@@ -32,7 +33,7 @@ class CityIndicatorBase(BaseModel):
     geo_version: int
 
 
-class CityIndicatorAdmin(BaseModel):  
+class CityIndicatorAdmin(BaseModel):
     """City indicator details for a specific admin level."""
 
     city_name: str
@@ -43,7 +44,7 @@ class CityIndicatorAdmin(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class CityIndicator(CityIndicatorBase):  
+class CityIndicator(CityIndicatorBase):
     """Detailed city information for indicators."""
 
     indicator: str
