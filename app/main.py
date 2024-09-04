@@ -9,8 +9,16 @@ from app.routers import (
     cities_router,
     datasets_router,
     indicators_router,
+    layers_router,
     projects_router,
 )
+from app.utils.settings import Settings
+
+# ----------------------------------------
+# Load settings
+# ----------------------------------------
+settings = Settings()
+
 
 # ----------------------------------------
 # Load settings
@@ -61,6 +69,7 @@ app.add_middleware(
 app.include_router(cities_router.router, prefix="/cities", tags=["Cities"])
 app.include_router(datasets_router.router, prefix="/datasets", tags=["Datasets"])
 app.include_router(indicators_router.router, prefix="/indicators", tags=["Indicators"])
+app.include_router(layers_router.router, prefix="/layers", tags=["Layers"])
 app.include_router(projects_router.router, prefix="/projects", tags=["Projects"])
 
 

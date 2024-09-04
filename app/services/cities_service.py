@@ -6,7 +6,7 @@ from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
-from app.repositories.cities_repository import fetch_cities
+from app.repositories.cities_repository import fetch_cities, fetch_first_city
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import construct_filter_formula, generate_search_query
@@ -311,5 +311,5 @@ def get_city_geometry_with_indicators(
         feature["properties"]["bbox"] = bbox
 
     city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
-    
+
     return city_geojson
