@@ -237,7 +237,9 @@ def get_city_geometry_with_indicators(
     ### Args:
     - **city_id** (`str`): The unique identifier of the city.
     - **indicator_id** (`str`): The unique identifier of the indicator.
-    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators by, if provided.
+    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
+        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
+        - If no value is provided, **"units_boundary_level"** value will be used as the default.
 
     ### Returns:
     - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry and indicators.
@@ -247,12 +249,15 @@ def get_city_geometry_with_indicators(
         - 404: If no indicators or geometry are found for the given city and administrative level.
         - 500: If an error occurs during the retrieval process.
     """
+    if admin_level is None:
+        admin_level = "units_boundary_level"
+
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
             city_id, indicator_id, admin_level
         )
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the indicators and geometry of the city failed.",

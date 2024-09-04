@@ -29,8 +29,8 @@ class CityIndicatorBase(BaseModel):  # "Base" indicates it's a foundational sche
     """Basic city information for indicators."""
 
     bbox: List[float]
-    city_name: str
     geo_id: str
+    geo_name: str
     geo_level: str
     geo_parent_name: str
     geo_version: int
@@ -78,6 +78,7 @@ class CityIndicatorFeature(BaseModel):  # No change needed
 class CityIndicatorGeoJSON(BaseModel):  # No change needed
     """A GeoJSON response with detailed city indicator information."""
 
+    bbox: List[float]
     type: str
     features: List[CityIndicatorFeature]
 
@@ -96,5 +97,6 @@ class CityBoundaryFeature(BaseModel):  # No change needed
 class CityBoundaryGeoJSON(BaseModel):  # No change needed
     """A GeoJSON response with basic city information."""
 
+    bbox: List[float]
     type: str
     features: List[CityBoundaryFeature]
