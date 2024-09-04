@@ -1,13 +1,11 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List, Dict, Set
+from typing import Dict, List, Optional, Set
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import (
-    CARTO_API_KEY,
-    CARTO_USERNAME,
     CITY_INDICATORS_RESPONSE_KEYS,
     INDICATORS_LIST_RESPONSE_KEYS,
     INDICATORS_METADATA_RESPONSE_KEYS,
@@ -15,14 +13,20 @@ from app.const import (
 )
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
-from app.repositories.projects_repository import fetch_projects
 from app.repositories.indicators_repository import (
-    fetch_indicators,
     fetch_first_indicator,
+    fetch_indicators,
 )
+from app.repositories.layers_repository import fetch_layers
+from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import generate_search_query
+from app.utils.settings import Settings
 
-set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
+settings = Settings()
+
+set_default_credentials(
+    username=settings.carto_username, api_key=settings.carto_api_key
+)
 
 
 def list_indicators(project: Optional[str] = None) -> List[Dict]:
@@ -35,13 +39,12 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
     Returns:
         List[Dict]: A list of indicators with selected fields.
 
-    Raises:
-        Exception: If there is an error fetching data from the underlying sources.
     """
     filter_formula = generate_search_query("projects", project)
     future_to_func = {
         fetch_projects: "projects",
         fetch_datasets: "datasets",
+        fetch_layers: "layers",
         lambda: fetch_indicators(filter_formula): "indicators",
     }
 
@@ -63,6 +66,9 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         project["id"]: project["fields"]["project_id"]
         for project in results["projects"]
     }
+    layers_dict = {
+        layer["fields"]["layer_id"]: layer["fields"] for layer in results["layers"]
+    }
 
     indicators = []
     # Update data_sources_link and projects for each indicator
@@ -72,11 +78,20 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
             datasets_dict.get(data_source, data_source)
             for data_source in data_sources_link
         ]
-        indicator_projects = indicator.get("projects", [])
         indicator["projects"] = [
-            projects_dict.get(project, project) for project in indicator_projects
+            projects_dict.get(project, project)
+            for project in indicator.get("projects", [])
         ]
-
+        indicator["layers"] = [
+            {
+                "layer_id": layer_id,
+                "layer_legend": layers_dict[layer_id].get("layer_legend", ""),
+                "layer_name": layers_dict[layer_id]["layer_name"],
+            }
+            for layer_id in indicator.get("layer_id", [])
+            if isinstance(indicator.get("layer_id"), list)
+            and layer_id in layers_dict.keys()
+        ]
         indicators.append(
             {
                 key: indicator[key]
@@ -190,8 +205,6 @@ def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
     Returns:
         Dict: A dictionary containing metadata for the specified indicator.
 
-    Raises:
-        Exception: If the indicator is not found.
     """
     filter_formula = generate_search_query("indicator_id", indicator_id)
     filtered_indicator = fetch_first_indicator(filter_formula)
@@ -221,8 +234,6 @@ def get_city_indicator_by_indicator_id_and_city_id(
     Returns:
         Dict: A dictionary containing the indicator data for the specified city.
 
-    Raises:
-        Exception: If the city indicator is not found.
     """
     with ThreadPoolExecutor() as executor:
         # Run fetch_indicators and read_carto in parallel

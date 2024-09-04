@@ -5,13 +5,18 @@ from typing import Any, Dict, List, Optional
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
-from app.const import CARTO_API_KEY, CARTO_USERNAME, CITY_RESPONSE_KEYS
+from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.settings import Settings
 
-set_default_credentials(username=CARTO_USERNAME, api_key=CARTO_API_KEY)
+settings = Settings()
+
+set_default_credentials(
+    username=settings.carto_username, api_key=settings.carto_api_key
+)
 
 
 def list_cities(
@@ -305,5 +310,5 @@ def get_city_geometry_with_indicators(
         feature["properties"]["bbox"] = bbox
 
     city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
-    
+
     return city_geojson

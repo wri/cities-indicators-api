@@ -9,6 +9,7 @@ class Dataset(BaseModel):
     dataset_id: str
     dataset_name: str
     Indicators: List[str]
+    Layers: List[str]
     Provider: str
     Spatial_Coverage: str
     Spatial_resolution: str
