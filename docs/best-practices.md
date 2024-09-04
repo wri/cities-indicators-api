@@ -84,7 +84,7 @@ Building a REST API requires careful planning and adherence to best practices to
    - Use `pytest` for testing to ensure your application behaves as expected. Install `pytest` (if not already installed) and run tests with:
      ```sh
      pipenv install --dev pytest
-     pytest
+     pytest -v tests/unit
      ```
 
 ## 17. **API Lifecycle Management**
