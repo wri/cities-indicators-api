@@ -11,7 +11,7 @@ from app.const import (
 from app.utils.dependencies import validate_query_params
 from app.schemas.common_schema import ErrorResponse
 from app.schemas.indicators_schema import (
-    IndicatorValueResponse,
+    CityIndicatorValueResponse,
     IndicatorsThemesResponse,
     IndicatorsResponse,
     MetadataByIndicatorIdResponse,
@@ -113,7 +113,7 @@ def get_cities_by_indicator_id(
     Retrieve a list of cities associated with a specific indicator.
     """
     try:
-        indicators_list = indicators_service.get_cities_by_indicator_id(indicator_id)
+        cities_list = indicators_service.get_cities_by_indicator_id(indicator_id)
     except Exception as e:
         logger.error("An error occurred: %s", e)
         raise HTTPException(
@@ -121,10 +121,10 @@ def get_cities_by_indicator_id(
             detail="An error occurred: Retrieving all the cities indicators specified by indicator_id failed.",
         ) from e
 
-    if not indicators_list:
-        raise HTTPException(status_code=404, detail="No cities found")
+    if not cities_list:
+        raise HTTPException(status_code=404, detail="No cities found.")
 
-    return {"cities": indicators_list}
+    return cities_list
 
 
 @router.get(
@@ -177,7 +177,7 @@ def get_metadata_by_indicator_id(
 @router.get(
     "/{indicator_id}/{city_id}",
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorValueResponse},
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorValueResponse},
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
