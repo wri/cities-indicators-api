@@ -3,7 +3,6 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from app.utils.settings import Settings
 
 from app.routers import (
     cities_router,
@@ -19,11 +18,6 @@ from app.utils.settings import Settings
 # ----------------------------------------
 settings = Settings()
 
-
-# ----------------------------------------
-# Load settings
-# ----------------------------------------
-settings = Settings()
 
 # ----------------------------------------
 # Logging Configuration
