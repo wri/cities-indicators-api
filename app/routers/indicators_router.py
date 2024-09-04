@@ -22,7 +22,6 @@ from app.services import indicators_service
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 router = APIRouter()
 
 
@@ -50,12 +49,24 @@ router = APIRouter()
     },
 )
 def list_indicators(
-    project: Optional[str] = Query(
-        None, description="The project ID to filter indicators by"
-    ),
+    project: Optional[str] = Query(None),
 ):
     """
     Retrieve a list of indicators based on the provided project filter.
+
+    ### Args:
+    - **project** (`Optional[str]`): The unique identifier of the project to filter the
+      indicators by.
+
+    ### Returns:
+    - **IndicatorsResponse**: A Pydantic model containing the list of indicators. The response
+      includes metadata such as indicator IDs, names, and associated projects.
+
+    ### Raises:
+    - **HTTPException**:
+        - 400: If there is an invalid query parameter.
+        - 404: If no indicators are found for the given filter.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         indicators_list = indicators_service.list_indicators(project)
@@ -82,6 +93,14 @@ def list_indicators(
 def list_indicators_themes():
     """
     Retrieve a set of unique themes from all indicators.
+
+    ### Returns:
+    - **IndicatorsThemesResponse**: A Pydantic model containing a set of unique indicator
+      themes.
+
+    ### Raises:
+    - **HTTPException**:
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         themes = indicators_service.list_indicators_themes()
@@ -89,7 +108,7 @@ def list_indicators_themes():
         logger.error("An error occurred: %s", e)
         raise HTTPException(
             status_code=500,
-            detail="An error occurred: Retrieving the list of indicators themes failed.",
+            detail="An error occurred: Retrieving the list of indicator themes failed.",
         ) from e
 
     return {"themes": themes}
@@ -107,10 +126,22 @@ def list_indicators_themes():
     },
 )
 def get_cities_by_indicator_id(
-    indicator_id: str = Path(description="The ID of the indicator to filter cities by"),
+    indicator_id: str = Path(),
 ):
     """
     Retrieve a list of cities associated with a specific indicator.
+
+    ### Args:
+    - **indicator_id** (`str`): The unique identifier of the indicator to filter cities by.
+
+    ### Returns:
+    - **CitiesByIndicatorIdResponse**: A Pydantic model containing a list of cities
+      associated with the specified indicator.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no cities are found for the given indicator.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         cities_list = indicators_service.get_cities_by_indicator_id(indicator_id)
@@ -118,7 +149,7 @@ def get_cities_by_indicator_id(
         logger.error("An error occurred: %s", e)
         raise HTTPException(
             status_code=500,
-            detail="An error occurred: Retrieving all the cities indicators specified by indicator_id failed.",
+            detail="An error occurred: Retrieving cities for the specified indicator failed.",
         ) from e
 
     if not cities_list:
@@ -150,12 +181,23 @@ def get_cities_by_indicator_id(
     },
 )
 def get_metadata_by_indicator_id(
-    indicator_id: str = Path(
-        description="The ID of the indicator to retrieve metadata for"
-    ),
+    indicator_id: str = Path(),
 ):
     """
     Retrieve metadata for a specific indicator.
+
+    ### Args:
+    - **indicator_id** (`str`): The unique identifier of the indicator to retrieve metadata for.
+
+    ### Returns:
+    - **MetadataByIndicatorIdResponse**: A Pydantic model containing metadata for the
+      specified indicator.
+
+    ### Raises:
+    - **HTTPException**:
+        - 400: If there is an invalid query parameter.
+        - 404: If no metadata is found for the given indicator.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         indicators_metadata_list = indicators_service.get_metadata_by_indicator_id(
@@ -165,7 +207,7 @@ def get_metadata_by_indicator_id(
         logger.error("An error occurred: %s", e)
         raise HTTPException(
             status_code=500,
-            detail="An error occurred: Retrieving all metadata for a single indicator by indicator_id failed.",
+            detail="An error occurred: Retrieving metadata for the specified indicator failed.",
         ) from e
 
     if not indicators_metadata_list:
@@ -188,11 +230,24 @@ def get_metadata_by_indicator_id(
     },
 )
 def get_city_indicator_by_indicator_id_and_city_id(
-    indicator_id: str = Path(description="The ID of the indicator to filter by"),
-    city_id: str = Path(description="The ID of the city to filter by"),
+    indicator_id: str = Path(),
+    city_id: str = Path(),
 ):
     """
     Retrieve indicator data for a specific city and indicator.
+
+    ### Args:
+    - **indicator_id** (`str`): The unique identifier of the indicator to filter by.
+    - **city_id** (`str`): The unique identifier of the city to filter by.
+
+    ### Returns:
+    - **IndicatorValueResponse**: A Pydantic model containing indicator data for the
+      specified city and indicator.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no indicator data is found for the given city and indicator.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         indicator = indicators_service.get_city_indicator_by_indicator_id_and_city_id(
@@ -202,7 +257,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
         logger.error("An error occurred: %s", e)
         raise HTTPException(
             status_code=500,
-            detail="An error occurred: Retrieving a single city indicator specified by indicator_id and city_id failed.",
+            detail="An error occurred: Retrieving indicator data for the specified city and indicator failed.",
         ) from e
 
     if not indicator:

@@ -1,22 +1,24 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List, Dict, Set
+from typing import Dict, List, Optional, Set
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import (
+    CITY_INDICATORS_RESPONSE_KEYS,
     INDICATORS_LIST_RESPONSE_KEYS,
     INDICATORS_METADATA_RESPONSE_KEYS,
     INDICATORS_RESPONSE_KEYS,
 )
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
-from app.repositories.projects_repository import fetch_projects
 from app.repositories.indicators_repository import (
-    fetch_indicators,
     fetch_first_indicator,
+    fetch_indicators,
 )
+from app.repositories.layers_repository import fetch_layers
+from app.repositories.projects_repository import fetch_projects
 from app.utils.filters import generate_search_query
 from app.utils.settings import Settings
 
@@ -42,6 +44,7 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
     future_to_func = {
         fetch_projects: "projects",
         fetch_datasets: "datasets",
+        fetch_layers: "layers",
         lambda: fetch_indicators(filter_formula): "indicators",
     }
 
@@ -63,6 +66,9 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         project["id"]: project["fields"]["project_id"]
         for project in results["projects"]
     }
+    layers_dict = {
+        layer["fields"]["layer_id"]: layer["fields"] for layer in results["layers"]
+    }
 
     indicators = []
     # Update data_sources_link and projects for each indicator
@@ -72,11 +78,20 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
             datasets_dict.get(data_source, data_source)
             for data_source in data_sources_link
         ]
-        indicator_projects = indicator.get("projects", [])
         indicator["projects"] = [
-            projects_dict.get(project, project) for project in indicator_projects
+            projects_dict.get(project, project)
+            for project in indicator.get("projects", [])
         ]
-
+        indicator["layers"] = [
+            {
+                "layer_id": layer_id,
+                "layer_legend": layers_dict[layer_id].get("layer_legend", ""),
+                "layer_name": layers_dict[layer_id]["layer_name"],
+            }
+            for layer_id in indicator.get("layer_id", [])
+            if isinstance(indicator.get("layer_id"), list)
+            and layer_id in layers_dict.keys()
+        ]
         indicators.append(
             {
                 key: indicator[key]
