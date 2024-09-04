@@ -197,8 +197,8 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     city_geometry_df = city_geometry_df[
         [
             "geo_id",
-            "city_name",
             "geo_level",
+            "geo_name",
             "geo_parent_name",
             "geo_version",
             "the_geom",
@@ -206,7 +206,7 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     ]
 
     # Calculate the bounding box for each polygon
-    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+    city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
@@ -291,7 +291,7 @@ def get_city_geometry_with_indicators(
     city_geometry_df["indicator_unit"] = indicators_dict[indicator_id].get("unit")
 
     # Calculate the bounding box for each polygon
-    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+    city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
