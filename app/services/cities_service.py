@@ -145,7 +145,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     """
     city_indicators_df = read_carto(
         f"SELECT *, geo_name as city_name FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
-    )
+    ).copy()
     city_indicators_df = city_indicators_df[
         [
             "city_name",
@@ -175,7 +175,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     return city_indicators
 
 
-def get_city_geometry(city_id: str, admin_level: str) -> Dict:
+def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     """
     Retrieve the geometry of a specific city and administrative level.
 
@@ -188,7 +188,10 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     """
     city_geometry_df = read_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
-    )
+    ).copy()
+
+    if city_geometry_df.empty:
+        return None
 
     # Select only necessary columns for GeoJSON response
     city_geometry_df = city_geometry_df[
@@ -207,7 +210,7 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
         lambda geom: geom.bounds
     )
 
-    # ConminLon = 180vert to GeoJSON and add bounding box to properties
+    # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
 
     # Add bounding box information to each feature in the GeoJSON
@@ -316,5 +319,5 @@ def get_city_geometry_with_indicators(
         feature["properties"]["bbox"] = bbox
 
     city_geojson = {"bbox": [minLon, minLat, maxLon, maxLat], **city_geojson}
-    
+
     return city_geojson
