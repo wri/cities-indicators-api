@@ -134,6 +134,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
             results[key] = future.result()
 
     indicator_df = results.get("indicator_df")
+
     if indicator_df.empty:
         return []
 
