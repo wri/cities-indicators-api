@@ -1,7 +1,7 @@
 name: Pylint
 
 on: 
-  pull_request:
+  push:
     branches: 
       - develop
 
@@ -22,7 +22,6 @@ jobs:
     - name: Cache pipenv dependencies
       uses: actions/cache@v4
       with:
-        PYTHONPATH: ./
         path: ~/.cache/pip
         key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
         restore-keys: |
@@ -36,4 +35,4 @@ jobs:
 
     - name: Running unit tests
       run: |
-        pipenv run pytest -v -s tests/unit/
+        pipenv run PYTHONPATH: ./ pytest -v -s tests/unit/
