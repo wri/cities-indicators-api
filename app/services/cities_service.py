@@ -206,7 +206,9 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     ]
 
     # Calculate the bounding box for each polygon
-    city_geometry_df['bbox'] = city_geometry_df['the_geom'].apply(lambda geom: geom.bounds)
+    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+        lambda geom: geom.bounds
+    )
 
     # Convert to GeoJSON and add bounding box to properties
     city_geojson = json.loads(city_geometry_df.to_json())
