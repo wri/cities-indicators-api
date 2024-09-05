@@ -34,5 +34,7 @@ jobs:
       run: pipenv install --dev --deploy --ignore-pipfile
 
     - name: Running unit tests
+      env:
+        PYTHONPATH: ./
       run: |
         pipenv run pytest -v -s tests/unit/
