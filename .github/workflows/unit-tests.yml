@@ -35,4 +35,4 @@ jobs:
 
     - name: Running unit tests
       run: |
-        PYTHONPATH=./ pipenv run pytest -v -s tests/unit/
+        pipenv run pytest -v -s tests/unit/
