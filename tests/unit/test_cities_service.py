@@ -153,7 +153,7 @@ def test_get_city_by_city_id_not_found(
     city_id = "nonexistent_city"
     response = get_city_by_city_id(city_id)
 
-    assert response == {}
+    assert response == None
 
 
 @patch("app.services.cities_service.read_carto")
@@ -180,13 +180,16 @@ def test_get_city_indicators(mock_read_carto):
     assert response[0]["Indicator_Test"] == 1000
 
 
-def test_get_city_indicators_empty():
+@patch("app.services.cities_service.read_carto")
+def test_get_city_indicators_empty(mock_read_carto):
     """Test the get_city_indicators function with no matching indicators."""
+    mock_read_carto.return_value = pd.DataFrame()
     city_id = "anything"
     admin_level = "unknown"
+
     response = get_city_indicators(city_id, admin_level)
 
-    assert response == []
+    assert response == None
 
 
 @patch("app.services.cities_service.read_carto")
@@ -218,9 +221,12 @@ def test_get_city_geometry(mock_read_carto, mock_city_geometry_df):
     assert properties["bbox"] == (0.0, 3.0, 100.0, 159.8)
 
 
-def test_get_city_geometry_empty():
+@patch("app.services.cities_service.read_carto")
+def test_get_city_geometry_empty(mock_read_carto):
     """Test the get_city_geometry function with no matching geometry."""
-    city_id = "anything"
+    mock_read_carto.return_value = pd.DataFrame()
+
+    city_id = "unknown"
     admin_level = "unknown"
 
     response = get_city_geometry(city_id, admin_level)
