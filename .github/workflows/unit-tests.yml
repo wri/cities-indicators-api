@@ -36,5 +36,6 @@ jobs:
     - name: Running unit tests
       env:
         PYTHONPATH: ./
+        cities_api_airtable_key: ${{ secrets.CITIES_API_AIRTABLE_KEY }}
       run: |
         pipenv run pytest -v -s tests/unit/
