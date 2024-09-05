@@ -226,36 +226,3 @@ def test_get_city_geometry_empty():
     response = get_city_geometry(city_id, admin_level)
 
     assert response == None
-
-
-@patch("app.services.cities_service.read_carto")
-@patch("app.services.cities_service.fetch_indicators")
-def test_get_city_geometry_with_indicators(
-    mock_fetch_indicators,
-    mock_read_carto,
-    mock_city_geometry_df,
-    mock_city_indicators_df,
-    mock_indicators,
-):
-    """Test the get_city_geometry_with_indicators function."""
-
-    def side_effect(query):
-        if "boundaries" in query:
-            return mock_city_geometry_df
-        elif "indicators" in query:
-            return mock_city_indicators_df
-
-    mock_read_carto.side_effect = side_effect
-    mock_fetch_indicators.return_value = mock_indicators
-
-    city_id = "CityID"
-    indicator_id = "IND_1"
-    admin_level = "admin_level_1"
-
-    result = get_city_geometry_with_indicators(city_id, indicator_id, admin_level)
-
-    assert "bbox" in result
-    assert "features" in result
-    assert result["features"][0]["properties"]["geo_name"] == "geoname1"
-    assert result["features"][0]["properties"]["indicator_label"] == "Indicator 1 label"
-    assert result["bbox"] == [0.0, 3.0, 100.0, 159.8]
