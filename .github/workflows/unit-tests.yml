@@ -31,7 +31,7 @@ jobs:
       run: pip install pipenv
 
     - name: Install dependencies
-      run: pipenv install --deploy --ignore-pipfile
+      run: pipenv install --dev --deploy --ignore-pipfile
 
     - name: Running unit tests
       run: |
