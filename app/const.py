@@ -36,7 +36,7 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "data_views",
     "importance",
     "definition",
-    "label",
+    "name",
     "legend",
     "layer_id",
     "methods",
