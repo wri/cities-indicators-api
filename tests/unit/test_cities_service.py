@@ -9,9 +9,12 @@ import pandas as pd
 import pytest
 from shapely import MultiPolygon, Polygon
 
-from app.services.cities_service import (get_city_by_city_id,
-                                         get_city_geometry,
-                                         get_city_indicators, list_cities)
+from app.services.cities_service import (
+    get_city_by_city_id,
+    get_city_geometry,
+    get_city_indicators,
+    list_cities,
+)
 
 # Constants for testing
 POLYGON_GEOMETRY = [
