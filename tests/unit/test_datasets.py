@@ -12,13 +12,13 @@ def mock_layers():
             "id": "layer1",
             "fields": {
                 "layer_id": "layer_1",
-            }
+            },
         },
         {
             "id": "layer2",
             "fields": {
                 "layer_id": "layer_2",
-            }
+            },
         },
     ]
 
@@ -32,7 +32,7 @@ def mock_datasets():
                 "dataset_name": "Dataset 1",
                 "Indicators": ["ind1", "ind2"],
                 "city_id": ["city1"],
-                "Layer": ["layer1"]
+                "Layer": ["layer1"],
             },
         },
         {
@@ -41,7 +41,7 @@ def mock_datasets():
                 "dataset_name": "Dataset 2",
                 "Indicators": ["ind3"],
                 "city_id": ["city2"],
-                "Layer": ["layer1", "layer2"]
+                "Layer": ["layer1", "layer2"],
             },
         },
     ]

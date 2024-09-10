@@ -14,6 +14,7 @@ from app.services.indicators_service import (
 
 # Fixtures
 
+
 @pytest.fixture
 def mock_layers():
     return [
@@ -21,15 +22,16 @@ def mock_layers():
             "id": "layer1",
             "fields": {
                 "layer_id": "layer_1",
-            }
+            },
         },
         {
             "id": "layer2",
             "fields": {
                 "layer_id": "layer_2",
-            }
+            },
         },
     ]
+
 
 @pytest.fixture
 def mock_indicators():
