@@ -4,7 +4,8 @@ from pydantic import BaseModel
 
 class LayerResponse(BaseModel):
     city_id: str
+    file_type: str
     layer_id: str
     layer_path: str
-    file_type: str
-    styling: Optional[List[Dict]]
+    legend_styling: Optional[List[Dict]]
+    map_styling: Optional[List[Dict]]

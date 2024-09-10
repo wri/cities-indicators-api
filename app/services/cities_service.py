@@ -247,6 +247,7 @@ def get_city_geometry_with_indicators(
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
 
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
@@ -255,7 +256,7 @@ def get_city_geometry_with_indicators(
         )
         indicators_future = executor.submit(
             read_carto,
-            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
+            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
         )
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
@@ -297,6 +298,9 @@ def get_city_geometry_with_indicators(
 
     # Add bounding box information to each feature in the GeoJSON
     bouding_box_coordinates = [180, 90, -180, -90]
+    min_value = None
+    max_value = None
+
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
         if bbox[0] < bouding_box_coordinates[0]:
             bouding_box_coordinates[0] = bbox[0]
@@ -306,9 +310,21 @@ def get_city_geometry_with_indicators(
             bouding_box_coordinates[2] = bbox[2]
         if bbox[3] > bouding_box_coordinates[3]:
             bouding_box_coordinates[3] = bbox[3]
+            
+        value = feature["properties"]["value"]
+        if value is not None and (min_value is None or value < min_value):
+            min_value = value
+        value = feature["properties"]["value"]
+        if value is not None and (max_value is None or value > max_value):
+            max_value = value
 
         feature["properties"]["bbox"] = bbox
 
-    city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
+    city_geojson = {
+        "bbox": bouding_box_coordinates, 
+        "max": max_value,
+        "min": min_value, 
+        **city_geojson
+    }
 
     return city_geojson

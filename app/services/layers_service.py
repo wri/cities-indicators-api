@@ -38,6 +38,9 @@ def get_city_layer(city_id: str, layer_id: str):
             results[futures[future]] = future.result()
 
     # Extract necessary fields from the results
+    if not results["layer"] or not results["city"]:
+        return None
+
     layer_fields = results["layer"]["fields"]
     city_fields = results["city"]["fields"]
 
@@ -51,12 +54,14 @@ def get_city_layer(city_id: str, layer_id: str):
         f"{layer_fields['version']}.{layer_fields['file_type']}"
     )
 
-    vis_param = json.loads(layer_fields.get("vis_param", "{}"))
+    map_styling = json.loads(layer_fields.get("map_styling", "{}"))
+    legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
 
     return {
         "city_id": city_id,
         "layer_id": layer_id,
         "layer_path": layer_path,
         "file_type": layer_fields["file_type"],
-        "styling": vis_param,
+        "map_styling": map_styling,
+        "legend_styling": legend_styling,
     }

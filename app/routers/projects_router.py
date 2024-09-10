@@ -54,7 +54,7 @@ def list_projects():
     try:
         projects_list = projects_service.list_projects()
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the list of projects failed.",

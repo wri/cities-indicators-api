@@ -79,6 +79,8 @@ class CityIndicatorGeoJSON(BaseModel):  # No change needed
     """A GeoJSON response with detailed city indicator information."""
 
     bbox: List[float]
+    max: Optional[float]
+    min: Optional[float]
     type: str
     features: List[CityIndicatorFeature]
 

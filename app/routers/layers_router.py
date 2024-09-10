@@ -59,7 +59,7 @@ def get_layer(
     try:
         layer = layers_service.get_city_layer(city_id, layer_id)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving layer failed.",
