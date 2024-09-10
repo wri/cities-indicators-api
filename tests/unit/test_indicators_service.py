@@ -14,6 +14,22 @@ from app.services.indicators_service import (
 
 # Fixtures
 
+@pytest.fixture
+def mock_layers():
+    return [
+        {
+            "id": "layer1",
+            "fields": {
+                "layer_id": "layer_1",
+            }
+        },
+        {
+            "id": "layer2",
+            "fields": {
+                "layer_id": "layer_2",
+            }
+        },
+    ]
 
 @pytest.fixture
 def mock_indicators():
@@ -108,27 +124,31 @@ class TestListIndicators:
     @patch("app.services.indicators_service.fetch_indicators")
     @patch("app.services.indicators_service.fetch_datasets")
     @patch("app.services.indicators_service.fetch_projects")
+    @patch("app.services.indicators_service.fetch_layers")
     def test_list_indicators(
         self,
+        mock_fetch_layers,
         mock_fetch_projects,
         mock_fetch_datasets,
         mock_fetch_indicators,
         mock_indicators,
         mock_datasets,
         mock_projects,
+        mock_layers,
     ):
         mock_fetch_indicators.return_value = mock_indicators
         mock_fetch_datasets.return_value = mock_datasets
-        mock_fetch_projects.return_value = mock_projects
+        mock_fetch_projects.returmock_fetch_layersn_value = mock_projects
+        mock_fetch_layers.return_value = mock_layers
 
         result = list_indicators()
         assert len(result) == 2
         assert result[0]["indicator_id"] == "IND_1"
         assert result[0]["data_sources_link"] == ["Dataset 1"]
-        assert result[0]["projects"] == ["Project 1"]
+        assert result[0]["projects"] == ["proj1"]
         assert result[1]["indicator_id"] == "IND_2"
         assert result[1]["data_sources_link"] == ["Dataset 2"]
-        assert result[1]["projects"] == ["Project 2"]
+        assert result[1]["projects"] == ["proj2"]
 
 
 @pytest.mark.unit

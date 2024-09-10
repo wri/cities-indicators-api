@@ -10,7 +10,6 @@ from app.services.cities_service import (
     get_city_by_city_id,
     get_city_indicators,
     get_city_geometry,
-    get_city_geometry_with_indicators,
 )
 
 # Constants for testing

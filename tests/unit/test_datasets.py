@@ -125,20 +125,24 @@ class TestListDatasets:
     @patch("app.services.datasets_service.fetch_datasets")
     @patch("app.services.datasets_service.fetch_cities")
     @patch("app.services.datasets_service.fetch_indicators")
+    @patch("app.services.datasets_service.fetch_layers")
     def test_list_datasets_filtered_by_city(
         self,
+        mock_fetch_layers,
         mock_fetch_indicators,
         mock_fetch_cities,
         mock_fetch_datasets,
         mock_datasets,
         mock_cities,
         mock_indicators,
+        mock_layers,
     ):
         mock_fetch_datasets.return_value = mock_datasets
         mock_fetch_cities.return_value = mock_cities
         mock_fetch_indicators.return_value = mock_indicators
+        mock_fetch_layers.return_value = mock_layers
 
-        result = list_datasets(None)
+        result = list_datasets(city_id=None)
 
         assert result[0]["dataset_name"] == "Dataset 1"
         assert result[0]["Indicators"] == ["Indicator 1", "Indicator 2"]
