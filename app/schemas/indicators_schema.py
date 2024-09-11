@@ -11,7 +11,7 @@ class Indicator(BaseModel):
     indicator_label: str
     indicator_legend: str
     methods: str
-    layer_id: List[str]
+    layers: List[str]
     Notebook: HttpUrl
     projects: List[str]
     theme: List[str]

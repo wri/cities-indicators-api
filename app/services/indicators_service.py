@@ -65,7 +65,7 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         project["id"]: project["fields"]["id"] for project in results["projects"]
     }
     layers_dict = {
-        layer["fields"]["layer_id"]: layer["fields"] for layer in results["layers"]
+        layer["fields"]["id"]: layer["fields"] for layer in results["layers"]
     }
 
     indicators = []
