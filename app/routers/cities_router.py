@@ -44,16 +44,23 @@ router = APIRouter()
     },
 )
 def list_cities(
-    projects: Optional[List[str]] = Query(
-        None,
-        description="A list of Project IDs to filter by",
-    ),
-    country_code_iso3: Optional[str] = Query(
-        None, description="An ISO 3166-1 alpha-3 country code to filter by"
-    ),
+    projects: Optional[List[str]] = Query(None),
+    country_code_iso3: Optional[str] = Query(None),
 ):
     """
     Retrieve a list of cities filtered by project IDs and/or country code.
+
+    ### Args:
+    - **projects** (`Optional[List[str]]`): A list of Project IDs used to filter the cities.
+    - **country_code_iso3** (`Optional[str]`): An ISO 3166-1 alpha-3 country code used to filter the cities.
+
+    ### Returns:
+    - **CityListResponse**: A list of cities that match the provided filters.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no cities are found for the given filters.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         cities_list = cities_service.list_cities(projects, country_code_iso3)
@@ -81,10 +88,21 @@ def list_cities(
     },
 )
 def get_city_by_city_id(
-    city_id: str = Path(description="The ID of the city to retrieve."),
+    city_id: str = Path(),
 ):
     """
     Retrieve information about a specific city by its ID.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+
+    ### Returns:
+    - **CityDetail**: A Pydantic model containing the city's details.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If the city corresponding to the provided `city_id` is not found.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         city = cities_service.get_city_by_city_id(city_id)
@@ -115,13 +133,23 @@ def get_city_by_city_id(
     },
 )
 def get_city_indicators(
-    city_id: str = Path(description="The ID of the city to retrieve indicators for"),
-    admin_level: str = Path(
-        description="The administrative level to filter indicators by"
-    ),
+    city_id: str = Path(),
+    admin_level: str = Path(),
 ):
     """
     Retrieve all indicators for a specific city and administrative level.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **admin_level** (`str`): The administrative level to filter the indicators by.
+
+    ### Returns:
+    - **CityIndicatorsDetail**: A Pydantic model containing the city's indicators details.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no indicators are found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         city_indicators = cities_service.get_city_indicators(city_id, admin_level)
@@ -152,13 +180,23 @@ def get_city_indicators(
     },
 )
 def get_city_geometry(
-    city_id: str = Path(description="The ID of the city to retrieve geometry for"),
-    admin_level: str = Path(
-        description="The administrative level to filter geometry by"
-    ),
+    city_id: str = Path(),
+    admin_level: str = Path(),
 ):
     """
     Retrieve the geometry of a specific city and administrative level in GeoJSON format.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **admin_level** (`str`): The administrative level to filter the geometry by.
+
+    ### Returns:
+    - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no geometry is found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
     """
     try:
         city_geojson = cities_service.get_city_geometry(city_id, admin_level)
@@ -189,24 +227,37 @@ def get_city_geometry(
     },
 )
 def get_city_geometry_with_indicators(
-    city_id: str = Path(
-        description="The ID of the city to retrieve geometry and indicators for."
-    ),
-    indicator_id: str = Path(description="The ID of the indicator to retrieve."),
-    admin_level: Optional[str] = Query(
-        None,
-        description="The administrative level to filter the geometry and indicators by, if provided.",
-    ),
+    city_id: str = Path(),
+    indicator_id: str = Path(),
+    admin_level: Optional[str] = Query(None),
 ):
     """
     Retrieve the geometry and indicators of a specific city and administrative level in GeoJSON format.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **indicator_id** (`str`): The unique identifier of the indicator.
+    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
+        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
+        - If no value is provided, **"units_boundary_level"** value will be used as the default.
+
+    ### Returns:
+    - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry and indicators.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no indicators or geometry are found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
     """
+    if admin_level is None:
+        admin_level = "units_boundary_level"
+
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
             city_id, indicator_id, admin_level
         )
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
