@@ -2,19 +2,24 @@ from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 
 
+class Layers(BaseModel):
+    layer_id: str
+    layer_legend: str
+    layer_name: str
+
 class Indicator(BaseModel):
+    id: str
     data_sources: str
-    data_sources_link: List[str]
+    data_views: List[str]
     importance: str
-    indicator_id: str
-    indicator_definition: str
-    indicator_label: str
-    indicator_legend: str
+    definition: str
+    name: str
+    legend: str
     methods: str
-    layers: List[str]
-    Notebook: HttpUrl
+    layers: List[Layers]
+    notebook_url: HttpUrl
     projects: List[str]
-    theme: List[str]
+    themes: List[str]
     unit: Optional[str] = None
 
 
