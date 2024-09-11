@@ -143,11 +143,11 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
         Dict: A dictionary containing the city's indicators.
     """
     city_indicators_df = read_carto(
-        f"SELECT *, geo_name as city_name FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
+        f"SELECT *, geo_name as name FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
     )
     city_indicators_df = city_indicators_df[
         [
-            "city_name",
+            "name",
             "geo_id",
             "geo_level",
             "geo_parent_name",
@@ -158,7 +158,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     ]
     city_indicators_df = city_indicators_df.pivot(
         index=[
-            "city_name",
+            "name",
             "geo_id",
             "geo_level",
             "geo_parent_name",

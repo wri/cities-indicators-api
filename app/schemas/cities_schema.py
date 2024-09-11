@@ -5,10 +5,10 @@ from typing import List, Optional
 class City(BaseModel):
     """A single city."""
 
-    city_id: str
+    id: str
     admin_levels: Optional[List[str]]
     city_admin_level: Optional[str]
-    city_name: str
+    name: str
     country_name: str
     country_code_iso3: str
     latitude: float
@@ -36,7 +36,7 @@ class CityIndicatorBase(BaseModel):
 class CityIndicatorAdmin(BaseModel):
     """City indicator details for a specific admin level."""
 
-    city_name: str
+    name: str
     geo_id: str
     geo_level: str
     geo_parent_name: str
