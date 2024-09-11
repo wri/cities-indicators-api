@@ -58,8 +58,7 @@ def list_cities(
 
     if not cities_list:
         return []
-
-    city_ids = [city["fields"]["city_id"] for city in cities_list]
+    city_ids = [city["fields"]["id"] for city in cities_list]
 
     # Asynchronously fetch all projects related to the cities
     with ThreadPoolExecutor() as executor:
@@ -68,7 +67,7 @@ def list_cities(
         ).result()
 
     project_id_map = {
-        project["id"]: project["fields"]["project_id"] for project in all_projects
+        project["id"]: project["fields"]["id"] for project in all_projects
     }
 
     for city in cities_list:
@@ -93,7 +92,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
     Returns:
         dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
     """
-    filter_formula = f'"{city_id}" = {{city_id}}'
+    filter_formula = f'"{city_id}" = {{id}}'
 
     # Define the tasks to be executed asynchronously
     future_to_func = {
@@ -121,7 +120,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
         all_projects = executor.submit(fetch_projects, project_filter_formula).result()
 
     project_id_map = {
-        project["id"]: project["fields"]["project_id"] for project in all_projects
+        project["id"]: project["fields"]["id"] for project in all_projects
     }
 
     city_projects = [project_id_map.get(project) for project in city["projects"]]
@@ -257,6 +256,9 @@ def get_city_geometry_with_indicators(
             read_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
         )
+        all_indicators_future = executor.submit(fetch_indicators)
+
+        all_indicators = all_indicators_future.result()
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
 
@@ -273,8 +275,7 @@ def get_city_geometry_with_indicators(
 
     # Fetch indicator metadata
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
-        for indicator in fetch_indicators()
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
     city_geometry_df = city_geometry_df.merge(
@@ -282,11 +283,8 @@ def get_city_geometry_with_indicators(
     )
 
     # Add indicator information from metadata
-    city_geometry_df["indicator_label"] = indicators_dict[indicator_id].get(
-        "indicator_label"
-    )
-    city_geometry_df["indicator_unit"] = indicators_dict[indicator_id].get("unit")
-
+    city_geometry_df["indicator_label"] = indicators_dict[indicator_id]["name"]
+    city_geometry_df["indicator_unit"] = indicators_dict[indicator_id]["unit"]
     # Calculate the bounding box for each polygon
     city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
