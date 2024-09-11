@@ -237,7 +237,7 @@ def get_city_geometry_with_indicators(
     Args:
         city_id (str): The ID of the city to retrieve geometry and indicators for.
         indicator_id (str): The ID of the indicator to retrieve.
-        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If no value is provided, "units_boundary_level" value will be used as the default.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If no value is provided, "subcity_admin_level" value will be used as the default.
 
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.

@@ -238,8 +238,8 @@ def get_city_geometry_with_indicators(
     - **city_id** (`str`): The unique identifier of the city.
     - **indicator_id** (`str`): The unique identifier of the indicator.
     - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
-        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
-        - If no value is provided, **"units_boundary_level"** value will be used as the default.
+        - Possible values are **"subcity_admin_level"**, **"city_admin_level"**, or any valid administrative level.
+        - If no value is provided, **"subcity_admin_level"** value will be used as the default.
 
     ### Returns:
     - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry and indicators.
@@ -250,7 +250,7 @@ def get_city_geometry_with_indicators(
         - 500: If an error occurs during the retrieval process.
     """
     if admin_level is None:
-        admin_level = "units_boundary_level"
+        admin_level = "subcity_admin_level"
 
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(

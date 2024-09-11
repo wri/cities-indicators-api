@@ -19,12 +19,12 @@ def get_city_layer(city_id: str, layer_id: str):
         - Dict[str, str]: A dictionary containing:
             - "city_id": The city ID.
             - "layer_id": The layer ID.
-            - "layer_path": The full URL path to the layer file on S3.
+            - "layer_url": The full URL path to the layer file on S3.
             - "file_type": The file type of the layer.
             - "styling": The styling parameters associated with the layer, if available, as a JSON object.
     """
-    layer_filter = generate_search_query("layer_id", layer_id)
-    city_filter = generate_search_query("city_id", city_id)
+    layer_filter = generate_search_query("id", layer_id)
+    city_filter = generate_search_query("id", city_id)
 
     tasks = {
         "layer": lambda: fetch_first_layer(layer_filter),
@@ -43,10 +43,10 @@ def get_city_layer(city_id: str, layer_id: str):
 
     # Construct the S3 file path
     s3_base_url = "https://cities-indicators.s3.amazonaws.com/"
-    s3_path = layer_fields["layer_path"].replace("s3://cities-indicators/", "")
-    layer_path = (
+    s3_path = layer_fields["layer_url"].replace("s3://cities-indicators/", "")
+    layer_url = (
         f"{s3_base_url}{s3_path}{city_id}-"
-        f"{city_fields['aoi_boundary_level']}-"
+        f"{city_fields['city_admin_level']}-"
         f"{layer_fields['layer_file_name']}-"
         f"{layer_fields['version']}.{layer_fields['file_type']}"
     )
@@ -56,7 +56,7 @@ def get_city_layer(city_id: str, layer_id: str):
     return {
         "city_id": city_id,
         "layer_id": layer_id,
-        "layer_path": layer_path,
+        "layer_url": layer_url,
         "file_type": layer_fields["file_type"],
         "styling": vis_param,
     }

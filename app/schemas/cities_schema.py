@@ -7,7 +7,7 @@ class City(BaseModel):
 
     city_id: str
     admin_levels: Optional[List[str]]
-    aoi_boundary_level: Optional[str]
+    city_admin_level: Optional[str]
     city_name: str
     country_name: str
     country_code_iso3: str
