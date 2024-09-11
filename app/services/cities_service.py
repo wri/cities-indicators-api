@@ -248,7 +248,6 @@ def get_city_geometry_with_indicators(
 
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
     indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
-    print(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0")
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
