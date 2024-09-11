@@ -59,22 +59,23 @@ def list_datasets(
         dataset["id"]: dataset["fields"] for dataset in results["datasets"]
     }
     indicators_dict = {
-        indicator["id"]: indicator["fields"]["name"]
+        indicator["id"]: indicator["fields"]["id"]
         for indicator in results["indicators"]
     }
     # Update indicators and cities for each dataset
     for dataset in datasets_dict.values():
-        dataset["Indicators"] = [
-            indicators_dict.get(indicator_id, indicator_id)
-            for indicator_id in dataset.get("Indicators", [])
+        dataset["indicators"] = [
+            indicators_dict[indicator_id]
+            for indicator_id in dataset.get("indicators", [])
+            if indicator_id in indicators_dict.keys()
         ]
         dataset["city_ids"] = [
             cities_dict[city_id]["id"] for city_id in dataset.get("city_id", [])
         ]
-        dataset["Layers"] = [
-            layers_dict[layer_id]["layer_id"]
-            for layer_id in dataset.get("Layers", [])
-            if layer_id in layers_dict and "layer_id" in layers_dict[layer_id]
+        dataset["layers"] = [
+            layers_dict[layer_id]["id"]
+            for layer_id in dataset.get("layers", [])
+            if layer_id in layers_dict.keys()
         ]
 
     # Reorder and select dataset fields
