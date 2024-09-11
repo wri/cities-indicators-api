@@ -65,7 +65,7 @@ def list_cities(
     try:
         cities_list = cities_service.list_cities(projects, country_code_iso3)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500, detail="An error occurred: Retrieving cities failed."
         ) from e
@@ -107,7 +107,7 @@ def get_city_by_city_id(
     try:
         city = cities_service.get_city_by_city_id(city_id)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving city by city_id failed.",
@@ -154,7 +154,7 @@ def get_city_indicators(
     try:
         city_indicators = cities_service.get_city_indicators(city_id, admin_level)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving all indicators for a single city and admin level failed.",
@@ -201,7 +201,7 @@ def get_city_geometry(
     try:
         city_geojson = cities_service.get_city_geometry(city_id, admin_level)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the geometry of a single city and admin level failed.",

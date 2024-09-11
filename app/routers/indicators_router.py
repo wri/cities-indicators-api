@@ -71,7 +71,7 @@ def list_indicators(
     try:
         indicators_list = indicators_service.list_indicators(project)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving list of indicators failed.",
@@ -105,7 +105,7 @@ def list_indicators_themes():
     try:
         themes = indicators_service.list_indicators_themes()
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving the list of indicator themes failed.",
@@ -146,7 +146,7 @@ def get_cities_by_indicator_id(
     try:
         cities_list = indicators_service.get_cities_by_indicator_id(indicator_id)
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving cities for the specified indicator failed.",
@@ -204,7 +204,7 @@ def get_metadata_by_indicator_id(
             indicator_id
         )
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving metadata for the specified indicator failed.",
@@ -254,7 +254,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
             indicator_id, city_id
         )
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred: Retrieving indicator data for the specified city and indicator failed.",
