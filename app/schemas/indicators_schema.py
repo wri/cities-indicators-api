@@ -10,6 +10,7 @@ class Layers(BaseModel):
 class Indicator(BaseModel):
     id: str
     data_sources: str
+    data_sources_link: List[str]
     data_views: List[str]
     importance: str
     definition: str
