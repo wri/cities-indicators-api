@@ -256,6 +256,9 @@ def get_city_geometry_with_indicators(
             read_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
         )
+        all_indicators_future = executor.submit(fetch_indicators)
+
+        all_indicators = all_indicators_future.result()
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
 
