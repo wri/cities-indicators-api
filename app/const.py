@@ -26,6 +26,7 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "notebook_url",
     "projects",
     "themes",
+    "layers",
     "unit",
 ]
 DATASETS_LIST_RESPONSE_KEYS = [
