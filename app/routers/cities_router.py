@@ -214,7 +214,7 @@ def get_city_geometry(
 
 
 @router.get(
-    "/{city_id}/indicators/{indicator_id}/geojson",
+    "/{city_id}/indicators/geojson",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
         404: {
@@ -228,7 +228,7 @@ def get_city_geometry(
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(),
-    indicator_id: str = Path(),
+    indicator_id: Optional[str] = Query(None),
     admin_level: Optional[str] = Query(None),
 ):
     """
@@ -236,10 +236,10 @@ def get_city_geometry_with_indicators(
 
     ### Args:
     - **city_id** (`str`): The unique identifier of the city.
-    - **indicator_id** (`str`): The unique identifier of the indicator.
+    - **indicator_id** (`Optional[str]`): The unique identifier of the indicator.
     - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
-        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
-        - If no value is provided, **"units_boundary_level"** value will be used as the default.
+        - Possible values are **"subcity_admin_level"**, **"city_admin_level"**, or any valid administrative level.
+        - If no value is provided, **"subcity_admin_level"** value will be used as the default.
 
     ### Returns:
     - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry and indicators.
@@ -250,11 +250,11 @@ def get_city_geometry_with_indicators(
         - 500: If an error occurs during the retrieval process.
     """
     if admin_level is None:
-        admin_level = "units_boundary_level"
+        admin_level = "subcity_admin_level"
 
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
-            city_id, indicator_id, admin_level
+            city_id, admin_level, indicator_id
         )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)

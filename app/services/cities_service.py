@@ -230,7 +230,7 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
 
 
 def get_city_geometry_with_indicators(
-    city_id: str, indicator_id: str, admin_level: str
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
 ) -> Dict:
     """
     Retrieve the geometry, bounding boxes, and indicators of a specific city and administrative level in GeoJSON format.
@@ -238,16 +238,17 @@ def get_city_geometry_with_indicators(
     Args:
         city_id (str): The ID of the city to retrieve geometry and indicators for.
         indicator_id (str): The ID of the indicator to retrieve.
-        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If no value is provided, "units_boundary_level" value will be used as the default.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If no value is provided, "subcity_admin_level" value will be used as the default.
 
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
-    airtable_city = fetch_first_city(generate_search_query("city_id", city_id))
+    airtable_city = fetch_first_city(generate_search_query("id", city_id))
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
 
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
     indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
+    print(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0")
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
@@ -258,8 +259,11 @@ def get_city_geometry_with_indicators(
             read_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
         )
+        all_indicators_future = executor.submit(fetch_indicators)
+
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
+        all_indicators = all_indicators_future.result()
 
     city_geometry_df = city_geometry_df[
         [
@@ -275,7 +279,7 @@ def get_city_geometry_with_indicators(
     # Fetch indicator metadata
     indicators_dict = {
         indicator["fields"]["indicator_id"]: indicator["fields"]
-        for indicator in fetch_indicators()
+        for indicator in all_indicators
     }
 
     city_geometry_df = city_geometry_df.merge(

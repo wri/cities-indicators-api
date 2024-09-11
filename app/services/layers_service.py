@@ -49,7 +49,7 @@ def get_city_layer(city_id: str, layer_id: str):
     s3_path = layer_fields["layer_path"].replace("s3://cities-indicators/", "")
     layer_path = (
         f"{s3_base_url}{s3_path}{city_id}-"
-        f"{city_fields['aoi_boundary_level']}-"
+        f"{city_fields['city_admin_level']}-"
         f"{layer_fields['layer_file_name']}-"
         f"{layer_fields['version']}.{layer_fields['file_type']}"
     )

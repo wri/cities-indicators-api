@@ -4,7 +4,7 @@ from app.schemas.common_schema import ErrorResponse
 CITY_RESPONSE_KEYS = [
     "city_id",
     "admin_levels",
-    "aoi_boundary_level",
+    "city_admin_level",
     "city_name",
     "country_name",
     "country_code_iso3",
