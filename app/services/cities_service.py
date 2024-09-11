@@ -242,7 +242,7 @@ def get_city_geometry_with_indicators(
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
-    airtable_city = fetch_first_city(generate_search_query("city_id", city_id))
+    airtable_city = fetch_first_city(generate_search_query("id", city_id))
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
 
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
