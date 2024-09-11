@@ -29,18 +29,17 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "unit",
 ]
 DATASETS_LIST_RESPONSE_KEYS = [
-    "city_ids",
-    "source",
-    "data_sources",
     "id",
     "name",
+    "city_ids",
+    "data_sources",
     "indicators",
+    "layers",
+    "source",
     "spatial_coverage",
     "spatial_resolution",
-    "layers",
     "storage",
     "theme",
-    "visualization_endpoint",
 ]
 CITY_INDICATORS_RESPONSE_KEYS = [
     "city_id",
