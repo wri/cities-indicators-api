@@ -298,12 +298,22 @@ def get_city_geometry_with_indicators(
     # Initialize indicator_values_dict with min and max values from the DataFrame
     indicator_values_dict = {
         indicator: {
-            "min": float(city_gdf[indicator].min()) if indicator in city_gdf.columns and not np.isnan(city_gdf[indicator].min()) else None,
-            "max": float(city_gdf[indicator].max()) if indicator in city_gdf.columns and not np.isnan(city_gdf[indicator].max()) else None,
+            "min": (
+                float(city_gdf[indicator].min())
+                if indicator in city_gdf.columns
+                and not np.isnan(city_gdf[indicator].min())
+                else None
+            ),
+            "max": (
+                float(city_gdf[indicator].max())
+                if indicator in city_gdf.columns
+                and not np.isnan(city_gdf[indicator].max())
+                else None
+            ),
         }
         for indicator in indicators_dict.keys()
     }
-    
+
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
         if bbox[0] < bouding_box_coordinates[0]:
             bouding_box_coordinates[0] = bbox[0]

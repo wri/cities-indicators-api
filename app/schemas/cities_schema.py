@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class City(BaseModel):
@@ -69,12 +69,20 @@ class CityIndicatorFeature(BaseModel):
     geometry: Geometry
 
 
+class MinMaxIndicators(BaseModel):
+    """Minimum and maximum values of each indicator for a city."""
+
+    max: float
+    min: float
+
+
 class CityIndicatorGeoJSON(BaseModel):
     """A GeoJSON response with detailed city indicator information."""
 
     bbox: List[float]
     max: Optional[float]
     min: Optional[float]
+    indicators: Dict[str, MinMaxIndicators]
     type: str
     features: List[CityIndicatorFeature]
 
