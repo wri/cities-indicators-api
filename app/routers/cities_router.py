@@ -167,53 +167,6 @@ def get_city_indicators(
 
 
 @router.get(
-    "/{city_id}/{admin_level}/geojson",
-    responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityBoundaryGeoJSON},
-        404: {
-            **COMMON_404_ERROR_RESPONSE,
-            "content": {
-                "application/json": {"example": {"detail": "No geometry found"}}
-            },
-        },
-        500: COMMON_500_ERROR_RESPONSE,
-    },
-)
-def get_city_geometry(
-    city_id: str = Path(),
-    admin_level: str = Path(),
-):
-    """
-    Retrieve the geometry of a specific city and administrative level in GeoJSON format.
-
-    ### Args:
-    - **city_id** (`str`): The unique identifier of the city.
-    - **admin_level** (`str`): The administrative level to filter the geometry by.
-
-    ### Returns:
-    - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry.
-
-    ### Raises:
-    - **HTTPException**:
-        - 404: If no geometry is found for the given city and administrative level.
-        - 500: If an error occurs during the retrieval process.
-    """
-    try:
-        city_geojson = cities_service.get_city_geometry(city_id, admin_level)
-    except Exception as e:
-        logger.exception("An error occurred: %s", e, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred: Retrieving the geometry of a single city and admin level failed.",
-        ) from e
-
-    if not city_geojson["features"]:
-        raise HTTPException(status_code=404, detail="No geometry found")
-
-    return city_geojson
-
-
-@router.get(
     "/{city_id}/indicators/geojson",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
@@ -267,3 +220,50 @@ def get_city_geometry_with_indicators(
         raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_indicators
+
+
+@router.get(
+    "/{city_id}/{admin_level}/geojson",
+    responses={
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityBoundaryGeoJSON},
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No geometry found"}}
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
+def get_city_geometry(
+    city_id: str = Path(),
+    admin_level: str = Path(),
+):
+    """
+    Retrieve the geometry of a specific city and administrative level in GeoJSON format.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **admin_level** (`str`): The administrative level to filter the geometry by.
+
+    ### Returns:
+    - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry.
+
+    ### Raises:
+    - **HTTPException**:
+        - 404: If no geometry is found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
+    """
+    try:
+        city_geojson = cities_service.get_city_geometry(city_id, admin_level)
+    except Exception as e:
+        logger.exception("An error occurred: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving the geometry of a single city and admin level failed.",
+        ) from e
+
+    if not city_geojson["features"]:
+        raise HTTPException(status_code=404, detail="No geometry found")
+
+    return city_geojson

@@ -7,6 +7,7 @@ class Layers(BaseModel):
     layer_legend: str
     layer_name: str
 
+
 class Indicator(BaseModel):
     id: str
     data_sources: str

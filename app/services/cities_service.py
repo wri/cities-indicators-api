@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
+import numpy as np
+import pandas as pd
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
@@ -259,9 +261,9 @@ def get_city_geometry_with_indicators(
         )
         all_indicators_future = executor.submit(fetch_indicators)
 
-        all_indicators = all_indicators_future.result()
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
+        all_indicators = all_indicators_future.result()
 
     city_geometry_df = city_geometry_df[
         [
@@ -274,31 +276,34 @@ def get_city_geometry_with_indicators(
         ]
     ]
 
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+
     # Fetch indicator metadata
     indicators_dict = {
         indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
-    city_geometry_df = city_geometry_df.merge(
-        city_indicators_df, on="geo_id", how="left"
-    )
-
-    # Add indicator information from metadata
-    city_geometry_df["indicator_label"] = indicators_dict[indicator_id]["name"]
-    city_geometry_df["indicator_unit"] = indicators_dict[indicator_id]["unit"]
-    # Calculate the bounding box for each polygon
     city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
     # Convert to GeoJSON and add bounding box to properties
-    city_geojson = json.loads(city_geometry_df.to_json())
-
+    city_geojson = json.loads(city_gdf.to_json())
     # Add bounding box information to each feature in the GeoJSON
     bouding_box_coordinates = [180, 90, -180, -90]
-    min_value = None
-    max_value = None
 
+    # Initialize indicator_values_dict with min and max values from the DataFrame
+    indicator_values_dict = {
+        indicator: {
+            "min": float(city_gdf[indicator].min()) if indicator in city_gdf.columns and not np.isnan(city_gdf[indicator].min()) else None,
+            "max": float(city_gdf[indicator].max()) if indicator in city_gdf.columns and not np.isnan(city_gdf[indicator].max()) else None,
+        }
+        for indicator in indicators_dict.keys()
+    }
+    
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
         if bbox[0] < bouding_box_coordinates[0]:
             bouding_box_coordinates[0] = bbox[0]
@@ -308,21 +313,11 @@ def get_city_geometry_with_indicators(
             bouding_box_coordinates[2] = bbox[2]
         if bbox[3] > bouding_box_coordinates[3]:
             bouding_box_coordinates[3] = bbox[3]
-            
-        value = feature["properties"]["value"]
-        if value is not None and (min_value is None or value < min_value):
-            min_value = value
-        value = feature["properties"]["value"]
-        if value is not None and (max_value is None or value > max_value):
-            max_value = value
 
         feature["properties"]["bbox"] = bbox
 
-    city_geojson = {
-        "bbox": bouding_box_coordinates, 
-        "max": max_value,
-        "min": min_value, 
-        **city_geojson
+    return {
+        "bbox": bouding_box_coordinates,
+        "indicators": indicator_values_dict,
+        **city_geojson,
     }
-
-    return city_geojson
