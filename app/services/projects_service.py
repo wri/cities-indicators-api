@@ -16,8 +16,8 @@ def list_projects() -> List[Dict]:
     projects = fetch_projects(filter_formula)
     projects_list = [
         {
-            "id": project["fields"]["project_id"],
-            "name": project["fields"]["project_name"][0],
+            "id": project["fields"]["id"],
+            "name": project["fields"]["name"][0],
         }
         for project in projects
     ]

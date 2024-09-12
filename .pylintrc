@@ -69,6 +69,8 @@ max-statements=50
 max-parents=7
 # Maximum number of attributes for a class (see R0902).
 max-attributes=10
+# Maximum number of local variables
+max-locals=20
 
 [CLASSES]
 # List of method names used to declare (i.e. assign) instance attributes.

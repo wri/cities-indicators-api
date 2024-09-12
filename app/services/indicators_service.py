@@ -59,15 +59,13 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         indicator["id"]: indicator["fields"] for indicator in results["indicators"]
     }
     datasets_dict = {
-        dataset["id"]: dataset["fields"]["dataset_name"]
-        for dataset in results["datasets"]
+        dataset["id"]: dataset["fields"]["name"] for dataset in results["datasets"]
     }
     projects_dict = {
-        project["id"]: project["fields"]["project_id"]
-        for project in results["projects"]
+        project["id"]: project["fields"]["id"] for project in results["projects"]
     }
     layers_dict = {
-        layer["fields"]["layer_id"]: layer["fields"] for layer in results["layers"]
+        layer["fields"]["id"]: layer["fields"] for layer in results["layers"]
     }
 
     indicators = []
@@ -114,7 +112,7 @@ def list_indicators_themes() -> Set[str]:
     themes_set = set()
 
     for indicator in indicators:
-        theme_list = indicator["fields"].get("theme")
+        theme_list = indicator["fields"].get("themes")
         for theme in theme_list:
             themes_set.add(theme)
 
@@ -152,23 +150,18 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     if indicator_df.empty:
         return []
 
-    cities_dict = {
-        city["fields"]["city_id"]: city["fields"] for city in results["cities"]
-    }
+    cities_dict = {city["fields"]["id"]: city["fields"] for city in results["cities"]}
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
+        indicator["fields"]["id"]: indicator["fields"]
         for indicator in results["indicators"]
     }
-
     indicator_df["creation_date"] = indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
     city_indicators = [
         {
             **item["properties"],
-            "city_name": cities_dict.get(item["properties"]["city_id"], {}).get(
-                "city_name"
-            ),
+            "city_name": cities_dict.get(item["properties"]["city_id"], {}).get("name"),
             "country_name": cities_dict.get(item["properties"]["city_id"], {}).get(
                 "country_name"
             ),
@@ -179,7 +172,6 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
         for item in json.loads(indicator_df.to_json())["features"]
         if item["properties"]["city_id"] in cities_dict
     ]
-
     return {
         "indicator": city_indicators[0]["indicator"],
         "indicator_version": city_indicators[0]["indicator_version"],
@@ -206,7 +198,7 @@ def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
         Dict: A dictionary containing metadata for the specified indicator.
 
     """
-    filter_formula = generate_search_query("indicator_id", indicator_id)
+    filter_formula = generate_search_query("id", indicator_id)
     filtered_indicator = fetch_first_indicator(filter_formula)
 
     if not filtered_indicator:
@@ -253,17 +245,16 @@ def get_city_indicator_by_indicator_id_and_city_id(
     if city_indicator_df.empty:
         return {}
 
-    cities_dict = {city["fields"]["city_id"]: city["fields"] for city in all_cities}
+    cities_dict = {city["fields"]["id"]: city["fields"] for city in all_cities}
     indicators_dict = {
-        indicator["fields"]["indicator_id"]: indicator["fields"]
-        for indicator in all_indicators
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
     city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
     city_indicator_df["unit"] = indicators_dict[indicator_id]["unit"]
-    city_indicator_df["city_name"] = cities_dict[city_id]["city_name"]
+    city_indicator_df["city_name"] = cities_dict[city_id]["name"]
     city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
     city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
     city_indicator = json.loads(city_indicator_df.to_json())
