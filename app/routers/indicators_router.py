@@ -153,7 +153,7 @@ def get_cities_by_indicator_id(
         ) from e
 
     if not cities_list:
-        raise HTTPException(status_code=404, detail="No cities found.")
+        raise HTTPException(status_code=404, detail="No cities found")
 
     return cities_list
 
