@@ -34,12 +34,12 @@ POLYGON_GEOMETRY = [
 # Fixtures
 @pytest.fixture
 def mock_cities_response():
-    return [{"fields": {"city_id": "city1", "projects": ["proj1"]}}]
+    return [{"fields": {"id": "city1", "projects": ["proj1"]}}]
 
 
 @pytest.fixture
 def mock_projects_response():
-    return [{"id": "proj1", "fields": {"project_id": "Project 1"}}]
+    return [{"id": "proj1", "fields": {"id": "Project 1"}}]
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ class TestListCities:
 
         assert isinstance(response, list)
         assert len(response) == 1
-        assert response[0]["city_id"] == "city1"
+        assert response[0]["id"] == "city1"
         assert response[0]["projects"] == ["Project 1"]
 
     @patch("app.services.cities_service.fetch_cities")
@@ -130,7 +130,7 @@ class TestGetCity:
         response = get_city_by_city_id(city_id)
 
         assert isinstance(response, dict)
-        assert response["city_id"] == "city1"
+        assert response["id"] == "city1"
         assert response["projects"] == ["Project 1"]
 
     @patch("app.services.cities_service.fetch_cities")
@@ -149,12 +149,12 @@ class TestGetCity:
 
 
 class TestGetCityIndicators:
-    @patch("app.services.cities_service.read_carto")
-    def test_get_city_indicators(self, mock_read_carto):
+    @patch("app.services.cities_service.query_carto")
+    def test_get_city_indicators(self, mock_query_carto):
         """Test the get_city_indicators function."""
-        mock_read_carto.return_value = pd.DataFrame(
+        mock_query_carto.return_value = pd.DataFrame(
             {
-                "city_name": ["City_1"],
+                "name": ["City_1"],
                 "geo_id": ["city1"],
                 "geo_level": ["ADM"],
                 "geo_parent_name": ["city1"],
@@ -172,10 +172,10 @@ class TestGetCityIndicators:
         assert response[0]["geo_id"] == "city1"
         assert response[0]["Indicator_Test"] == 1000
 
-    @patch("app.services.cities_service.read_carto")
-    def test_get_city_indicators_empty(self, mock_read_carto):
+    @patch("app.services.cities_service.query_carto")
+    def test_get_city_indicators_empty(self, mock_query_carto):
         """Test the get_city_indicators function with no matching indicators."""
-        mock_read_carto.return_value = pd.DataFrame()
+        mock_query_carto.return_value = pd.DataFrame()
         city_id = "anything"
         admin_level = "unknown"
 
@@ -185,10 +185,10 @@ class TestGetCityIndicators:
 
 
 class TestGetCityGeometry:
-    @patch("app.services.cities_service.read_carto")
-    def test_get_city_geometry(self, mock_read_carto, mock_city_geometry_df):
+    @patch("app.services.cities_service.query_carto")
+    def test_get_city_geometry(self, mock_query_carto, mock_city_geometry_df):
         """Test the get_city_geometry function."""
-        mock_read_carto.return_value = mock_city_geometry_df
+        mock_query_carto.return_value = mock_city_geometry_df
 
         city_id = "city1"
         admin_level = "ADM"
@@ -213,10 +213,10 @@ class TestGetCityGeometry:
         assert properties["geo_version"] == 0
         assert properties["bbox"] == (0.0, 3.0, 100.0, 159.8)
 
-    @patch("app.services.cities_service.read_carto")
-    def test_get_city_geometry_empty(self, mock_read_carto):
+    @patch("app.services.cities_service.query_carto")
+    def test_get_city_geometry_empty(self, mock_query_carto):
         """Test the get_city_geometry function with no matching geometry."""
-        mock_read_carto.return_value = pd.DataFrame()
+        mock_query_carto.return_value = pd.DataFrame()
 
         city_id = "unknown"
         admin_level = "unknown"

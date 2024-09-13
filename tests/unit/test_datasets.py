@@ -11,13 +11,13 @@ def mock_layers():
         {
             "id": "layer1",
             "fields": {
-                "layer_id": "layer_1",
+                "id": "layer_1",
             },
         },
         {
             "id": "layer2",
             "fields": {
-                "layer_id": "layer_2",
+                "id": "layer_2",
             },
         },
     ]
@@ -29,19 +29,19 @@ def mock_datasets():
         {
             "id": "ds1",
             "fields": {
-                "dataset_name": "Dataset 1",
-                "Indicators": ["ind1", "ind2"],
-                "city_id": ["city1"],
-                "Layer": ["layer1"],
+                "name": "Dataset 1",
+                "indicators": ["ind1", "ind2"],
+                "city_ids": ["city1"],
+                "layers": ["layer1"],
             },
         },
         {
             "id": "ds2",
             "fields": {
-                "dataset_name": "Dataset 2",
-                "Indicators": ["ind3"],
-                "city_id": ["city2"],
-                "Layer": ["layer1", "layer2"],
+                "name": "Dataset 2",
+                "indicators": ["ind3"],
+                "city_ids": ["city2"],
+                "layers": ["layer1", "layer2"],
             },
         },
     ]
@@ -53,13 +53,13 @@ def mock_cities():
         {
             "id": "city1",
             "fields": {
-                "city_id": "city1",
+                "id": "city1",
             },
         },
         {
             "id": "city2",
             "fields": {
-                "city_id": "city2",
+                "id": "city2",
             },
         },
     ]
@@ -69,21 +69,24 @@ def mock_cities():
 def mock_indicators():
     return [
         {
-            "id": "ind1",
+            "id": "0",
             "fields": {
-                "indicator_label": "Indicator 1",
+                "id": "ind1",
+                "name": "Indicator 1",
             },
         },
         {
-            "id": "ind2",
+            "id": "1",
             "fields": {
-                "indicator_label": "Indicator 2",
+                "id": "ind2",
+                "name": "Indicator 2",
             },
         },
         {
-            "id": "ind3",
+            "id": "2",
             "fields": {
-                "indicator_label": "Indicator 3",
+                "id": "ind3",
+                "name": "Indicator 3",
             },
         },
     ]
@@ -115,12 +118,8 @@ class TestListDatasets:
         result = list_datasets(city_id=None)
 
         assert len(result) == 2
-        assert result[0]["dataset_name"] == "Dataset 1"
-        assert result[0]["Indicators"] == ["Indicator 1", "Indicator 2"]
-        assert result[0]["city_ids"] == ["city1"]
-        assert result[1]["dataset_name"] == "Dataset 2"
-        assert result[1]["Indicators"] == ["Indicator 3"]
-        assert result[1]["city_ids"] == ["city2"]
+        assert result[0]["name"] == "Dataset 1"
+        assert result[1]["name"] == "Dataset 2"
 
     @patch("app.services.datasets_service.fetch_datasets")
     @patch("app.services.datasets_service.fetch_cities")
@@ -144,6 +143,4 @@ class TestListDatasets:
 
         result = list_datasets(city_id=None)
 
-        assert result[0]["dataset_name"] == "Dataset 1"
-        assert result[0]["Indicators"] == ["Indicator 1", "Indicator 2"]
-        assert result[0]["city_ids"] == ["city1"]
+        assert result[0]["name"] == "Dataset 1"

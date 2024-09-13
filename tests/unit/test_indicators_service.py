@@ -21,13 +21,13 @@ def mock_layers():
         {
             "id": "layer1",
             "fields": {
-                "layer_id": "layer_1",
+                "id": "layer_1",
             },
         },
         {
             "id": "layer2",
             "fields": {
-                "layer_id": "layer_2",
+                "id": "layer_2",
             },
         },
     ]
@@ -41,9 +41,9 @@ def mock_indicators():
             "fields": {
                 "data_sources_link": ["ds1"],
                 "projects": ["proj1"],
-                "theme": ["Theme 1", "Theme 2"],
-                "indicator_id": "IND_1",
-                "indicator_label": "Indicator 1",
+                "themes": ["Theme 1", "Theme 2"],
+                "id": "IND_1",
+                "name": "Indicator 1",
                 "unit": "unit1",
             },
         },
@@ -52,9 +52,9 @@ def mock_indicators():
             "fields": {
                 "data_sources_link": ["ds2"],
                 "projects": ["proj2"],
-                "theme": ["Theme 2", "Theme 3"],
-                "indicator_id": "IND_2",
-                "indicator_label": "Indicator 2",
+                "themes": ["Theme 2", "Theme 3"],
+                "id": "IND_2",
+                "name": "Indicator 2",
                 "unit": "unit2",
             },
         },
@@ -64,16 +64,16 @@ def mock_indicators():
 @pytest.fixture
 def mock_datasets():
     return [
-        {"id": "ds1", "fields": {"dataset_name": "Dataset 1"}},
-        {"id": "ds2", "fields": {"dataset_name": "Dataset 2"}},
+        {"id": "ds1", "fields": {"name": "Dataset 1"}},
+        {"id": "ds2", "fields": {"name": "Dataset 2"}},
     ]
 
 
 @pytest.fixture
 def mock_projects():
     return [
-        {"id": "proj1", "fields": {"project_id": "Project 1"}},
-        {"id": "proj2", "fields": {"project_id": "Project 2"}},
+        {"id": "proj1", "fields": {"id": "Project 1"}},
+        {"id": "proj2", "fields": {"id": "Project 2"}},
     ]
 
 
@@ -145,10 +145,10 @@ class TestListIndicators:
 
         result = list_indicators()
         assert len(result) == 2
-        assert result[0]["indicator_id"] == "IND_1"
+        assert result[0]["id"] == "IND_1"
         assert result[0]["data_sources_link"] == ["Dataset 1"]
         assert result[0]["projects"] == ["proj1"]
-        assert result[1]["indicator_id"] == "IND_2"
+        assert result[1]["id"] == "IND_2"
         assert result[1]["data_sources_link"] == ["Dataset 2"]
         assert result[1]["projects"] == ["proj2"]
 
@@ -164,18 +164,18 @@ class TestListIndicatorThemes:
 
 @pytest.mark.unit
 class TestGetCitiesByIndicatorId:
-    @patch("app.services.indicators_service.read_carto")
+    @patch("app.services.indicators_service.query_carto")
     @patch("app.services.indicators_service.fetch_cities")
     @patch("app.services.indicators_service.fetch_indicators")
     def test_get_cities_by_indicator_id_empty(
         self,
         mock_fetch_indicators,
         mock_fetch_cities,
-        mock_read_carto,
+        mock_query_carto,
         mock_cities,
         mock_indicators,
     ):
-        mock_read_carto.return_value = pd.DataFrame()
+        mock_query_carto.return_value = pd.DataFrame()
         mock_fetch_cities.return_value = mock_cities
         mock_fetch_indicators.return_value = mock_indicators
 
@@ -195,18 +195,18 @@ class TestGetMetadataByIndicatorId:
 
 @pytest.mark.unit
 class TestGetCityIndicatorByIds:
-    @patch("app.services.indicators_service.read_carto")
+    @patch("app.services.indicators_service.query_carto")
     @patch("app.services.indicators_service.fetch_cities")
     @patch("app.services.indicators_service.fetch_indicators")
     def test_get_city_indicator_by_indicator_id_and_city_id_not_found(
         self,
         mock_fetch_indicators,
         mock_fetch_cities,
-        mock_read_carto,
+        mock_query_carto,
         mock_cities,
         mock_indicators,
     ):
-        mock_read_carto.return_value = pd.DataFrame()
+        mock_query_carto.return_value = pd.DataFrame()
         mock_fetch_cities.return_value = mock_cities
         mock_fetch_indicators.return_value = mock_indicators
 

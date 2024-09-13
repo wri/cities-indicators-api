@@ -11,16 +11,16 @@ def mock_projects():
         {
             "id": "proj1",
             "fields": {
-                "project_id": "Project 1",
-                "project_name": ["Project One"],
+                "id": "Project 1",
+                "name": ["Project One"],
                 "status": "Active",
             },
         },
         {
             "id": "proj2",
             "fields": {
-                "project_id": "Project 2",
-                "project_name": ["Project Two"],
+                "id": "Project 2",
+                "name": ["Project Two"],
                 "status": "Inactive",
             },
         },
