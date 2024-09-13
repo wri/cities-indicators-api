@@ -15,7 +15,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 pydantic-settings = "*"
 pytest = "*"
 pytest-mock = "*"
-
+ratelimit = "*"
 [dev-packages]
 pylint = "*"
 black = "*"

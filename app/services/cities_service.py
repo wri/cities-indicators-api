@@ -2,13 +2,13 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
-from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
+from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
 
@@ -142,7 +142,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> Optional[Dict]:
     Returns:
         Dict: A dictionary containing the city's indicators.
     """
-    city_indicators_df = read_carto(
+    city_indicators_df = query_carto(
         f"SELECT *, geo_name as name FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
     ).copy()
 
@@ -189,7 +189,7 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     Returns:
         dict: A GeoJSON dictionary representing the city's geometry.
     """
-    city_geometry_df = read_carto(
+    city_geometry_df = query_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
     ).copy()
 
@@ -256,11 +256,11 @@ def get_city_geometry_with_indicators(
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
-            read_carto,
+            query_carto,
             f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
         )
         indicators_future = executor.submit(
-            read_carto,
+            query_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
         )
         all_indicators_future = executor.submit(fetch_indicators)
