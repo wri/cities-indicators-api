@@ -3,11 +3,15 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.const import COMMON_200_SUCCESSFUL_RESPONSE, COMMON_500_ERROR_RESPONSE
-from app.utils.dependencies import validate_query_params
+from app.const import (
+    COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_400_ERROR_RESPONSE,
+    COMMON_500_ERROR_RESPONSE,
+)
 from app.schemas.common_schema import ErrorResponse
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
+from app.utils.dependencies import validate_query_params
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,15 +24,7 @@ router = APIRouter()
     dependencies=[Depends(validate_query_params("city_id", "layer_id"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": DatasetsResponse},
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid query parameter",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
-                }
-            },
-        },
+        400: COMMON_400_ERROR_RESPONSE,
         500: COMMON_500_ERROR_RESPONSE,
     },
 )

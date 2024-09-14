@@ -8,7 +8,6 @@ class Layers(BaseModel):
     name: str
 
 
-
 class Indicator(BaseModel):
     id: str
     data_sources: str

@@ -1,14 +1,16 @@
 import logging
+
 from fastapi import APIRouter, HTTPException
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_400_ERROR_RESPONSE,
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
 from app.schemas.common_schema import ErrorResponse
-from app.services import projects_service
 from app.schemas.projects_schema import ListProjectsResponse
+from app.services import projects_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,15 +22,7 @@ router = APIRouter()
     "",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": ListProjectsResponse},
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid query parameter",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
-                }
-            },
-        },
+        400: COMMON_400_ERROR_RESPONSE,
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {

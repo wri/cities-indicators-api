@@ -76,13 +76,16 @@ class MinMaxIndicators(BaseModel):
     min: float
 
 
+class CityIndicatorStats(BaseModel):
+    """Stats about an specific city."""
+
+    indicators: Dict[str, MinMaxIndicators]
+
+
 class CityIndicatorGeoJSON(BaseModel):
     """A GeoJSON response with detailed city indicator information."""
 
     bbox: List[float]
-    max: Optional[float]
-    min: Optional[float]
-    indicators: Dict[str, MinMaxIndicators]
     type: str
     features: List[CityIndicatorFeature]
 
