@@ -223,7 +223,7 @@ def get_city_geometry_with_indicators(
 
 
 @router.get(
-    "/{city_id}/indicators/geojson",
+    "/{city_id}/{admin_level}/geojson",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityBoundaryGeoJSON},
         404: {
@@ -237,18 +237,14 @@ def get_city_geometry_with_indicators(
 )
 def get_city_geometry(
     city_id: str = Path(),
-    indicator_id: Optional[str] = Query(None),
-    admin_level: Optional[str] = Query(None),
+    admin_level: str = Path(),
 ):
     """
     Retrieve the geometry of a specific city and administrative level in GeoJSON format.
 
     ### Args:
     - **city_id** (`str`): The unique identifier of the city.
-    - **indicator_id** (`Optional[str]`): The unique identifier of the indicator.
-    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
-        - Possible values are **"units_boundary_level"**, **"aoi_boundary_level"**, or any valid administrative level.
-        - If no value is provided, **"units_boundary_level"** value will be used as the default.
+    - **admin_level** (`str`): The administrative level to filter the geometry by.
 
     ### Returns:
     - **GeoJSONFeatureCollection**: A GeoJSON feature collection representing the city's geometry.
@@ -259,9 +255,7 @@ def get_city_geometry(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        city_indicators = cities_service.get_city_geometry_with_indicators(
-            city_id, admin_level, indicator_id
-        )
+        city_geojson = cities_service.get_city_geometry(city_id, admin_level)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
@@ -269,7 +263,7 @@ def get_city_geometry(
             detail="An error occurred: Retrieving the geometry of a single city and admin level failed.",
         ) from e
 
-    if not city_indicators["features"]:
+    if not city_geojson["features"]:
         raise HTTPException(status_code=404, detail="No geometry found")
 
-    return city_indicators
+    return city_geojson
