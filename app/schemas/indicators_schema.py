@@ -3,9 +3,10 @@ from typing import List, Optional
 
 
 class Layers(BaseModel):
-    layer_id: str
-    layer_legend: str
-    layer_name: str
+    id: str
+    legend: str
+    name: str
+
 
 
 class Indicator(BaseModel):

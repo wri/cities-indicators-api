@@ -32,7 +32,7 @@ def list_datasets(
     filters = {}
 
     if layer_id:
-        filters["Layers"] = layer_id
+        filters["layers"] = layer_id
     if city_id:
         filters["city_id"] = city_id
 

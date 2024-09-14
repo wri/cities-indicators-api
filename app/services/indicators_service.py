@@ -2,7 +2,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Set
 
-from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 
 from app.const import (
@@ -19,6 +18,7 @@ from app.repositories.indicators_repository import (
 )
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
+from app.utils.carto import query_carto
 from app.utils.filters import generate_search_query
 from app.utils.settings import Settings
 
@@ -82,9 +82,9 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         ]
         indicator["layers"] = [
             {
-                "layer_id": layer_id,
-                "layer_legend": layers_dict[layer_id].get("layer_legend", ""),
-                "layer_name": layers_dict[layer_id]["layer_name"],
+                "id": layer_id,
+                "legend": layers_dict[layer_id].get("layer_legend", ""),
+                "name": layers_dict[layer_id]["layer_name"],
             }
             for layer_id in indicator.get("layer_id", [])
             if isinstance(indicator.get("layer_id"), list)
@@ -134,7 +134,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
             executor.submit(fetch_cities): "cities",
             executor.submit(fetch_indicators): "indicators",
             executor.submit(
-                read_carto,
+                query_carto,
                 f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
                 f"AND indicators.geo_name=indicators.geo_parent_name",
             ): "indicator_df",
@@ -228,11 +228,11 @@ def get_city_indicator_by_indicator_id_and_city_id(
 
     """
     with ThreadPoolExecutor() as executor:
-        # Run fetch_indicators and read_carto in parallel
+        # Run fetch_indicators and query_carto in parallel
         fetch_cities_future = executor.submit(fetch_cities)
         fetch_indicators_future = executor.submit(fetch_indicators)
-        read_carto_future = executor.submit(
-            read_carto,
+        query_carto_future = executor.submit(
+            query_carto,
             f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
             f"AND geo_name = '{city_id}'",
         )
@@ -240,7 +240,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
         # Get results
         all_cities = fetch_cities_future.result()
         all_indicators = fetch_indicators_future.result()
-        city_indicator_df = read_carto_future.result()
+        city_indicator_df = query_carto_future.result()
 
     if city_indicator_df.empty:
         return {}

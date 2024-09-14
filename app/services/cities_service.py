@@ -2,7 +2,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
-from cartoframes import read_carto
 from cartoframes.auth import set_default_credentials
 import numpy as np
 import pandas as pd
@@ -11,6 +10,7 @@ from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
+from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
 
@@ -84,7 +84,7 @@ def list_cities(
     ]
 
 
-def get_city_by_city_id(city_id: str) -> Dict:
+def get_city_by_city_id(city_id: str) -> Optional[Dict]:
     """
     Retrieve city data for a specific city ID.
 
@@ -112,7 +112,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
                 city_data = future.result()
 
     if not city_data:
-        return {}
+        return None
 
     city = city_data[0]["fields"]
     project_filter_formula = construct_filter_formula({"cities": [city_id]})
@@ -133,7 +133,7 @@ def get_city_by_city_id(city_id: str) -> Dict:
     return city_response
 
 
-def get_city_indicators(city_id: str, admin_level: str) -> Dict:
+def get_city_indicators(city_id: str, admin_level: str) -> Optional[Dict]:
     """
     Retrieve indicators for a specific city and administrative level.
 
@@ -144,9 +144,13 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     Returns:
         Dict: A dictionary containing the city's indicators.
     """
-    city_indicators_df = read_carto(
+    city_indicators_df = query_carto(
         f"SELECT *, geo_name as name FROM indicators WHERE geo_parent_name = '{city_id}' and geo_level = '{admin_level}'"
-    )
+    ).copy()
+
+    if city_indicators_df.empty:
+        return None
+
     city_indicators_df = city_indicators_df[
         [
             "name",
@@ -176,7 +180,7 @@ def get_city_indicators(city_id: str, admin_level: str) -> Dict:
     return city_indicators
 
 
-def get_city_geometry(city_id: str, admin_level: str) -> Dict:
+def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     """
     Retrieve the geometry of a specific city and administrative level.
 
@@ -187,9 +191,12 @@ def get_city_geometry(city_id: str, admin_level: str) -> Dict:
     Returns:
         dict: A GeoJSON dictionary representing the city's geometry.
     """
-    city_geometry_df = read_carto(
+    city_geometry_df = query_carto(
         f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' AND geo_level = '{admin_level}'"
-    )
+    ).copy()
+
+    if city_geometry_df.empty:
+        return None
 
     # Select only necessary columns for GeoJSON response
     city_geometry_df = city_geometry_df[
@@ -252,12 +259,12 @@ def get_city_geometry_with_indicators(
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
-            read_carto,
+            query_carto,
             f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
         )
         indicators_future = executor.submit(
-            read_carto,
-            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
+            query_carto,
+            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
         )
         all_indicators_future = executor.submit(fetch_indicators)
 
