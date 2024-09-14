@@ -255,6 +255,7 @@ def get_city_geometry_with_indicators(
             read_carto,
             f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
         )
+        print(f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0")
         indicators_future = executor.submit(
             read_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
@@ -282,7 +283,8 @@ def get_city_geometry_with_indicators(
 
     # Fetch indicator metadata
     indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
+        indicator["fields"]["id"]: indicator["fields"]
+        for indicator in all_indicators
     }
 
     city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
