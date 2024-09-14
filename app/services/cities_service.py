@@ -344,7 +344,7 @@ def get_city_stats(
     )
     if city_indicators_df.empty:
         return None
-    
+
     city_indicators_df = city_indicators_df.pivot(
         index="geo_id", columns="indicator", values="value"
     )
