@@ -8,7 +8,6 @@ from app.const import (
     COMMON_400_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common_schema import ErrorResponse
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
 from app.utils.dependencies import validate_query_params

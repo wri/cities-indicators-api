@@ -9,7 +9,6 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common_schema import ErrorResponse
 from app.schemas.indicators_schema import (
     CitiesByIndicatorIdResponse,
     CityIndicatorValueResponse,

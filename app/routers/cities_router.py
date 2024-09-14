@@ -17,7 +17,6 @@ from app.schemas.cities_schema import (
     CityIndicatorStats,
     CityList,
 )
-from app.schemas.common_schema import ErrorResponse
 from app.services import cities_service
 from app.utils.dependencies import validate_query_params
 

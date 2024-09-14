@@ -8,7 +8,6 @@ import pandas as pd
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
