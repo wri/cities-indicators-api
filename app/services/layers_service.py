@@ -54,8 +54,12 @@ def get_city_layer(city_id: str, layer_id: str):
         f"{layer_fields['version']}.{layer_fields['file_type']}"
     )
 
-    map_styling = json.loads(layer_fields.get("map_styling", "{}"))
-    legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
+    try:
+        map_styling = json.loads(layer_fields["map_styling"])
+        legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
+    except json.JSONDecodeError:
+        map_styling = {}
+        legend_styling = {}
 
     return {
         "city_id": city_id,
