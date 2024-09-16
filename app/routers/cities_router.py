@@ -5,20 +5,20 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_400_ERROR_RESPONSE,
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-
-from app.utils.dependencies import validate_query_params
-from app.schemas.common_schema import ErrorResponse
 from app.schemas.cities_schema import (
-    CityBoundaryGeoJSON,
     City,
+    CityBoundaryGeoJSON,
     CityIndicatorAdmin,
     CityIndicatorGeoJSON,
+    CityIndicatorStats,
     CityList,
 )
 from app.services import cities_service
+from app.utils.dependencies import validate_query_params
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,15 +31,7 @@ router = APIRouter()
     dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityList},
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid query parameter",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
-                }
-            },
-        },
+        400: COMMON_400_ERROR_RESPONSE,
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
@@ -214,9 +206,11 @@ def get_city_geometry(
 
 
 @router.get(
-    "/{city_id}/indicators/{indicator_id}/geojson",
+    "/{city_id}/indicators/geojson",
+    dependencies=[Depends(validate_query_params("indicator_id", "admin_level"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
+        400: COMMON_400_ERROR_RESPONSE,
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -228,7 +222,7 @@ def get_city_geometry(
 )
 def get_city_geometry_with_indicators(
     city_id: str = Path(),
-    indicator_id: str = Path(),
+    indicator_id: Optional[str] = Query(None),
     admin_level: Optional[str] = Query(None),
 ):
     """
@@ -236,7 +230,7 @@ def get_city_geometry_with_indicators(
 
     ### Args:
     - **city_id** (`str`): The unique identifier of the city.
-    - **indicator_id** (`str`): The unique identifier of the indicator.
+    - **indicator_id** (`Optional[str]`): The unique identifier of the indicator.
     - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
         - Possible values are **"subcity_admin_level"**, **"city_admin_level"**, or any valid administrative level.
         - If no value is provided, **"subcity_admin_level"** value will be used as the default.
@@ -246,6 +240,7 @@ def get_city_geometry_with_indicators(
 
     ### Raises:
     - **HTTPException**:
+        - 400: If there is an invalid query parameter.
         - 404: If no indicators or geometry are found for the given city and administrative level.
         - 500: If an error occurs during the retrieval process.
     """
@@ -254,7 +249,7 @@ def get_city_geometry_with_indicators(
 
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
-            city_id, indicator_id, admin_level
+            city_id, admin_level, indicator_id
         )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
@@ -263,7 +258,62 @@ def get_city_geometry_with_indicators(
             detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
         ) from e
 
-    if not city_indicators["features"]:
+    if not city_indicators or not city_indicators["features"]:
         raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_indicators
+
+
+@router.get(
+    "/{city_id}/indicators/stats",
+    dependencies=[Depends(validate_query_params("indicator_id", "admin_level"))],
+    responses={
+        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorStats},
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {"application/json": {"example": {"detail": "No stats found"}}},
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
+def get_city_stats(
+    city_id: str = Path(),
+    indicator_id: Optional[str] = Query(None),
+    admin_level: Optional[str] = Query(None),
+):
+    """
+    Retrieve stats for an specific city, administrative level, and indicator.
+
+    ### Args:
+    - **city_id** (`str`): The unique identifier of the city.
+    - **indicator_id** (`Optional[str]`): The unique identifier of the indicator.
+    - **admin_level** (`Optional[str]`): The administrative level to filter the geometry and indicators.
+        - Possible values are **"subcity_admin_level"**, **"city_admin_level"**, or any valid administrative level.
+        - If no value is provided, **"subcity_admin_level"** value will be used as the default.
+
+    ### Returns:
+    - **Dict**: A dictionary containing:
+        - **indicators**: A dictionary of indicator statistics, where each key is an indicator ID and the value is a dictionary containing "min" and "max" values for that indicator.
+
+    ### Raises:
+    - **HTTPException**:
+        - 400: If there is an invalid query parameter.
+        - 404: If no stats are found for the given city and administrative level.
+        - 500: If an error occurs during the retrieval process.
+    """
+    if admin_level is None:
+        admin_level = "subcity_admin_level"
+
+    try:
+        stats = cities_service.get_city_stats(city_id, admin_level, indicator_id)
+    except Exception as e:
+        logger.exception("An error occurred: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving city stats failed.",
+        ) from e
+
+    if not stats:
+        raise HTTPException(status_code=404, detail="No stats found.")
+
+    return stats

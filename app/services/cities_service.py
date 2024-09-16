@@ -3,10 +3,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 from cartoframes.auth import set_default_credentials
+import numpy as np
+import pandas as pd
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
@@ -236,8 +237,8 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
 
 
 def get_city_geometry_with_indicators(
-    city_id: str, indicator_id: str, admin_level: str
-) -> Dict:
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
+) -> Optional[Dict]:
     """
     Retrieve the geometry, bounding boxes, and indicators of a specific city and administrative level in GeoJSON format.
 
@@ -250,9 +251,13 @@ def get_city_geometry_with_indicators(
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
     airtable_city = fetch_first_city(generate_search_query("id", city_id))
+    if not airtable_city:
+        return None
+
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
 
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
 
     with ThreadPoolExecutor() as executor:
         geometry_future = executor.submit(
@@ -261,11 +266,9 @@ def get_city_geometry_with_indicators(
         )
         indicators_future = executor.submit(
             query_carto,
-            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' AND indicator = '{indicator_id}' {geo_level_filter} AND indicator_version = 0",
+            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
         )
-        all_indicators_future = executor.submit(fetch_indicators)
 
-        all_indicators = all_indicators_future.result()
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
 
@@ -280,28 +283,20 @@ def get_city_geometry_with_indicators(
         ]
     ]
 
-    # Fetch indicator metadata
-    indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
-    }
-
-    city_geometry_df = city_geometry_df.merge(
-        city_indicators_df, on="geo_id", how="left"
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
     )
 
-    # Add indicator information from metadata
-    city_geometry_df["indicator_label"] = indicators_dict[indicator_id]["name"]
-    city_geometry_df["indicator_unit"] = indicators_dict[indicator_id]["unit"]
-    # Calculate the bounding box for each polygon
     city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
 
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
     # Convert to GeoJSON and add bounding box to properties
-    city_geojson = json.loads(city_geometry_df.to_json())
-
+    city_geojson = json.loads(city_gdf.to_json())
     # Add bounding box information to each feature in the GeoJSON
     bouding_box_coordinates = [180, 90, -180, -90]
+
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
         if bbox[0] < bouding_box_coordinates[0]:
             bouding_box_coordinates[0] = bbox[0]
@@ -314,6 +309,62 @@ def get_city_geometry_with_indicators(
 
         feature["properties"]["bbox"] = bbox
 
-    city_geojson = {"bbox": bouding_box_coordinates, **city_geojson}
+    return {
+        "bbox": bouding_box_coordinates,
+        **city_geojson,
+    }
 
-    return city_geojson
+
+def get_city_stats(
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
+) -> Optional[Dict]:
+    """
+    Retrieve stats for an specific city, administrative level, and indicator.
+
+    Args:
+        city_id (str): The ID of the city.
+        admin_level (Optional[str]): The administrative level. If not provided, the default admin level from the city's data will be used.
+        indicator_id (Optional[str]): The ID of the indicator. If not provided, statistics for all indicators will be returned.
+
+    Returns:
+        Dict: A dictionary containing:
+            - "indicators": A dictionary of indicator statistics, where each key is an indicator ID and the value is a dictionary containing "min" and "max" values for that indicator.
+    """
+    airtable_city = fetch_first_city(generate_search_query("id", city_id))
+    if not airtable_city:
+        return None
+
+    admin_level = airtable_city["fields"].get(admin_level, admin_level)
+
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
+
+    city_indicators_df = query_carto(
+        f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0"
+    )
+    if city_indicators_df.empty:
+        return None
+
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+
+    indicators = {
+        indicator: {
+            "min": (
+                float(city_indicators_df[indicator].min())
+                if indicator in city_indicators_df.columns
+                and not np.isnan(city_indicators_df[indicator].min())
+                else None
+            ),
+            "max": (
+                float(city_indicators_df[indicator].max())
+                if indicator in city_indicators_df.columns
+                and not np.isnan(city_indicators_df[indicator].max())
+                else None
+            ),
+        }
+        for indicator in city_indicators_df.columns
+    }
+
+    return {"indicators": indicators}

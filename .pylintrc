@@ -69,7 +69,7 @@ max-statements=50
 max-parents=7
 # Maximum number of attributes for a class (see R0902).
 max-attributes=10
-# Maximum number of local variables
+# Maximum number of local variables for a function (see R0914).
 max-locals=20
 
 [CLASSES]

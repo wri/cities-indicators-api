@@ -5,19 +5,19 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
+    COMMON_400_ERROR_RESPONSE,
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.utils.dependencies import validate_query_params
-from app.schemas.common_schema import ErrorResponse
 from app.schemas.indicators_schema import (
-    CityIndicatorValueResponse,
-    IndicatorsThemesResponse,
-    IndicatorsResponse,
-    MetadataByIndicatorIdResponse,
     CitiesByIndicatorIdResponse,
+    CityIndicatorValueResponse,
+    IndicatorsResponse,
+    IndicatorsThemesResponse,
+    MetadataByIndicatorIdResponse,
 )
 from app.services import indicators_service
+from app.utils.dependencies import validate_query_params
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,15 +30,7 @@ router = APIRouter()
     dependencies=[Depends(validate_query_params("project"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid query parameter",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
-                }
-            },
-        },
+        400: COMMON_400_ERROR_RESPONSE,
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
@@ -60,7 +52,7 @@ def list_indicators(
 
     ### Returns:
     - **IndicatorsResponse**: A Pydantic model containing the list of indicators. The response
-      includes metadata such as indicator IDs, names, and associated projects.
+      includes metadata such as indicator IDs, labels, and associated projects, and themes.
 
     ### Raises:
     - **HTTPException**:
@@ -162,15 +154,7 @@ def get_cities_by_indicator_id(
     "/metadata/{indicator_id}",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": MetadataByIndicatorIdResponse},
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid query parameter",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid query parameter: <query_parameter>"}
-                }
-            },
-        },
+        400: COMMON_400_ERROR_RESPONSE,
         404: {
             **COMMON_404_ERROR_RESPONSE,
             "content": {
