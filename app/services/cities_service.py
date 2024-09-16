@@ -241,42 +241,51 @@ def get_city_geometry_with_indicators(
     city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
 ) -> Optional[Dict]:
     """
-    Retrieve the geometry, bounding boxes, and indicators of a specific city and administrative level in GeoJSON format.
+    Retrieve the geometry, bounding boxes, and indicators of a specific city and
+    administrative level in GeoJSON format.
 
     Args:
         city_id (str): The ID of the city to retrieve geometry and indicators for.
-        indicator_id (str): The ID of the indicator to retrieve.
-        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If no value is provided, "subcity_admin_level" value will be used as the default.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators.
+        indicator_id (Optional[str]): The ID of the indicator to retrieve.
 
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
+    # Fetch city details and handle missing city data
     airtable_city = fetch_first_city(generate_search_query("id", city_id))
     if not airtable_city:
         return None
 
+    # Use the provided admin_level or fallback to the city's admin_level
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
     indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
 
+    # Fetch data concurrently for geometry, indicators, and all indicators metadata
     with ThreadPoolExecutor() as executor:
-        geometry_future = executor.submit(
-            query_carto,
-            f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
-        )
-        indicators_future = executor.submit(
-            query_carto,
-            f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
-        )
-        all_indicators_future = executor.submit(fetch_indicators)
+        futures = {
+            "geometry": executor.submit(
+                query_carto,
+                f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+            ),
+            "indicators": executor.submit(
+                query_carto,
+                f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
+            ),
+            "all_indicators": executor.submit(fetch_indicators),
+        }
 
-        city_geometry_df = geometry_future.result()
-        city_indicators_df = indicators_future.result()
-        all_indicators = all_indicators_future.result()
+        # Retrieve results and handle potential errors
+        city_geometry_df = futures["geometry"].result()
+        city_indicators_df = futures["indicators"].result()
+        all_indicators = futures["all_indicators"].result()
 
+    # Handle empty results
     if city_geometry_df.empty or city_indicators_df.empty:
         return None
 
+    # Prepare the geometry data
     city_geometry_df = city_geometry_df[
         [
             "geo_id",
@@ -287,14 +296,23 @@ def get_city_geometry_with_indicators(
             "the_geom",
         ]
     ]
+    city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
+        lambda geom: geom.bounds
+    )
 
+    # Prepare the indicators data and merge with unit information
     indicators_dict = {
         indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
     indicator_unities = [
-        {"indicator": indicator_name, "unit": (indicators_dict.get(indicator_name) or {}).get("unit")}
+        {
+            "indicator": indicator_name,
+            "legend": indicator_info.get("legend"),
+            "unit": indicator_info.get("unit"),
+        }
         for indicator_name in city_indicators_df["indicator"].unique()
+        if (indicator_info := indicators_dict.get(indicator_name, {}))
     ]
 
     indicator_unities_df = pd.DataFrame(indicator_unities)
@@ -302,42 +320,41 @@ def get_city_geometry_with_indicators(
         indicator_unities_df, city_indicators_df, on="indicator"
     )
 
+    # Create a new column for unit values and handle missing values
     city_indicators_df["unit_values"] = merged_indicators_df.apply(
         lambda row: {
             "unit": row["unit"],
+            "legend": row["legend"],
             "value": row["value"] if pd.notna(row["value"]) else None,
         },
         axis=1,
     )
 
+    # Pivot the DataFrame to structure indicators per geo_id
     city_indicators_df = city_indicators_df.pivot(
         index="geo_id", columns="indicator", values="unit_values"
     )
 
-    city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
-        lambda geom: geom.bounds
-    )
-
+    # Merge geometry and indicators
     city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
-    # Convert to GeoJSON and add bounding box to properties
+
+    # Convert the merged data to GeoJSON
     city_geojson = json.loads(city_gdf.to_json())
-    # Add bounding box information to each feature in the GeoJSON
-    bouding_box_coordinates = [180, 90, -180, -90]
 
+    # Calculate overall bounding box
+    bounding_box_coordinates = [180, 90, -180, -90]
     for feature, bbox in zip(city_geojson["features"], city_geometry_df["bbox"]):
-        if bbox[0] < bouding_box_coordinates[0]:
-            bouding_box_coordinates[0] = bbox[0]
-        if bbox[1] < bouding_box_coordinates[1]:
-            bouding_box_coordinates[1] = bbox[1]
-        if bbox[2] > bouding_box_coordinates[2]:
-            bouding_box_coordinates[2] = bbox[2]
-        if bbox[3] > bouding_box_coordinates[3]:
-            bouding_box_coordinates[3] = bbox[3]
-
+        bounding_box_coordinates = [
+            min(bounding_box_coordinates[0], bbox[0]),
+            min(bounding_box_coordinates[1], bbox[1]),
+            max(bounding_box_coordinates[2], bbox[2]),
+            max(bounding_box_coordinates[3], bbox[3]),
+        ]
         feature["properties"]["bbox"] = bbox
 
+    # Return the final result with bounding box included
     return {
-        "bbox": bouding_box_coordinates,
+        "bbox": bounding_box_coordinates,
         **city_geojson,
     }
 
