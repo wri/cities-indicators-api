@@ -47,13 +47,10 @@ class CityIndicatorAdmin(BaseModel):
 class CityIndicator(CityIndicatorBase):
     """Detailed city information for indicators."""
 
-    geo_id: str
-    geo_name: str
-    geo_level: str
-    geo_parent_name: str
-    geo_version: int
-    bbox: List[float]
-    model_config = ConfigDict(extra="allow")
+    indicator: str
+    indicator_label: str
+    indicator_unit: str
+    value: float
 
 
 class Geometry(BaseModel):

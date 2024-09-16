@@ -8,7 +8,6 @@ import pandas as pd
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
@@ -256,6 +255,7 @@ def get_city_geometry_with_indicators(
         return None
 
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
+
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
     indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
 
@@ -268,14 +268,9 @@ def get_city_geometry_with_indicators(
             query_carto,
             f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
         )
-        all_indicators_future = executor.submit(fetch_indicators)
 
         city_geometry_df = geometry_future.result()
         city_indicators_df = indicators_future.result()
-        all_indicators = all_indicators_future.result()
-
-    if city_geometry_df.empty or city_indicators_df.empty:
-        return None
 
     city_geometry_df = city_geometry_df[
         [
@@ -288,31 +283,8 @@ def get_city_geometry_with_indicators(
         ]
     ]
 
-    indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
-    }
-
-    indicator_unities = [
-        {"indicator": indicator_name, "unit": (indicators_dict.get(indicator_name) or {}).get("unit")}
-        for indicator_name in city_indicators_df["indicator"].unique()
-    ]
-
-    # print("indicator_unities:", indicator_unities)
-    indicator_unities_df = pd.DataFrame(indicator_unities)
-    merged_indicators_df = pd.merge(
-        indicator_unities_df, city_indicators_df, on="indicator"
-    )
-
-    city_indicators_df["unit_values"] = merged_indicators_df.apply(
-        lambda row: {
-            "unit": row["unit"],
-            "value": row["value"] if pd.notna(row["value"]) else None,
-        },
-        axis=1,
-    )
-
     city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="unit_values"
+        index="geo_id", columns="indicator", values="value"
     )
 
     city_geometry_df.loc[:, "bbox"] = city_geometry_df["the_geom"].apply(
