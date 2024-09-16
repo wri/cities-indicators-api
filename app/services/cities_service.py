@@ -297,7 +297,6 @@ def get_city_geometry_with_indicators(
         for indicator_name in city_indicators_df["indicator"].unique()
     ]
 
-    # print("indicator_unities:", indicator_unities)
     indicator_unities_df = pd.DataFrame(indicator_unities)
     merged_indicators_df = pd.merge(
         indicator_unities_df, city_indicators_df, on="indicator"
