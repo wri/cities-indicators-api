@@ -307,8 +307,8 @@ def get_city_geometry_with_indicators(
 
     indicator_unities = [
         {
+            "name": indicator_info.get("name"),
             "indicator": indicator_name,
-            "label": indicator_info.get("name"),
             "unit": indicator_info.get("unit"),
         }
         for indicator_name in city_indicators_df["indicator"].unique()
@@ -323,8 +323,8 @@ def get_city_geometry_with_indicators(
     # Create a new column for unit values and handle missing values
     city_indicators_df["unit_values"] = merged_indicators_df.apply(
         lambda row: {
+            "name": row["name"],
             "unit": row["unit"],
-            "label": row["label"],
             "value": row["value"] if pd.notna(row["value"]) else None,
         },
         axis=1,
