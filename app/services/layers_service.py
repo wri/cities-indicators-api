@@ -50,8 +50,9 @@ def get_city_layer(city_id: str, layer_id: str):
     layer_url = (
         f"{s3_base_url}{s3_path}{city_id}-"
         f"{city_fields['city_admin_level']}-"
-        f"{layer_fields['layer_file_name']}-"
-        f"{layer_fields['version']}.{layer_fields['file_type']}"
+        f"{layer_fields['layer_file_name']}"
+        f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
+        f".{layer_fields['file_type']}"
     )
 
     try:
