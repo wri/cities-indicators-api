@@ -34,50 +34,41 @@ def list_cities(
     Returns:
         List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
-    filters = {}
-
+    # Fetch active projects based on provided project IDs
+    projects_filters = {"status": "Active"}
     if projects:
-        filters["projects"] = projects
-    if country_code_iso3:
-        filters["country_code_iso3"] = country_code_iso3
+        projects_filters["id"] = projects
 
-    filter_formula = construct_filter_formula(filters)
-
-    # Define the tasks to be executed asynchronously
-    future_to_func = {
-        lambda: fetch_cities(filter_formula): "cities",
+    projects_filter_formula = construct_filter_formula(projects_filters)
+    active_projects = fetch_projects(projects_filter_formula)
+    active_project_ids = {
+        project["id"]: project["fields"]["id"] for project in active_projects
     }
 
-    cities_list = []
-    all_projects = []
+    # Filter cities based on active projects and country code
+    cities_filters = {}
+    if active_project_ids:
+        cities_filters["projects"] = list(active_project_ids.values())
+    if country_code_iso3:
+        cities_filters["country_code_iso3"] = country_code_iso3
 
-    with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(func): name for func, name in future_to_func.items()}
-        for future in as_completed(futures):
-            func_name = futures[future]
-            if func_name == "cities":
-                cities_list = future.result()
+    cities_filter_formula = construct_filter_formula(cities_filters)
+    cities_list = fetch_cities(cities_filter_formula)
 
+    # Return empty list if no cities found
     if not cities_list:
         return []
-    city_ids = [city["fields"]["id"] for city in cities_list]
 
-    # Asynchronously fetch all projects related to the cities
-    with ThreadPoolExecutor() as executor:
-        all_projects = executor.submit(
-            fetch_projects, construct_filter_formula({"cities": city_ids})
-        ).result()
-
-    project_id_map = {
-        project["id"]: project["fields"]["id"] for project in all_projects
-    }
-
+    # Update project IDs in each city to reflect active projects
     for city in cities_list:
         city_projects = [
-            project_id_map.get(project) for project in city["fields"]["projects"]
+            active_project_ids[project]
+            for project in city["fields"]["projects"]
+            if project in active_project_ids.keys()
         ]
         city["fields"]["projects"] = city_projects
 
+    # Return the filtered cities data
     return [
         {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         for city in cities_list

@@ -36,6 +36,8 @@ def list_indicators(
     Retrieve a list of indicators, optionally filtered by project.
 
     Args:
+        city_id (Optional[List[str]]): A list of city IDs to filter indicators by.
+            If None, indicators from all cities are retrieved.
         project (Optional[str]): The project ID to filter indicators by.
 
     Returns:

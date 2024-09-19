@@ -50,6 +50,9 @@ def list_indicators(
     ### Args:
     - **project** (`Optional[str]`): The unique identifier of the project to filter the
       indicators by.
+    - **city_id** (`Optional[List[str]]`): A list of unique city identifiers to filter the
+      indicators by.
+
 
     ### Returns:
     - **IndicatorsResponse**: A Pydantic model containing the list of indicators. The response
