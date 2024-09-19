@@ -307,10 +307,9 @@ def get_city_geometry_with_indicators(
         for indicator_name in city_indicators_df["indicator"].unique()
         if (indicator_info := indicators_dict.get(indicator_name, {}))
     ]
-
-    indicator_unities_df = pd.DataFrame(indicator_unities)
+ 
     merged_indicators_df = pd.merge(
-        indicator_unities_df, city_indicators_df, on="indicator"
+        pd.DataFrame(indicator_unities), city_indicators_df, on="indicator"
     )
 
     # Create a new column for unit values and handle missing values
