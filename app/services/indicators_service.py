@@ -19,7 +19,7 @@ from app.repositories.indicators_repository import (
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
-from app.utils.filters import generate_search_query
+from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -29,7 +29,9 @@ set_default_credentials(
 )
 
 
-def list_indicators(project: Optional[str] = None) -> List[Dict]:
+def list_indicators(
+    project: Optional[str] = None, city_id: Optional[List[str]] = None
+) -> List[Dict]:
     """
     Retrieve a list of indicators, optionally filtered by project.
 
@@ -40,21 +42,33 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         List[Dict]: A list of indicators with selected fields.
 
     """
-    filter_formula = generate_search_query("projects", project)
-    future_to_func = {
-        fetch_projects: "projects",
-        fetch_datasets: "datasets",
-        fetch_layers: "layers",
-        lambda: fetch_indicators(filter_formula): "indicators",
-    }
+    # Create filters
+    indicators_filters = {}
 
-    results = {}
+    if project:
+        indicators_filters["projects"] = project
+    if city_id:
+        indicators_filters["Cities 3"] = city_id
+
+    indicators_filter_formula = construct_filter_formula(indicators_filters)
+
+    # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(func): name for func, name in future_to_func.items()}
+        futures = {
+            executor.submit(fetch_cities): "cities",
+            executor.submit(fetch_projects): "projects",
+            executor.submit(fetch_datasets): "datasets",
+            executor.submit(fetch_layers): "layers",
+            executor.submit(fetch_indicators, indicators_filter_formula): "indicators",
+        }
+
+        results = {}
         for future in as_completed(futures):
             func_name = futures[future]
             results[func_name] = future.result()
 
+    # Create dictionaries for quick lookup
+    cities_dict = {city["id"]: city["fields"]["id"] for city in results["cities"]}
     indicators_dict = {
         indicator["id"]: indicator["fields"] for indicator in results["indicators"]
     }
@@ -68,8 +82,8 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
         layer["fields"]["id"]: layer["fields"] for layer in results["layers"]
     }
 
+    # Format the output
     indicators = []
-    # Update data_sources_link and projects for each indicator
     for indicator in indicators_dict.values():
         data_sources_link = indicator.get("data_sources_link", [])
         indicator["data_sources_link"] = [
@@ -89,6 +103,11 @@ def list_indicators(project: Optional[str] = None) -> List[Dict]:
             for layer_id in indicator.get("layer_id", [])
             if isinstance(indicator.get("layer_id"), list)
             and layer_id in layers_dict.keys()
+        ]
+        indicator["city_ids"] = [
+            cities_dict[city_id]
+            for city_id in cities_dict.keys()
+            if city_id in indicator.get("Cities 3", [])
         ]
         indicators.append(
             {

@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
@@ -27,7 +27,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(validate_query_params("project"))],
+    dependencies=[Depends(validate_query_params("project", "city_id"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
         400: COMMON_400_ERROR_RESPONSE,
@@ -42,6 +42,7 @@ router = APIRouter()
 )
 def list_indicators(
     project: Optional[str] = Query(None),
+    city_id: Optional[List[str]] = Query(None),
 ):
     """
     Retrieve a list of indicators based on the provided project filter.
@@ -61,7 +62,7 @@ def list_indicators(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        indicators_list = indicators_service.list_indicators(project)
+        indicators_list = indicators_service.list_indicators(project, city_id)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(

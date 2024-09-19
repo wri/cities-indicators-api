@@ -14,6 +14,7 @@ CITY_RESPONSE_KEYS = [
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",
+    "city_ids",
     "data_sources",
     "data_sources_link",
     "data_views",
