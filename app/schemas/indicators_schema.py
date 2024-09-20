@@ -10,6 +10,7 @@ class Layers(BaseModel):
 
 class Indicator(BaseModel):
     id: str
+    city_ids: List[str]
     data_sources: str
     data_sources_link: List[str]
     data_views: List[str]

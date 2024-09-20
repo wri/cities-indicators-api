@@ -72,8 +72,8 @@ def mock_datasets():
 @pytest.fixture
 def mock_projects():
     return [
-        {"id": "proj1", "fields": {"id": "Project 1"}},
-        {"id": "proj2", "fields": {"id": "Project 2"}},
+        {"id": "pr1", "fields": {"id": "project1"}},
+        {"id": "pr2", "fields": {"id": "project2"}},
     ]
 
 
@@ -81,20 +81,18 @@ def mock_projects():
 def mock_cities():
     return [
         {
+            "id": "ct1",
             "fields": {
-                "city_id": "city1",
-                "city_name": "City 1",
-                "country_name": "Country 1",
-                "country_code_iso3": "CO1",
-            }
+                "id": "city1",
+                "name": "City 1",
+            },
         },
         {
+            "id": "ct2",
             "fields": {
-                "city_id": "city2",
-                "city_name": "City 2",
-                "country_name": "Country 2",
-                "country_code_iso3": "CO2",
-            }
+                "id": "city2",
+                "name": "City 2",
+            },
         },
     ]
 
@@ -127,8 +125,10 @@ class TestListIndicators:
     @patch("app.services.indicators_service.fetch_datasets")
     @patch("app.services.indicators_service.fetch_projects")
     @patch("app.services.indicators_service.fetch_layers")
+    @patch("app.services.indicators_service.fetch_cities")
     def test_list_indicators(
         self,
+        mock_fetch_cities,
         mock_fetch_layers,
         mock_fetch_projects,
         mock_fetch_datasets,
@@ -137,11 +137,13 @@ class TestListIndicators:
         mock_datasets,
         mock_projects,
         mock_layers,
+        mock_cities,
     ):
         mock_fetch_indicators.return_value = mock_indicators
         mock_fetch_datasets.return_value = mock_datasets
-        mock_fetch_projects.returmock_fetch_layersn_value = mock_projects
+        mock_fetch_projects.return_value = mock_projects
         mock_fetch_layers.return_value = mock_layers
+        mock_fetch_cities.return_value = mock_cities
 
         result = list_indicators()
         assert len(result) == 2
