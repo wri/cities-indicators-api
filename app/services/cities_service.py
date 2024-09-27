@@ -2,9 +2,9 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
-from cartoframes.auth import set_default_credentials
 import numpy as np
 import pandas as pd
+from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
@@ -12,6 +12,7 @@ from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.formatters import unit_formatter
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -307,7 +308,7 @@ def get_city_geometry_with_indicators(
         for indicator_name in city_indicators_df["indicator"].unique()
         if (indicator_info := indicators_dict.get(indicator_name, {}))
     ]
- 
+
     merged_indicators_df = pd.merge(
         pd.DataFrame(indicator_unities), city_indicators_df, on="indicator"
     )
@@ -351,6 +352,96 @@ def get_city_geometry_with_indicators(
         "bbox": bounding_box_coordinates,
         **city_geojson,
     }
+
+
+def get_city_geometry_with_indicators_csv(
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
+) -> Optional[Dict]:
+    """
+    Retrieve the geometry, bounding boxes, and indicators of a specific city
+    and administrative level, and return the data as a list of dictionaries (CSV-like).
+
+    Args:
+        city_id (str): The ID of the city to retrieve geometry and indicators for.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators.
+        indicator_id (Optional[str]): The ID of a specific indicator to retrieve.
+
+    Returns:
+        Optional[Dict]: A list of dictionaries, where each dictionary represents
+                        a row of the city's geometry, indicators, and bounding boxes.
+                        If no data is found, returns None.
+    """
+    # Fetch city details and handle missing city data
+    airtable_city = fetch_first_city(generate_search_query("id", city_id))
+    if not airtable_city:
+        return None
+
+    # Use the provided admin_level or fallback to the city's admin_level
+    admin_level = airtable_city["fields"].get(admin_level, admin_level)
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
+
+    # Fetch data concurrently for geometry, indicators, and all indicators metadata
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            "geometry": executor.submit(
+                query_carto,
+                f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+            ),
+            "indicators": executor.submit(
+                query_carto,
+                f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
+            ),
+            "all_indicators": executor.submit(fetch_indicators),
+        }
+
+        # Retrieve results and handle potential errors
+        city_geometry_df = futures["geometry"].result()
+        city_indicators_df = futures["indicators"].result()
+        all_indicators = futures["all_indicators"].result()
+
+    # Handle empty results
+    if city_geometry_df.empty or city_indicators_df.empty:
+        return None
+
+    # Prepare the indicators data and merge with unit information
+    indicators_dict = {
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
+    }
+
+    indicator_columns = city_indicators_df["indicator"].unique()
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+    city_indicators_df = city_indicators_df.replace([np.inf, -np.inf], np.nan)
+    city_indicators_df = city_indicators_df.replace({np.nan: None})
+
+    # Prepare the geometry data
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+        ]
+    ]
+
+    for indicator_name in indicator_columns:
+        unit = indicators_dict[indicator_name].get("unit", "")
+
+        # Use apply to format each value in the column with the unit_formatter method
+        city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
+            lambda x: unit_formatter(x, unit) if pd.notna(x) else ""
+        )
+
+    # Merge geometry and indicators
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
+
+    table_data = city_gdf.to_dict(orient="records")
+
+    # Return the final result with bounding box included
+    return table_data
 
 
 def get_city_stats(
