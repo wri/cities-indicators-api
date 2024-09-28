@@ -300,35 +300,19 @@ def get_city_geometry_with_indicators(
         indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
-    indicator_unities = [
-        {
-            "indicator": indicator_name,
-            "legend_styling": json.loads(indicator_info.get("legend_styling")),
-            "map_styling": json.loads(indicator_info.get("map_styling")),
-            "name": indicator_info.get("name"),
-            "unit": indicator_info.get("unit"),
-        }
-        for indicator_name in city_indicators_df["indicator"].unique()
-        if (indicator_info := indicators_dict.get(indicator_name, {}))
-    ]
-
-    merged_indicators_df = pd.merge(
-        pd.DataFrame(indicator_unities), city_indicators_df, on="indicator"
-    )
-
-    # Create a new column for unit values and handle missing values
-    city_indicators_df["unit_values"] = merged_indicators_df.apply(
+    # Create 'unit_values' within city_indicators_df
+    city_indicators_df["unit_values"] = city_indicators_df.apply(
         lambda row: {
-            "legend_styling": row["legend_styling"],
-            "map_styling": row["map_styling"],
-            "name": row["name"],
-            "unit": row["unit"],
+            "legend_styling": json.loads(indicators_dict.get(row["indicator"], {}).get("legend_styling", "{}")),
+            "map_styling": json.loads(indicators_dict.get(row["indicator"], {}).get("map_styling", "{}")),
+            "name": indicators_dict.get(row["indicator"], {}).get("name"),
+            "unit": indicators_dict.get(row["indicator"], {}).get("unit"),
             "value": row["value"] if pd.notna(row["value"]) else None,
         },
         axis=1,
     )
 
-    # Pivot the DataFrame to structure indicators per geo_id
+    # Pivot using the new 'unit_values' column
     city_indicators_df = city_indicators_df.pivot(
         index="geo_id", columns="indicator", values="unit_values"
     )
