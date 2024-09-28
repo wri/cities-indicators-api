@@ -2,6 +2,9 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi.responses import StreamingResponse
+import csv
+import io
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -215,6 +218,91 @@ def get_city_geometry_with_indicators(
         raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_indicators
+
+
+@router.get(
+    "/{city_id}/indicators/csv",
+    dependencies=[Depends(validate_query_params("indicator_id", "admin_level"))],
+    responses={
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
+        400: COMMON_400_ERROR_RESPONSE,
+        404: {
+            **COMMON_404_ERROR_RESPONSE,
+            "content": {
+                "application/json": {"example": {"detail": "No indicators found"}},
+            },
+        },
+        500: COMMON_500_ERROR_RESPONSE,
+    },
+)
+def get_city_geometry_with_indicators_csv(
+    city_id: str = Path(),
+    indicator_id: Optional[str] = Query(None),
+    admin_level: Optional[str] = Query(None),
+):
+    """
+    Retrieve a city's geometry and its associated indicators as a CSV file.
+
+    This endpoint generates and returns a CSV file containing geometric data and selected indicators for a specified city. The CSV includes filtered information based on the administrative level and indicator ID provided.
+
+    ### Parameters:
+    - **city_id** (`str`): Unique identifier of the city whose data is to be retrieved.
+    - **indicator_id** (`Optional[str]`): Filter by a specific indicator's unique ID. If no value is provided, all available indicators will be returned. By setting one of the special indicators bellow, it will download a CSV file for that specific indicator:
+        - **AQ_1_airPollution**
+        - **AQ_2_exceedancedays_atleastone**
+        - **GHG_1_ghg_emissions**
+    - **admin_level** (`Optional[str]`): Filter by a specific administrative level (e.g., subcity or city level). If not provided, defaults to the **subcity_admin_level**.
+
+    ### Returns:
+    - **StreamingResponse**: A stream of CSV data representing the city's geometry and indicators, available for direct download.
+
+    ### Raises:
+    - **HTTPException**:
+        - **400**: Raised when the provided query parameters are invalid.
+        - **404**: Raised when no matching data is found for the given filters.
+        - **500**: Raised when an internal error occurs while processing the request.
+    """
+    try:
+        csv_data = cities_service.get_city_geometry_with_indicators_csv(
+            city_id, admin_level, indicator_id
+        )
+
+        if not csv_data.get("data"):
+            # Raise a 404 error if no data is found
+            raise HTTPException(status_code=404, detail="No geometry found.")
+
+        # Create an in-memory stream for the CSV data
+        csv_file = io.StringIO()
+        fieldnames = csv_data.get("data")[0].keys()
+
+        # Create a CSV writer object
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()  # Write the header (field names)
+
+        # Write data rows
+        for row in csv_data.get("data"):
+            writer.writerow(row)
+
+        # Move the cursor to the start of the stream
+        csv_file.seek(0)
+
+        # Create a StreamingResponse with the CSV file
+        response = StreamingResponse(csv_file, media_type="text/csv")
+
+        # Define the filename for the CSV download
+        filename = csv_data.get("filename")
+        response.headers["Content-Disposition"] = f"attachment; filename={filename}.csv"
+
+        return response
+
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.exception("An error occurred: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
+        ) from e
 
 
 @router.get(
