@@ -8,7 +8,10 @@ from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import fetch_indicators
+from app.repositories.indicators_repository import (
+    fetch_first_indicator,
+    fetch_indicators,
+)
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
@@ -354,29 +357,29 @@ def get_city_geometry_with_indicators(
     }
 
 
-def get_city_geometry_with_indicators_csv(
+def process_normal_indicators(
     city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
-) -> Optional[Dict]:
+):
     """
-    Retrieve the geometry, bounding boxes, and indicators of a specific city
-    and administrative level, and return the data as a list of dictionaries (CSV-like).
+    Processes normal indicators for a city by formatting and applying units to the indicator values.
 
     Args:
-        city_id (str): The ID of the city to retrieve geometry and indicators for.
-        admin_level (Optional[str]): The administrative level to filter the geometry and indicators.
-        indicator_id (Optional[str]): The ID of a specific indicator to retrieve.
+        city_id (str): The ID of the city to retrieve indicator data for.
+        admin_level (Optional[str]): The administrative level to filter the data by. Defaults to 'subcity_admin_level' if not provided.
+        indicator_id (Optional[str]): The ID of the specific indicator to process. If not provided, all available indicators are fetched.
 
     Returns:
-        Optional[Dict]: A list of dictionaries, where each dictionary represents
-                        a row of the city's geometry, indicators, and bounding boxes.
-                        If no data is found, returns None.
+        list: A list of dictionaries representing the formatted city geometry and indicator data with units.
     """
+    if admin_level is None:
+        admin_level = "subcity_admin_level"
+
     # Fetch city details and handle missing city data
     airtable_city = fetch_first_city(generate_search_query("id", city_id))
     if not airtable_city:
         return None
 
-    # Use the provided admin_level or fallback to the city's admin_level
+    # Use the provided admin_level or fallback to the city's or subcity's admin_level
     admin_level = airtable_city["fields"].get(admin_level, admin_level)
     geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
     indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
@@ -432,7 +435,7 @@ def get_city_geometry_with_indicators_csv(
 
         # Use apply to format each value in the column with the unit_formatter method
         city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
-            lambda x: unit_formatter(x, unit) if pd.notna(x) else ""
+            lambda value: unit_formatter(value, unit) if pd.notna(value) else ""
         )
 
     # Merge geometry and indicators
@@ -442,6 +445,102 @@ def get_city_geometry_with_indicators_csv(
 
     # Return the final result with bounding box included
     return table_data
+
+
+def process_special_indicators(
+    city_id: str, indicator_id: str, table_name: str, admin_level: Optional[str]
+):
+    """
+    Processes and formats special indicator data for a city based on its ID, indicator ID,
+    and administrative level.
+
+    Args:
+        city_id (str): The ID of the city for which the special indicator is being retrieved.
+        indicator_id (str): The ID of the specific indicator to process.
+        table_name (str): The name of the table to query for the special indicator data.
+        admin_level (Optional[str]): The administrative level to filter the data by.
+
+    Returns:
+        dict: A dictionary containing formatted special indicator data, with units applied
+        where applicable.
+    """
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    query = (
+        f"SELECT * FROM {table_name} WHERE geo_name = '{city_id}' {geo_level_filter}"
+    )
+    indicator_filter_formula = generate_search_query("id", indicator_id)
+
+    # Fetch data concurrently for geometry, indicators, and all indicators metadata
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            "special_indicator": executor.submit(
+                query_carto,
+                query,
+            ),
+            "first_indicator": executor.submit(
+                fetch_first_indicator, indicator_filter_formula
+            ),
+        }
+
+        # Retrieve results and handle potential errors
+        special_indicator_df = futures["special_indicator"].result()
+        special_indicator_df = special_indicator_df.drop(
+            columns=["cartodb_id", "the_geom", "geo_name"]
+        )
+        first_indicator_df = futures["first_indicator"].result()
+
+    unit = first_indicator_df["fields"].get("unit", "")
+
+    if "value" in special_indicator_df.columns:
+        # Use apply to format each value in the column with the unit_formatter method
+        special_indicator_df["value"] = special_indicator_df["value"].apply(
+            lambda value: unit_formatter(value, unit) if pd.notna(value) else ""
+        )
+
+    table_data = special_indicator_df.to_dict(orient="records")
+
+    return table_data
+
+
+def get_city_geometry_with_indicators_csv(
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
+) -> Optional[Dict]:
+    """
+    Retrieve the geometry, bounding boxes, and indicators of a specific city and
+    administrative level in CSV format.
+
+    Args:
+        city_id (str): The ID of the city to retrieve geometry and indicators for.
+        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If not provided, defaults to the city's admin_level.
+        indicator_id (Optional[str]): The ID of the indicator to retrieve. If not provided, all indicators are fetched.
+
+    Returns:
+        dict: A dictionary representing the city's geometry along with its indicators, bounding boxes, and units formatted in a CSV-compatible structure.
+    """
+
+    table_name = None
+    if indicator_id == "AQ_1_airPollution":
+        table_name = "indicators_aq_1"
+    elif indicator_id == "AQ_2_exceedancedays_atleastone":
+        table_name = "indicators_aq_2"
+    elif indicator_id == "GHG_1_ghg_emissions":
+        table_name = "indicators_ghg_1"
+
+    if table_name:
+        data = process_special_indicators(
+            city_id=city_id,
+            indicator_id=indicator_id,
+            admin_level=admin_level,
+            table_name=table_name,
+        )
+
+        return {"filename": indicator_id, "data": data}
+
+    data = process_normal_indicators(
+        city_id=city_id, admin_level=admin_level, indicator_id=indicator_id
+    )
+
+    return {"filename": "cities_indicators", "data": data}
 
 
 def get_city_stats(

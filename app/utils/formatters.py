@@ -19,7 +19,5 @@ def unit_formatter(value, unit):
 
     if unit == "%":
         return f"{value}%"  # Format the percentage
-    
-    return (
-        f"{value} {unit}"  # Return other values with the unit separated by a space
-    )
+
+    return f"{value} {unit}"  # Return other values with the unit separated by a space
