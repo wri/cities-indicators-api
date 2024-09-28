@@ -304,10 +304,18 @@ def get_city_geometry_with_indicators(
     # Create 'unit_values' within city_indicators_df
     city_indicators_df["unit_values"] = city_indicators_df.apply(
         lambda row: {
-            "legend_styling": json.loads(indicators_dict.get(row["indicator"], {}).get("legend_styling", "{}")),
-            "map_styling": json.loads(indicators_dict.get(row["indicator"], {}).get("map_styling", "{}")),
+            "legend_styling": json.loads(
+                indicators_dict.get(row["indicator"], {}).get("legend_styling", "{}")
+            ),
+            "map_styling": json.loads(
+                indicators_dict.get(row["indicator"], {}).get("map_styling", "{}")
+            ),
             "name": indicators_dict.get(row["indicator"], {}).get("name"),
-            "unit": None if row["value"] == "No data" else indicators_dict.get(row["indicator"], {}).get("unit"),
+            "unit": (
+                None
+                if row["value"] == "No data"
+                else indicators_dict.get(row["indicator"], {}).get("unit")
+            ),
             "value": row["value"] if pd.notna(row["value"]) else None,
         },
         axis=1,
@@ -403,7 +411,7 @@ def process_normal_indicators(
     )
     city_indicators_df = city_indicators_df.replace([np.inf, -np.inf], np.nan)
     city_indicators_df = city_indicators_df.replace({np.nan: None})
-    city_indicators_df = city_indicators_df.replace({-9999: "No data"})
+    city_indicators_df = city_indicators_df.replace({-9999: None})
 
     # Prepare the geometry data
     city_geometry_df = city_geometry_df[
@@ -421,7 +429,11 @@ def process_normal_indicators(
 
         # Use apply to format each value in the column with the unit_formatter method
         city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
-            lambda value, unit=unit: unit_formatter(value, unit) if pd.notna(value) else ""
+            lambda value, unit=unit: (
+                unit_formatter(value, "" if value == "No data" else unit)
+                if pd.notna(value)
+                else ""
+            )
         )
 
     # Merge geometry and indicators
@@ -475,8 +487,8 @@ def process_special_indicators(
         )
         first_indicator_df = futures["first_indicator"].result()
 
+    special_indicator_df = special_indicator_df.replace({-9999: None})
     unit = first_indicator_df["fields"].get("unit", "")
-
     if "value" in special_indicator_df.columns:
         # Use apply to format each value in the column with the unit_formatter method
         special_indicator_df["value"] = special_indicator_df["value"].apply(

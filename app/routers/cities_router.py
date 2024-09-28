@@ -224,7 +224,7 @@ def get_city_geometry_with_indicators(
     "/{city_id}/indicators/csv",
     dependencies=[Depends(validate_query_params("indicator_id", "admin_level"))],
     responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorGeoJSON},
+        200: COMMON_200_SUCCESSFUL_RESPONSE,
         400: COMMON_400_ERROR_RESPONSE,
         404: {
             **COMMON_404_ERROR_RESPONSE,
