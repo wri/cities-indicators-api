@@ -196,7 +196,7 @@ def get_cities_by_indicator_id(indicator_id: str) -> List[Dict]:
     return {
         "indicator": city_indicators[0]["indicator"],
         "indicator_version": city_indicators[0]["indicator_version"],
-        "unit": indicators_dict[indicator_id]["unit"],
+        "unit": indicators_dict[indicator_id].get("unit", None),
         "cities": [
             {
                 key: city_indicator[key]
@@ -274,7 +274,7 @@ def get_city_indicator_by_indicator_id_and_city_id(
     city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
         "%Y-%m-%d"
     )
-    city_indicator_df["unit"] = indicators_dict[indicator_id]["unit"]
+    city_indicator_df["unit"] = indicators_dict[indicator_id].get("unit", None)
     city_indicator_df["city_name"] = cities_dict[city_id]["name"]
     city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
     city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
