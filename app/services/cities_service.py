@@ -291,7 +291,7 @@ def get_city_geometry_with_indicators(
             "the_geom",
         ]
     ]
-    city_indicators_df = city_indicators_df.replace({-9999: "No data"})
+    city_indicators_df = city_indicators_df.replace({-9999: None})
     city_geometry_df["bbox"] = city_geometry_df["the_geom"].apply(
         lambda geom: geom.bounds
     )
@@ -311,11 +311,7 @@ def get_city_geometry_with_indicators(
                 indicators_dict.get(row["indicator"], {}).get("map_styling", "{}")
             ),
             "name": indicators_dict.get(row["indicator"], {}).get("name"),
-            "unit": (
-                None
-                if row["value"] == "No data"
-                else indicators_dict.get(row["indicator"], {}).get("unit")
-            ),
+            "unit": indicators_dict.get(row["indicator"], {}).get("unit"),
             "value": row["value"] if pd.notna(row["value"]) else None,
         },
         axis=1,
@@ -430,7 +426,7 @@ def process_normal_indicators(
         # Use apply to format each value in the column with the unit_formatter method
         city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
             lambda value, unit=unit: (
-                unit_formatter(value, "" if value == "No data" else unit)
+                unit_formatter(value, "" if value == None else unit)
                 if pd.notna(value)
                 else ""
             )

@@ -248,14 +248,27 @@ def get_city_indicator_by_indicator_id_and_city_id(
         Dict: A dictionary containing the indicator data for the specified city.
 
     """
+    indicator_table_name = None
+    if indicator_id == "AQ_1_airPollution":
+        indicator_table_name = "indicators_aq_1"
+    elif indicator_id == "AQ_2_exceedancedays_atleastone":
+        indicator_table_name = "indicators_aq_2"
+    elif indicator_id == "GHG_1_ghg_emissions":
+        indicator_table_name = "indicators_ghg_1"
+    
+    if indicator_table_name:
+        query = f"SELECT * FROM {indicator_table_name} WHERE geo_name = '{city_id}'"
+    else:
+        query = f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' AND geo_name = '{city_id}'"
+    
+
     with ThreadPoolExecutor() as executor:
         # Run fetch_indicators and query_carto in parallel
         fetch_cities_future = executor.submit(fetch_cities)
         fetch_indicators_future = executor.submit(fetch_indicators)
         query_carto_future = executor.submit(
             query_carto,
-            f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' "
-            f"AND geo_name = '{city_id}'",
+            query,
         )
 
         # Get results
@@ -271,9 +284,11 @@ def get_city_indicator_by_indicator_id_and_city_id(
         indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
     }
 
-    city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
-        "%Y-%m-%d"
-    )
+    if not indicator_table_name:
+        city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
+            "%Y-%m-%d"
+        )
+    
     city_indicator_df["unit"] = indicators_dict[indicator_id].get("unit", None)
     city_indicator_df["city_name"] = cities_dict[city_id]["name"]
     city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
