@@ -8,10 +8,7 @@ from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import (
-    fetch_first_indicator,
-    fetch_indicators,
-)
+from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
@@ -262,7 +259,8 @@ def get_city_geometry_with_indicators(
             admin_level=admin_level,
             table_name=table_name,
         )
-    elif admin_level is None:
+    
+    if admin_level is None:
         admin_level = "subcity_admin_level"
 
     # Fetch city details and handle missing city data
