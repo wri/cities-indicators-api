@@ -200,8 +200,6 @@ def get_city_geometry_with_indicators(
         - 404: If no indicators or geometry are found for the given city and administrative level.
         - 500: If an error occurs during the retrieval process.
     """
-    if admin_level is None:
-        admin_level = "subcity_admin_level"
 
     try:
         city_indicators = cities_service.get_city_geometry_with_indicators(
@@ -214,7 +212,7 @@ def get_city_geometry_with_indicators(
             detail="An error occurred: Retrieving the indicators and geometry of the city failed.",
         ) from e
 
-    if not city_indicators or not city_indicators["features"]:
+    if not city_indicators:
         raise HTTPException(status_code=404, detail="No geometry found.")
 
     return city_indicators

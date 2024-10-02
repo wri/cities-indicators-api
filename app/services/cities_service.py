@@ -15,7 +15,6 @@ from app.repositories.indicators_repository import (
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
-from app.utils.formatters import unit_formatter
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -232,156 +231,6 @@ def get_city_geometry(city_id: str, admin_level: str) -> Optional[Dict]:
     return city_geojson
 
 
-def process_normal_indicators(
-    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
-):
-    """
-    Processes normal indicators for a city by formatting and applying units to the indicator values.
-
-    Args:
-        city_id (str): The ID of the city to retrieve indicator data for.
-        admin_level (Optional[str]): The administrative level to filter the data by. Defaults to 'subcity_admin_level' if not provided.
-        indicator_id (Optional[str]): The ID of the specific indicator to process. If not provided, all available indicators are fetched.
-
-    Returns:
-        list: A list of dictionaries representing the formatted city geometry and indicator data with units.
-    """
-    if admin_level is None:
-        admin_level = "subcity_admin_level"
-
-    # Fetch city details and handle missing city data
-    airtable_city = fetch_first_city(generate_search_query("id", city_id))
-    if not airtable_city:
-        return None
-
-    # Use the provided admin_level or fallback to the city's or subcity's admin_level
-    admin_level = airtable_city["fields"].get(admin_level, admin_level)
-    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
-    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
-
-    # Fetch data concurrently for geometry, indicators, and all indicators metadata
-    with ThreadPoolExecutor() as executor:
-        futures = {
-            "geometry": executor.submit(
-                query_carto,
-                f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
-            ),
-            "indicators": executor.submit(
-                query_carto,
-                f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
-            ),
-            "all_indicators": executor.submit(fetch_indicators),
-        }
-
-        # Retrieve results and handle potential errors
-        city_geometry_df = futures["geometry"].result()
-        city_indicators_df = futures["indicators"].result()
-        all_indicators = futures["all_indicators"].result()
-
-    # Handle empty results
-    if city_geometry_df.empty or city_indicators_df.empty:
-        return None
-
-    # Prepare the indicators data and merge with unit information
-    indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
-    }
-
-    indicator_columns = city_indicators_df["indicator"].unique()
-    city_indicators_df = city_indicators_df.pivot(
-        index="geo_id", columns="indicator", values="value"
-    )
-    city_indicators_df = city_indicators_df.replace([np.inf, -np.inf], np.nan)
-    city_indicators_df = city_indicators_df.replace({np.nan: None})
-    city_indicators_df = city_indicators_df.replace({-9999: None})
-
-    # Prepare the geometry data
-    city_geometry_df = city_geometry_df[
-        [
-            "geo_id",
-            "geo_name",
-            "geo_level",
-            "geo_parent_name",
-            "geo_version",
-        ]
-    ]
-
-    for indicator_name in indicator_columns:
-        unit = indicators_dict[indicator_name].get("unit", "")
-
-        # Use apply to format each value in the column with the unit_formatter method
-        city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
-            lambda value, unit=unit: (
-                unit_formatter(value, "" if value == None else unit)
-                if pd.notna(value)
-                else ""
-            )
-        )
-
-    # Merge geometry and indicators
-    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
-
-    table_data = city_gdf.to_dict(orient="records")
-
-    # Return the final result with bounding box included
-    return table_data
-
-
-def process_special_indicators(
-    city_id: str, indicator_id: str, table_name: str, admin_level: Optional[str]
-):
-    """
-    Processes and formats special indicator data for a city based on its ID, indicator ID,
-    and administrative level.
-
-    Args:
-        city_id (str): The ID of the city for which the special indicator is being retrieved.
-        indicator_id (str): The ID of the specific indicator to process.
-        table_name (str): The name of the table to query for the special indicator data.
-        admin_level (Optional[str]): The administrative level to filter the data by.
-
-    Returns:
-        dict: A dictionary containing formatted special indicator data, with units applied
-        where applicable.
-    """
-    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
-    query = (
-        f"SELECT * FROM {table_name} WHERE geo_name = '{city_id}' {geo_level_filter}"
-    )
-    indicator_filter_formula = generate_search_query("id", indicator_id)
-
-    # Fetch data concurrently for geometry, indicators, and all indicators metadata
-    with ThreadPoolExecutor() as executor:
-        futures = {
-            "special_indicator": executor.submit(
-                query_carto,
-                query,
-            ),
-            "first_indicator": executor.submit(
-                fetch_first_indicator, indicator_filter_formula
-            ),
-        }
-
-        # Retrieve results and handle potential errors
-        special_indicator_df = futures["special_indicator"].result()
-        special_indicator_df = special_indicator_df.drop(
-            columns=["cartodb_id", "the_geom", "geo_name"]
-        )
-        first_indicator_df = futures["first_indicator"].result()
-
-    special_indicator_df = special_indicator_df.replace({-9999: None})
-    unit = first_indicator_df["fields"].get("unit", "")
-    if "value" in special_indicator_df.columns:
-        # Use apply to format each value in the column with the unit_formatter method
-        special_indicator_df["value"] = special_indicator_df["value"].apply(
-            lambda value: unit_formatter(value, unit) if pd.notna(value) else ""
-        )
-
-    table_data = special_indicator_df.to_dict(orient="records")
-
-    return table_data
-
-
 def get_city_geometry_with_indicators(
     city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
 ) -> Optional[Dict]:
@@ -397,6 +246,25 @@ def get_city_geometry_with_indicators(
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
+
+    table_name = None
+    if indicator_id == "AQ_1_airPollution":
+        table_name = "indicators_aq_1"
+    elif indicator_id == "AQ_2_exceedancedays_atleastone":
+        table_name = "indicators_aq_2"
+    elif indicator_id == "GHG_1_ghg_emissions":
+        table_name = "indicators_ghg_1"
+
+    if table_name:
+        return process_special_indicators(
+            city_id=city_id,
+            indicator_id=indicator_id,
+            admin_level=admin_level,
+            table_name=table_name,
+        )
+    elif admin_level is None:
+        admin_level = "subcity_admin_level"
+
     # Fetch city details and handle missing city data
     airtable_city = fetch_first_city(generate_search_query("id", city_id))
     if not airtable_city:
@@ -494,6 +362,116 @@ def get_city_geometry_with_indicators(
         "bbox": bounding_box_coordinates,
         **city_geojson,
     }
+
+
+def process_normal_indicators(
+    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
+):
+    """
+    Processes normal indicators for a city by formatting and applying units to the indicator values.
+
+    Args:
+        city_id (str): The ID of the city to retrieve indicator data for.
+        admin_level (Optional[str]): The administrative level to filter the data by. Defaults to 'subcity_admin_level' if not provided.
+        indicator_id (Optional[str]): The ID of the specific indicator to process. If not provided, all available indicators are fetched.
+
+    Returns:
+        list: A list of dictionaries representing the formatted city geometry and indicator data with units.
+    """
+    if admin_level is None:
+        admin_level = "subcity_admin_level"
+
+    # Fetch city details and handle missing city data
+    airtable_city = fetch_first_city(generate_search_query("id", city_id))
+    if not airtable_city:
+        return None
+
+    # Use the provided admin_level or fallback to the city's or subcity's admin_level
+    admin_level = airtable_city["fields"].get(admin_level, admin_level)
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    indicator_filter = f"AND indicator = '{indicator_id}'" if indicator_id else ""
+
+    # Fetch data concurrently for geometry, indicators, and all indicators metadata
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            "geometry": executor.submit(
+                query_carto,
+                f"SELECT * FROM boundaries WHERE geo_parent_name = '{city_id}' {geo_level_filter}",
+            ),
+            "indicators": executor.submit(
+                query_carto,
+                f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
+            ),
+        }
+
+        # Retrieve results and handle potential errors
+        city_geometry_df = futures["geometry"].result()
+        city_indicators_df = futures["indicators"].result()
+
+    # Handle empty results
+    if city_geometry_df.empty or city_indicators_df.empty:
+        return None
+
+    city_indicators_df = city_indicators_df.pivot(
+        index="geo_id", columns="indicator", values="value"
+    )
+    city_indicators_df = city_indicators_df.replace([np.inf, -np.inf], np.nan)
+    city_indicators_df = city_indicators_df.replace({np.nan: None})
+    city_indicators_df = city_indicators_df.replace({-9999: None})
+
+    # Prepare the geometry data
+    city_geometry_df = city_geometry_df[
+        [
+            "geo_id",
+            "geo_name",
+            "geo_level",
+            "geo_parent_name",
+            "geo_version",
+        ]
+    ]
+
+    # Merge geometry and indicators
+    city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
+
+    table_data = city_gdf.to_dict(orient="records")
+
+    # Return the final result with bounding box included
+    return table_data
+
+
+def process_special_indicators(
+    city_id: str, indicator_id: str, table_name: str, admin_level: Optional[str]
+):
+    """
+    Processes and formats special indicator data for a city based on its ID, indicator ID,
+    and administrative level.
+
+    Args:
+        city_id (str): The ID of the city for which the special indicator is being retrieved.
+        indicator_id (str): The ID of the specific indicator to process.
+        table_name (str): The name of the table to query for the special indicator data.
+        admin_level (Optional[str]): The administrative level to filter the data by.
+
+    Returns:
+        dict: A dictionary containing formatted special indicator data, with units applied
+        where applicable.
+    """
+    geo_level_filter = f"AND geo_level = '{admin_level}'" if admin_level else ""
+    query = (
+        f"SELECT * FROM {table_name} WHERE geo_name = '{city_id}' {geo_level_filter}"
+    )
+
+    # Fetch data special indicators
+    special_indicator_df = query_carto(query)
+    special_indicator_df = special_indicator_df.drop(
+        columns=["cartodb_id", "the_geom", "geo_name"]
+    )
+
+    special_indicator_df = special_indicator_df.replace({-9999: None})
+
+    table_data = special_indicator_df.to_dict(orient="records")
+
+    return table_data
 
 
 def get_city_geometry_with_indicators_csv(
