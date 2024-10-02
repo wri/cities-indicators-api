@@ -28,6 +28,12 @@ set_default_credentials(
     username=settings.carto_username, api_key=settings.carto_api_key
 )
 
+SPECIAL_INDICATOR_TABLES = {
+    "AQ_1_airPollution": "indicators_aq_1",
+    "AQ_2_exceedancedays_atleastone": "indicators_aq_2",
+    "GHG_1_ghg_emissions": "indicators_ghg_1",
+}
+
 
 def list_indicators(
     project: Optional[str] = None, city_id: Optional[List[str]] = None
@@ -234,6 +240,92 @@ def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
     }
 
 
+def _calculate_total_reduction_percent(city_indicator):
+    """Calculates the total reduction percentage for special indicators."""
+    year_sums = {}
+    for feature in city_indicator["features"]:
+        year = feature["properties"]["year"]
+        value = feature["properties"]["value"]
+        year_sums[year] = year_sums.get(year, 0) + value
+
+    min_year = min(year_sums.keys())
+    max_year = max(year_sums.keys())
+    sum_min_year = year_sums[max_year]
+    sum_max_year = year_sums[min_year]
+
+    return (
+        ((sum_min_year - sum_max_year) / sum_min_year) * 100 if sum_min_year != 0 else 0
+    )
+
+
+def _fetch_and_process_data(indicator_id: str, city_id: str):
+    """Fetches and pre-processes data for both normal and special indicators."""
+    table_name = SPECIAL_INDICATOR_TABLES.get(indicator_id)
+    query = (
+        f"SELECT * FROM {table_name} WHERE geo_name = '{city_id}'"
+        if table_name
+        else f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' AND geo_name = '{city_id}'"
+    )
+
+    with ThreadPoolExecutor() as executor:
+        fetch_cities_future = executor.submit(fetch_cities)
+        fetch_indicators_future = executor.submit(fetch_indicators)
+        query_carto_future = executor.submit(query_carto, query)
+
+        all_cities = fetch_cities_future.result()
+        all_indicators = fetch_indicators_future.result()
+        city_indicator_df = query_carto_future.result()
+
+    return city_indicator_df, all_cities, all_indicators
+
+
+def _format_indicator_data(
+    city_indicator_df, all_cities, all_indicators, indicator_id, city_id, table_name
+):
+    """Formats the indicator data based on its type."""
+    if city_indicator_df.empty:
+        return {}
+
+    cities_dict = {city["fields"]["id"]: city["fields"] for city in all_cities}
+    indicators_dict = {
+        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
+    }
+
+    if not table_name:
+        city_indicator_df["creation_date"] = city_indicator_df[
+            "creation_date"
+        ].dt.strftime("%Y-%m-%d")
+    else:
+        city_indicator_df["city_id"] = cities_dict[city_id]["id"]
+        city_indicator_df["indicator"] = indicator_id
+
+    special_indicator_value = None
+    if table_name == "indicators_aq_2":
+        special_indicator_value = int(city_indicator_df["fine_particulate_matter"][0])
+
+    city_indicator_df["unit"] = indicators_dict[indicator_id].get("unit", "").strip()
+    city_indicator_df["city_name"] = cities_dict[city_id]["name"]
+    city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
+    city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
+
+    city_indicator = json.loads(city_indicator_df.to_json())
+    if table_name in ["indicators_aq_1", "indicators_ghg_1"]:
+        special_indicator_value = _calculate_total_reduction_percent(city_indicator)
+
+    city_indicator = city_indicator["features"][0]["properties"]
+
+    response = {
+        key: city_indicator.get(key)
+        for key in CITY_INDICATORS_RESPONSE_KEYS
+        if key in city_indicator
+    }
+
+    if special_indicator_value is not None:
+        response["value"] = special_indicator_value
+
+    return response
+
+
 def get_city_indicator_by_indicator_id_and_city_id(
     indicator_id: str, city_id: str
 ) -> Dict:
@@ -246,58 +338,20 @@ def get_city_indicator_by_indicator_id_and_city_id(
 
     Returns:
         Dict: A dictionary containing the indicator data for the specified city.
-
     """
-    indicator_table_name = None
-    if indicator_id == "AQ_1_airPollution":
-        indicator_table_name = "indicators_aq_1"
-    elif indicator_id == "AQ_2_exceedancedays_atleastone":
-        indicator_table_name = "indicators_aq_2"
-    elif indicator_id == "GHG_1_ghg_emissions":
-        indicator_table_name = "indicators_ghg_1"
-    
-    if indicator_table_name:
-        query = f"SELECT * FROM {indicator_table_name} WHERE geo_name = '{city_id}'"
-    else:
-        query = f"SELECT *, geo_name as city_id FROM indicators WHERE indicator = '{indicator_id}' AND geo_name = '{city_id}'"
-    
 
-    with ThreadPoolExecutor() as executor:
-        # Run fetch_indicators and query_carto in parallel
-        fetch_cities_future = executor.submit(fetch_cities)
-        fetch_indicators_future = executor.submit(fetch_indicators)
-        query_carto_future = executor.submit(
-            query_carto,
-            query,
-        )
+    (
+        city_indicator_df,
+        all_cities,
+        all_indicators,
+    ) = _fetch_and_process_data(indicator_id, city_id)
 
-        # Get results
-        all_cities = fetch_cities_future.result()
-        all_indicators = fetch_indicators_future.result()
-        city_indicator_df = query_carto_future.result()
-
-    if city_indicator_df.empty:
-        return {}
-
-    cities_dict = {city["fields"]["id"]: city["fields"] for city in all_cities}
-    indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
-    }
-
-    if not indicator_table_name:
-        city_indicator_df["creation_date"] = city_indicator_df["creation_date"].dt.strftime(
-            "%Y-%m-%d"
-        )
-    
-    city_indicator_df["unit"] = indicators_dict[indicator_id].get("unit", None)
-    city_indicator_df["city_name"] = cities_dict[city_id]["name"]
-    city_indicator_df["country_name"] = cities_dict[city_id]["country_name"]
-    city_indicator_df["country_code_iso3"] = cities_dict[city_id]["country_code_iso3"]
-    city_indicator = json.loads(city_indicator_df.to_json())
-    city_indicator = city_indicator["features"][0]["properties"]
-
-    return {
-        key: city_indicator[key]
-        for key in CITY_INDICATORS_RESPONSE_KEYS
-        if key in city_indicator
-    }
+    table_name = SPECIAL_INDICATOR_TABLES.get(indicator_id)
+    return _format_indicator_data(
+        city_indicator_df,
+        all_cities,
+        all_indicators,
+        indicator_id,
+        city_id,
+        table_name,
+    )
