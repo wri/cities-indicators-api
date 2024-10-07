@@ -8,14 +8,10 @@ from cartoframes.auth import set_default_credentials
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities, fetch_first_city
-from app.repositories.indicators_repository import (
-    fetch_first_indicator,
-    fetch_indicators,
-)
+from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.projects_repository import fetch_projects
 from app.utils.carto import query_carto
 from app.utils.filters import construct_filter_formula, generate_search_query
-from app.utils.formatters import unit_formatter
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -247,6 +243,26 @@ def get_city_geometry_with_indicators(
     Returns:
         Dict: A GeoJSON dictionary representing the city's geometry along with its indicators and bounding boxes.
     """
+
+    table_name = None
+    if indicator_id == "AQ_1_airPollution":
+        table_name = "indicators_aq_1"
+    elif indicator_id == "AQ_2_exceedancedays_atleastone":
+        table_name = "indicators_aq_2"
+    elif indicator_id == "GHG_1_ghg_emissions":
+        table_name = "indicators_ghg_1"
+
+    if table_name:
+        return process_special_indicators(
+            city_id=city_id,
+            indicator_id=indicator_id,
+            admin_level=admin_level,
+            table_name=table_name,
+        )
+    
+    if admin_level is None:
+        admin_level = "subcity_admin_level"
+
     # Fetch city details and handle missing city data
     airtable_city = fetch_first_city(generate_search_query("id", city_id))
     if not airtable_city:
@@ -384,24 +400,16 @@ def process_normal_indicators(
                 query_carto,
                 f"SELECT geo_id, indicator, value FROM indicators WHERE geo_parent_name = '{city_id}' {indicator_filter} {geo_level_filter} AND indicator_version = 0",
             ),
-            "all_indicators": executor.submit(fetch_indicators),
         }
 
         # Retrieve results and handle potential errors
         city_geometry_df = futures["geometry"].result()
         city_indicators_df = futures["indicators"].result()
-        all_indicators = futures["all_indicators"].result()
 
     # Handle empty results
     if city_geometry_df.empty or city_indicators_df.empty:
         return None
 
-    # Prepare the indicators data and merge with unit information
-    indicators_dict = {
-        indicator["fields"]["id"]: indicator["fields"] for indicator in all_indicators
-    }
-
-    indicator_columns = city_indicators_df["indicator"].unique()
     city_indicators_df = city_indicators_df.pivot(
         index="geo_id", columns="indicator", values="value"
     )
@@ -419,18 +427,6 @@ def process_normal_indicators(
             "geo_version",
         ]
     ]
-
-    for indicator_name in indicator_columns:
-        unit = indicators_dict[indicator_name].get("unit", "")
-
-        # Use apply to format each value in the column with the unit_formatter method
-        city_indicators_df[indicator_name] = city_indicators_df[indicator_name].apply(
-            lambda value, unit=unit: (
-                unit_formatter(value, "" if value == None else unit)
-                if pd.notna(value)
-                else ""
-            )
-        )
 
     # Merge geometry and indicators
     city_gdf = pd.merge(city_geometry_df, city_indicators_df, on="geo_id")
@@ -462,34 +458,14 @@ def process_special_indicators(
     query = (
         f"SELECT * FROM {table_name} WHERE geo_name = '{city_id}' {geo_level_filter}"
     )
-    indicator_filter_formula = generate_search_query("id", indicator_id)
 
-    # Fetch data concurrently for geometry, indicators, and all indicators metadata
-    with ThreadPoolExecutor() as executor:
-        futures = {
-            "special_indicator": executor.submit(
-                query_carto,
-                query,
-            ),
-            "first_indicator": executor.submit(
-                fetch_first_indicator, indicator_filter_formula
-            ),
-        }
-
-        # Retrieve results and handle potential errors
-        special_indicator_df = futures["special_indicator"].result()
-        special_indicator_df = special_indicator_df.drop(
-            columns=["cartodb_id", "the_geom", "geo_name"]
-        )
-        first_indicator_df = futures["first_indicator"].result()
+    # Fetch data special indicators
+    special_indicator_df = query_carto(query)
+    special_indicator_df = special_indicator_df.drop(
+        columns=["cartodb_id", "the_geom", "geo_name"]
+    )
 
     special_indicator_df = special_indicator_df.replace({-9999: None})
-    unit = first_indicator_df["fields"].get("unit", "")
-    if "value" in special_indicator_df.columns:
-        # Use apply to format each value in the column with the unit_formatter method
-        special_indicator_df["value"] = special_indicator_df["value"].apply(
-            lambda value: unit_formatter(value, unit) if pd.notna(value) else ""
-        )
 
     table_data = special_indicator_df.to_dict(orient="records")
 
