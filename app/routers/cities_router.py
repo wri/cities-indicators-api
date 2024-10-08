@@ -1,10 +1,10 @@
+import csv
+import io
 import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
-import csv
-import io
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -239,7 +239,6 @@ def get_city_geometry_with_indicators_csv(
     admin_level: Optional[str] = Query(None),
 ):
     """
-    Retrieve a city's geometry and its associated indicators as a CSV file.
 
     This endpoint generates and returns a CSV file containing geometric data and selected indicators for a specified city. The CSV includes filtered information based on the administrative level and indicator ID provided.
 
