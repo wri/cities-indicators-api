@@ -73,6 +73,7 @@ INDICATORS_METADATA_RESPONSE_KEYS = [
     "methods",
     "importance",
     "data_sources",
+    "cif_metric_name",
 ]
 
 # Common HTTP responses
