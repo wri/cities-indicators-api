@@ -22,7 +22,7 @@ set_default_credentials(
 
 
 @sleep_and_retry
-@limits(calls=4, period=1)
+@limits(calls=10, period=1)
 def query_carto(query: str, retries=6, backoff_factor=2):
     last_exception = None
     for attempt in range(retries):
