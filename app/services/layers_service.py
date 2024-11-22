@@ -1,4 +1,5 @@
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.repositories.cities_repository import fetch_first_city
@@ -54,6 +55,9 @@ def get_city_layer(city_id: str, layer_id: str):
         f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
         f".{layer_fields['file_type']}"
     )
+    pmtiles_layer_url = None
+    if layer_fields['layer_type'] == 'vector':
+        pmtiles_layer_url = f'{os.path.splitext(layer_url)[0]}.pmtiles'
 
     try:
         map_styling = json.loads(layer_fields["map_styling"])
@@ -61,8 +65,7 @@ def get_city_layer(city_id: str, layer_id: str):
     except json.JSONDecodeError:
         map_styling = {}
         legend_styling = {}
-
-    return {
+    return_dict = {
         "city_id": city_id,
         "layer_id": layer_id,
         "layer_url": layer_url,
@@ -70,3 +73,6 @@ def get_city_layer(city_id: str, layer_id: str):
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
+    if layer_fields['layer_type'] == 'vector':
+        return_dict['pmtiles_layer_url'] = pmtiles_layer_url
+    return return_dict
