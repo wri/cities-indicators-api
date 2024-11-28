@@ -111,6 +111,9 @@ def get_city_by_city_id(
     if not city:
         raise HTTPException(status_code=404, detail="No city found")
 
+    city["indicators-pmtiles-url"] = (
+        f"https://cities-indicators.s3.amazonaws.com/data-pmtiles/{city_id}.pmtiles"
+    )
     return city
 
 
