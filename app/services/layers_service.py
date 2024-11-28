@@ -61,7 +61,6 @@ def get_city_layer(city_id: str, layer_id: str):
     except json.JSONDecodeError:
         map_styling = {}
         legend_styling = {}
-    print(layer_fields)
     return {
         "city_id": city_id,
         "layer_id": layer_id,
