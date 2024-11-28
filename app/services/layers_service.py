@@ -65,8 +65,8 @@ def get_city_layer(city_id: str, layer_id: str):
         "city_id": city_id,
         "layer_id": layer_id,
         "layer_url": layer_url,
-        "class_name": layer_fields["cif_class_name"],
-        "file_type": layer_fields["file_type"],
+        "class_name": layer_fields.get("cif_class_name"),
+        "file_type": layer_fields.get("file_type"),
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
