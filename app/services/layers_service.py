@@ -55,10 +55,6 @@ def get_city_layer(city_id: str, layer_id: str):
         f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
         f".{layer_fields['file_type']}"
     )
-    pmtiles_layer_url = None
-    if layer_fields['layer_type'] == 'vector':
-        pmtiles_layer_url = f'{os.path.splitext(layer_url)[0]}.pmtiles'
-
     try:
         map_styling = json.loads(layer_fields["map_styling"])
         legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
@@ -73,6 +69,6 @@ def get_city_layer(city_id: str, layer_id: str):
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
-    if layer_fields['layer_type'] == 'vector':
-        return_dict['pmtiles_layer_url'] = pmtiles_layer_url
+    if layer_fields["layer_type"] == "vector":
+        return_dict["pmtiles_layer_url"] = f"{os.path.splitext(layer_url)[0]}.pmtiles"
     return return_dict
