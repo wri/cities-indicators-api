@@ -67,9 +67,11 @@ def get_city_layer(city_id: str, layer_id: str):
         "layer_url": layer_url,
         "class_name": layer_fields.get("cif_class_name"),
         "file_type": layer_fields.get("file_type"),
+        "source_layer_id": layer_fields.get("source_layer_id"),
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
     if layer_fields["layer_type"] == "vector":
         return_dict["pmtiles_layer_url"] = f"{os.path.splitext(layer_url)[0]}.pmtiles"
+
     return return_dict
