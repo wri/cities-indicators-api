@@ -3,7 +3,8 @@ runtime: python3
 build:
   commands:
     pre-build:
-      - yum install libgdal-dev
+      - yum --version || echo "yum not found"
+      - yum search gdal || echo "gdal not found"
     build:
       - pip install pipenv
       - pipenv install --deploy --ignore-pipfile --system
