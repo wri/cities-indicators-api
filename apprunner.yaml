@@ -1,0 +1,23 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    pre-build:
+      - yum install libgdal-dev
+    build:
+      - pip install pipenv
+      - pipenv install --deploy --ignore-pipfile --system
+run:
+  runtime-version: 3.10
+  command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+    env: MY_APP_PORT
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: CORS_ORIGINS
+      value: "localhost"
+  secrets:
+    - name: CITIES_API_AIRTABLE_KEY
+      value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:CITIES_API_AIRTABLE_KEY-rdmImu"
