@@ -7,7 +7,7 @@ build:
       - yum search gdal || echo "gdal not found"
     build:
       - pip install pipenv
-      - pipenv install --deploy --ignore-pipfile --system
+      - pipenv install --deploy --ignore-pipfile
 run:
   command: uvicorn app.main:app --host 0.0.0.0 --port 8000
   network:
@@ -16,8 +16,8 @@ run:
   env:
     - name: PYTHONUNBUFFERED
       value: "1"
-    - name: CORS_ORIGINS
-      value: "localhost"
+    - name: cors_origins
+      value: '["localhost"]'
   secrets:
     - name: CITIES_API_AIRTABLE_KEY
       value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:CITIES_API_AIRTABLE_KEY-rdmImu"
