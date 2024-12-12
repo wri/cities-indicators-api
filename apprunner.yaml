@@ -18,7 +18,7 @@ run:
     - name: PYTHONUNBUFFERED
       value: "1"
     - name: cors_origins
-      value: '["localhost"]'
+      value: '["*"]'
   secrets:
-    - name: CITIES_API_AIRTABLE_KEY
+    - name: cities_api_airtable_key
       value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:CITIES_API_AIRTABLE_KEY-rdmImu"
