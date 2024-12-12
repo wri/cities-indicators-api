@@ -12,13 +12,13 @@ Docs: [http://44.201.179.158/docs](http://44.201.179.158/docs)
         ```sh
         pip install pipenv
         ```
-    2. Install the project dependencies:
-        ```sh
-        pipenv install
-        ```
-    3. Activate the virtual environment:
+    2. Activate the virtual environment:
         ```sh
         pipenv shell
+        ```
+    3. Install the project dependencies:
+        ```sh
+        pipenv install
         ```
     4. Run the server:
         ```sh
