@@ -21,4 +21,4 @@ run:
       value: '["*"]'
   secrets:
     - name: cities_api_airtable_key
-      value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:CITIES_API_AIRTABLE_KEY-rdmImu"
+      value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:airtable-api-key-value-ogq3dA"
