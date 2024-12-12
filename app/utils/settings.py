@@ -22,6 +22,5 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print(f"Loaded cities_api_airtable_key: {self.cities_api_airtable_key}")
         if not self.cities_api_airtable_key:
             raise ValueError("cities_api_airtable_key must be set")
