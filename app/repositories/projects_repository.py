@@ -9,6 +9,7 @@ from app.utils.settings import Settings
 settings = Settings()
 
 # Airtable tables
+print(f"Projects Repository - Loaded cities_api_airtable_key: {settings.cities_api_airtable_key}")
 airtable_api = Api(settings.cities_api_airtable_key)
 projects_table = airtable_api.table(settings.airtable_base_id, "Projects")
 
