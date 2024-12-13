@@ -1,15 +1,19 @@
-FROM python:3.10
+FROM python:3.11
 
-RUN apt-get update
-RUN apt-get install -y libgdal-dev
+RUN apt-get update && apt-get install -y libgdal-dev
 
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
+# Copy Pipfile and Pipfile.lock
+COPY ./Pipfile ./Pipfile.lock /code/
 
+# Install pipenv and use it to install dependencies globally
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install pipenv
+RUN pipenv install --deploy --ignore-pipfile --system
 
-COPY ./main.py /code/main.py
+# Copy the rest of the application code
+COPY ./ /code/
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

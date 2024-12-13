@@ -1,4 +1,0 @@
-cartoframes
-fastapi
-pyairtable
-uvicorn[standard]

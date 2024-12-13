@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Deploy over ssh
-      uses: appleboy/ssh-action@v1.0.0
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_IP }}
         username: ${{ secrets.EC2_USERNAME }}
@@ -25,5 +25,5 @@ jobs:
           git pull
           docker kill develop-container
           docker build . -t develop-image
-          docker run -d --rm -p 8000:8000 --env-file ../.env --name develop-container develop-image
+          docker run -d --rm -p 80:8000 --env-file ../.env --name develop-container develop-image
         
