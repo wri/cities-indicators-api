@@ -56,7 +56,7 @@ def list_indicators(
     if project:
         indicators_filters["projects"] = project
     if city_id:
-        indicators_filters["Cities 3"] = city_id
+        indicators_filters["cities"] = city_id
 
     indicators_filter_formula = construct_filter_formula(indicators_filters)
 
@@ -115,11 +115,15 @@ def list_indicators(
         indicator["city_ids"] = [
             cities_dict[city_id]
             for city_id in cities_dict.keys()
-            if city_id in indicator.get("Cities 3", [])
+            if city_id in indicator.get("cities", [])
         ]
         indicators.append(
             {
-                key: indicator[key]
+                key: (
+                    json.loads(indicator[key])
+                    if key.endswith("styling")
+                    else indicator[key]
+                )
                 for key in INDICATORS_LIST_RESPONSE_KEYS
                 if key in indicator
             }
