@@ -2,7 +2,10 @@
 
 FastAPI connected to Airtable & Carto
 
-Docs: [http://44.201.179.158/docs](http://44.201.179.158/docs)
+Docs: 
+- [Production Environment](https://xpakp4mkpz.us-east-1.awsapprunner.com)
+- [Development Environment](https://sn3rgxtgsn.us-east-1.awsapprunner.com)
+
 
 ## Local Development Setup
 
@@ -43,9 +46,9 @@ Docs: [http://44.201.179.158/docs](http://44.201.179.158/docs)
 
 ## Deployment
 
-The API is deployed to [https://citiesapi-1-x4387694.deta.app/](https://citiesapi-1-x4387694.deta.app/). We followed this tutorial to get it working: [FastAPI Deta Deployment](https://fastapi.tiangolo.com/deployment/deta/).
-
-If you want to deploy your own copy, follow the instructions starting at [Create a Free Deta Space Account](https://fastapi.tiangolo.com/deployment/deta/#create-a-free-deta-space-account). You will also need to add the `CITIES_API_AIRTABLE_KEY` and `CORS_ORIGINS` environment variables to the app settings under Settings > Configuration.
+The API is deployed via AWS App Runner.
+- Deployments to the development environment happen when any changes to the `develop` branch occur.
+- Deployments to the production environment happen when manually forcing a deployment of the `main` branch using the AWS App Runner console.
 
 ## Best Practices
 
