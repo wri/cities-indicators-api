@@ -1,5 +1,6 @@
 version: 1.0
-runtime: python311
+#runtime: python311
+runtime: python3
 build:
   commands:
     pre-build:
@@ -9,7 +10,8 @@ build:
       - pip3 install pipenv
       - pipenv install --deploy --ignore-pipfile --system
 run:
-  runtime-version: 3.11
+#  runtime-version: 3.11
+  runtime-version: 3.8.20
   pre-run:
     - pip3 install pipenv
     - pipenv install --deploy --ignore-pipfile --system
