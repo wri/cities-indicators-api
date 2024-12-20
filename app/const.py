@@ -11,6 +11,7 @@ CITY_RESPONSE_KEYS = [
     "latitude",
     "longitude",
     "projects",
+    "bbox",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",

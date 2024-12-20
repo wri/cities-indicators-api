@@ -106,6 +106,9 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
         return None
 
     city = city_data[0]["fields"]
+    geometry = get_city_geometry(city["id"], city["city_admin_level"])
+    city["bbox"] = geometry["bbox"]
+
     project_filter_formula = construct_filter_formula({"cities": [city_id]})
 
     # Asynchronously fetch all projects related to the city
@@ -259,7 +262,7 @@ def get_city_geometry_with_indicators(
             admin_level=admin_level,
             table_name=table_name,
         )
-    
+
     if admin_level is None:
         admin_level = "subcity_admin_level"
 
