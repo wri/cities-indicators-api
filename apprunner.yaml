@@ -1,7 +1,10 @@
 version: 1.0
 runtime: python311
-#build:
-#  commands:
+build:
+  commands:
+    build:
+      - pip3 install pipenv
+      - pipenv install --deploy --ignore-pipfile --system
 #    pre-build:
 #      - yum --version || echo "yum not found"
 #      - yum search gdal || echo "gdal not found"
