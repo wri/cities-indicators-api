@@ -58,9 +58,34 @@ def list_cities(
     # Return empty list if no cities found
     if not cities_list:
         return []
+    cdict = {
+        city["fields"]["id"]: {"admin_level": city["fields"]["city_admin_level"]}
+        for city in cities_list
+    }
+    cl = [city["fields"]["id"] for city in cities_list]
+    cls = "','".join(cl)
+    cls = f"('{cls}')"
+    cg_df = query_carto(
+        f"SELECT * FROM boundaries WHERE geo_parent_name in {cls}"
+    ).copy()
+    row_drop_list = []
+    for index, row in cg_df.iterrows():
+        if (
+            str(row["geo_parent_name"]) not in cdict
+            or row["geo_level"] != cdict[row["geo_parent_name"]]["admin_level"]
+        ):
+            row_drop_list.append(index)
+
+    cg_df.drop(axis=0, index=row_drop_list, inplace=True)
+    cg_df.loc[:, "bbox"] = cg_df["the_geom"].apply(lambda geom: geom.bounds)
+
+    for index, row in cg_df.iterrows():
+        cdict[row["geo_parent_name"]]["bbox"] = row["bbox"]
 
     # Update project IDs in each city to reflect active projects
     for city in cities_list:
+        if "bbox" in cdict[city["fields"]["id"]]:
+            city["fields"]["bbox"] = cdict[city["fields"]["id"]]["bbox"]
         city_projects = [
             active_project_ids[project]
             for project in city["fields"]["projects"]
