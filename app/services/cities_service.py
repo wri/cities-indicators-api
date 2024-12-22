@@ -132,7 +132,8 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
 
     city = city_data[0]["fields"]
     geometry = get_city_geometry(city["id"], city["city_admin_level"])
-    city["bbox"] = geometry["bbox"]
+    if geometry and "bbox" in geometry:
+        city["bbox"] = geometry["bbox"]
 
     project_filter_formula = construct_filter_formula({"cities": [city_id]})
 
