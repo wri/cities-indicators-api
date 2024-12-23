@@ -86,9 +86,7 @@ def list_indicators(
     projects_dict = {
         project["id"]: project["fields"]["id"] for project in results["projects"]
     }
-    layers_dict = {
-        layer["fields"]["id"]: layer["fields"] for layer in results["layers"]
-    }
+    layers_dict = {layer["id"]: layer["fields"] for layer in results["layers"]}
 
     # Format the output
     indicators = []
@@ -108,8 +106,8 @@ def list_indicators(
                 "legend": layers_dict[layer_id].get("layer_legend", ""),
                 "name": layers_dict[layer_id]["layer_name"],
             }
-            for layer_id in indicator.get("layer_id", [])
-            if isinstance(indicator.get("layer_id"), list)
+            for layer_id in indicator.get("layers", [])
+            if isinstance(indicator.get("layers"), list)
             and layer_id in layers_dict.keys()
         ]
         indicator["city_ids"] = [
