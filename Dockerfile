@@ -1,19 +1,27 @@
+# Python 3.11 base image
 FROM python:3.11
 
-RUN apt-get update && apt-get install -y libgdal-dev
+# Wor directory
+WORKDIR /app
 
-WORKDIR /code
+# Install pipenv
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install pipenv
 
 # Copy Pipfile and Pipfile.lock
-COPY ./Pipfile ./Pipfile.lock /code/
+COPY Pipfile Pipfile.lock ./
 
-# Install pipenv and use it to install dependencies globally
-RUN pip install --upgrade pip
-RUN pip install pipenv
+# Install dependencies
 RUN pipenv install --deploy --ignore-pipfile --system
 
-# Copy the rest of the application code
-COPY ./ /code/
+# Install o boto3
+RUN pipenv install boto3
 
-# Run Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy source code
+COPY . .
+
+# Copy script to load the AWS secret
+COPY fetch_secret.py /app/fetch_secret.py
+
+# Exceute script
+CMD ["python3", "/app/fetch_secret.py", "&&", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
