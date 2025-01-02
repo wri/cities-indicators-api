@@ -34,11 +34,11 @@ jobs:
       - name: Build Docker image
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          docker build -t $REPOSITORY_NAME:latest .
-          docker tag $REPOSITORY_NAME:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/$REPOSITORY_NAME:latest
+          docker build -t ${REPOSITORY_NAME}-img:latest .
+          docker tag ${REPOSITORY_NAME}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
 
       # Push to ECR
       - name: Push to AWS ECR
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/$REPOSITORY_NAME:latest
+          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
