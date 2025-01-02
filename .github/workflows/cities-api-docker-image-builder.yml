@@ -1,0 +1,44 @@
+name: Cities API Image Builder
+
+on:
+  push:
+    branches:
+      - ccl-develop
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Login to AWS ECR
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::540362055257:role/GitHubActionsOIDC
+          aws-region: us-east-1
+
+      # AWS ECR Login
+      - name: ECR Login
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 540362055257.dkr.ecr.us-east-1.amazonaws.com
+
+      # Docker Image Build
+      - name: Build Docker image
+        run: |
+          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          docker build -t $REPOSITORY_NAME:latest .
+          docker tag my-image:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/$REPOSITORY_NAME:latest
+
+      # Push to ECR
+      - name: Push to AWS ECR
+        run: |
+          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/$REPOSITORY_NAME:latest
