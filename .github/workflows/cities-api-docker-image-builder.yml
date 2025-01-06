@@ -70,10 +70,9 @@ jobs:
         run: |
           aws apprunner update-service \
             --service-arn arn:aws:apprunner:us-east-1:540362055257:service/cities-api-app-runner-service-Docker/ce42838cdd6c4764991c775f2a13141f \
-            --source-configuration '{"ImageRepository": {"ImageIdentifier: "540362055257.dkr.ecr.us-east-1.amazonaws.com/cities-indicators-api-img:latest", "ImageRepositoryType": "ECR"}}' \
+            --source-configuration '{"ImageRepository": {"ImageIdentifier": "540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest", "ImageRepositoryType": "ECR"}}' \
             --region us-east-1
-          echo "Deployment initiated to App Runner"
-      
+
       # App Runner URL
       - name: App Runner URL
         run: echo "App runner URL ${{ steps.deploy-apprunner.outputs.service-url }}" 
