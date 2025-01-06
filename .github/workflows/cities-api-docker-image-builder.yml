@@ -52,17 +52,35 @@ jobs:
           echo "AIRTABLE_BASE_ID=${{ vars.AIRTABLE_BASE_ID }}" >> $GITHUB_ENV
 
       # Deploy to AWS APP Runner
+#      - name: Deploy to App Runner
+#        id: deploy-apprunner
+#        uses: wri/cities-indicators-api@ccl-develop
+#        with:
+#          service: cities-api-app-runner-service-Docker 
+#          image: ${{ steps.build-image.outputs.image }}
+#          access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
+#          region: us-east-1
+#          cpu: 1
+#          memory: 2
+#          wait-for-service-stability-seconds: 1200
+
+      # Deploy to App Runner
       - name: Deploy to App Runner
         id: deploy-apprunner
-        uses: wri/cities-indicators-api@ccl-develop
-        with:
-          service: cities-api-app-runner-service-Docker 
-          image: ${{ steps.build-image.outputs.image }}
-          access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
-          region: us-east-1
-          cpu: 1
-          memory: 2
-          wait-for-service-stability-seconds: 1200
+        run: |
+          aws apprunner create-service \
+            --service-name cities-api-app-runner-service-Docker \
+            --image-uri 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest \
+            --instance-configuration cpu=1,memory=2 \
+            --auto-scaling-configuration-name develop-environment \
+            --network-configuration egress-type=DEFAULT \
+            --health-check-protocol TCP \
+            --health-check-port 8000 \
+            --health-check-timeout-seconds 5 \
+            --health-check-interval-seconds 10 \
+            --health-check-retries 5 \
+            --region us-east-1
+          echo "Deployment initiated to App Runner"
       
       # App Runner URL
       - name: App Runner URL
