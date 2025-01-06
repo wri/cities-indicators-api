@@ -5,7 +5,7 @@ on:
     branches:
       - ccl-develop
   workflow_dispatch:
-  
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -60,3 +60,12 @@ jobs:
       
       - name: App Runner URL
         run: echo "App runner URL ${{ steps.deploy-apprunner.outputs.service-url }}" 
+
+      # Cleanup Docker Image if Deploy Fails
+      - name: Cleanup Docker Image on Failure
+        if: failure()
+        run: |
+          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          IMAGE_TAG=540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
+          echo "Deleting Docker image from ECR: $IMAGE_TAG"
+          aws ecr batch-delete-image --repository-name ${REPOSITORY_NAME}-img --image-ids imageTag=latest --region us-east-1
