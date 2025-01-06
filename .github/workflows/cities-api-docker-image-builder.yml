@@ -19,6 +19,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Set Environment Variables
+      - name: Set environment variables
+        run: |
+          echo "CITIES_API_AIRTABLE_KEY=${{ secrets.CITIES_API_AIRTABLE_KEY }}" >> $GITHUB_ENV
+          echo "AIRTABLE_BASE_ID=${{ vars.AIRTABLE_BASE_ID }}" >> $GITHUB_ENV
+          echo "REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
+
       # OIDC Assume Role
       - name: OIDC Assume Role
         id: oidc-assume-role
@@ -35,22 +42,13 @@ jobs:
       - name: Build Docker image
         id: build-image
         run: |
-          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          docker build -t ${REPOSITORY_NAME}-img:latest .
-          docker tag ${REPOSITORY_NAME}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
-          echo "image=540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest" >> $GITHUB_ENV
+          docker build -t ${{ env.REPOSITORY_NAME }}-img:latest .
+          docker tag ${{ env.REPOSITORY_NAME }}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
 
       # Push to ECR
       - name: Push to AWS ECR
         run: |
-          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
-      
-      # Set Environment Variables
-      - name: Set environment variables
-        run: |
-          echo "CITIES_API_AIRTABLE_KEY=${{ secrets.CITIES_API_AIRTABLE_KEY }}" >> $GITHUB_ENV
-          echo "AIRTABLE_BASE_ID=${{ vars.AIRTABLE_BASE_ID }}" >> $GITHUB_ENV
+          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
 
       # Deploy to AWS APP Runner
       - name: Deploy to App Runner
@@ -58,7 +56,7 @@ jobs:
         uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: cities-api-app-runner-service-Docker 
-          image: ${{ env.image }}
+          image: 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
           access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
           region: us-east-1
           cpu: 1
@@ -70,6 +68,6 @@ jobs:
         if: failure()
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          IMAGE_TAG=540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
+          IMAGE_TAG=540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
           echo "Deleting Docker image from ECR: $IMAGE_TAG"
           aws ecr batch-delete-image --repository-name ${REPOSITORY_NAME}-img --image-ids imageTag=latest --region us-east-1
