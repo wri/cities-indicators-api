@@ -38,7 +38,7 @@ jobs:
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
           docker build -t ${REPOSITORY_NAME}-img:latest .
           docker tag ${REPOSITORY_NAME}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
-          echo "image=${REPOSITORY_NAME}-img:latest" >> $GITHUB_ENV
+          echo "image=540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest" >> $GITHUB_ENV
 
       # Push to ECR
       - name: Push to AWS ECR
@@ -58,7 +58,7 @@ jobs:
         uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: cities-api-app-runner-service-Docker 
-          image: ${{ env.image }}"
+          image: ${{ env.image }}
           access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
           region: us-east-1
           cpu: 1
