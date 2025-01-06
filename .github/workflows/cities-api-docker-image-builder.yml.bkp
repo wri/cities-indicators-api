@@ -38,32 +38,21 @@ jobs:
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
           docker build -t ${REPOSITORY_NAME}-img:latest .
           docker tag ${REPOSITORY_NAME}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
-          echo "image=${REPOSITORY_NAME}-img:latest" >> $GITHUB_ENV
 
       # Push to ECR
       - name: Push to AWS ECR
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
           docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${REPOSITORY_NAME}-img:latest
-      
-      # Set Environment Variables
-      - name: Set environment variables
-        run: |
-          echo "CITIES_API_AIRTABLE_KEY=${{ secrets.CITIES_API_AIRTABLE_KEY }}" >> $GITHUB_ENV
-          echo "AIRTABLE_BASE_ID=${{ vars.AIRTABLE_BASE_ID }}" >> $GITHUB_ENV
 
-      # Deploy to AWS APP Runner
+      # Deploy to App Runner
       - name: Deploy to App Runner
         id: deploy-apprunner
-        uses: awslabs/amazon-app-runner-deploy@main
-        with:
-          service: cities-api-app-runner-service-Docker 
-          image: ${{ env.image }}"
-          access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
-          region: us-east-1
-          cpu: 1
-          memory: 2
-          wait-for-service-stability-seconds: 1200
+        run: |
+          REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          aws apprunner start-deployment \
+            --service-arn arn:aws:apprunner:us-east-1:540362055257:service/cities-api-app-runner-service-Docker/ce42838cdd6c4764991c775f2a13141f \
+            --region us-east-1
 
       # Cleanup Docker Image if Deploy Fails
       - name: Cleanup Docker Image on Failure
