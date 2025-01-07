@@ -61,7 +61,7 @@ jobs:
           region: us-east-1
           cpu: 1
           memory: 2
-          wait-for-service-stability-seconds: 1200
+          wait-for-service-stability-seconds: 600
 
       # Cleanup Docker Image if Deploy Fails
       - name: Cleanup Docker Image on Failure
