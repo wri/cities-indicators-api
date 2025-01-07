@@ -3,8 +3,8 @@ runtime: python311
 build:
   commands:
     pre-build:
-      - yum --version || echo "yum not found"
-      - yum search gdal || echo "gdal not found"
+      - apt-get update && apt-get install -y libgdal-dev
+
 run:
   runtime-version: 3.11
   pre-run:
