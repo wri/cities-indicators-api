@@ -31,7 +31,7 @@ jobs:
         id: oidc-assume-role
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::540362055257:role/GitHubActionsOIDC
+          role-to-assume: ${{ vars.OIDC_ROLE }}
           aws-region: us-east-1
 
       # AWS ECR Login
@@ -47,6 +47,7 @@ jobs:
 
       # Push to ECR
       - name: Push to AWS ECR
+        id: push-image
         run: |
           docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
 
@@ -55,14 +56,13 @@ jobs:
         id: deploy-apprunner
         run: |
           aws apprunner start-deployment \
-            --service-arn arn:aws:apprunner:us-east-1:540362055257:service/cities-api-app-runner-service-Docker/ce42838cdd6c4764991c775f2a13141f \
+            --service-arn ${{ vars.SERVICE_ARN }} \
             --region us-east-1 \
             --no-paginate \
             --output json
 
-          SERVICE_ARN="arn:aws:apprunner:us-east-1:540362055257:service/cities-api-app-runner-service-Docker/ce42838cdd6c4764991c775f2a13141f"
-          aws apprunner describe-service --service-arn $SERVICE_ARN --region us-east-1 --query "Service.Status" --output text
-          while [ "$(aws apprunner describe-service --service-arn $SERVICE_ARN --region us-east-1 --query 'Service.Status' --output text)" != "RUNNING" ]; do
+          aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text
+          while [ "$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query 'Service.Status' --output text)" != "RUNNING" ]; do
             echo "Waiting for service to stabilize..."
             sleep 30
           done
@@ -70,6 +70,7 @@ jobs:
 
       # Cleanup Docker Image if Deploy Fails
       - name: Cleanup Docker Image on Failure
+        id: delete-image
         if: failure()
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
