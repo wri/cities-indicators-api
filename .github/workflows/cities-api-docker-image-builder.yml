@@ -57,7 +57,7 @@ jobs:
         with:
           service: cities-api-app-runner-service-Docker 
           image: 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
-          access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-for-github
+          access-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner-docker
           region: us-east-1
           cpu: 1
           memory: 2
