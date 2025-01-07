@@ -61,12 +61,19 @@ jobs:
             --no-paginate \
             --output json
 
-          aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text
-          while [ "$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query 'Service.Status' --output text)" != "RUNNING" ]; do
-            echo "Waiting for service to stabilize..."
+          SERVICE_STATUS=$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text)
+
+          while [ "$SERVICE_STATUS" != "RUNNING" ]; do
+            if [[ "$SERVICE_STATUS" == "FAILED" || "$SERVICE_STATUS" == "ROLLBACK_SUCCEEDED" ]]; then
+              echo "Deployment failed, exiting."
+              exit 1
+            fi
+            echo "Deployment in progress..."
             sleep 30
+            SERVICE_STATUS=$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text)
           done
-          echo "Service is stable."
+
+          echo "Deployment completed."
 
       # Cleanup Docker Image if Deploy Fails
       - name: Cleanup Docker Image on Failure
