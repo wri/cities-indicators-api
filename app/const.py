@@ -29,6 +29,8 @@ INDICATORS_LIST_RESPONSE_KEYS = [
     "themes",
     "layers",
     "unit",
+    "map_styling",
+    "legend_styling",
 ]
 DATASETS_LIST_RESPONSE_KEYS = [
     "id",

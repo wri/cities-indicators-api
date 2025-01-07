@@ -56,7 +56,7 @@ def list_indicators(
     if project:
         indicators_filters["projects"] = project
     if city_id:
-        indicators_filters["Cities 3"] = city_id
+        indicators_filters["cities"] = city_id
 
     indicators_filter_formula = construct_filter_formula(indicators_filters)
 
@@ -86,9 +86,7 @@ def list_indicators(
     projects_dict = {
         project["id"]: project["fields"]["id"] for project in results["projects"]
     }
-    layers_dict = {
-        layer["fields"]["id"]: layer["fields"] for layer in results["layers"]
-    }
+    layers_dict = {layer["id"]: layer["fields"] for layer in results["layers"]}
 
     # Format the output
     indicators = []
@@ -108,18 +106,22 @@ def list_indicators(
                 "legend": layers_dict[layer_id].get("layer_legend", ""),
                 "name": layers_dict[layer_id]["layer_name"],
             }
-            for layer_id in indicator.get("layer_id", [])
-            if isinstance(indicator.get("layer_id"), list)
+            for layer_id in indicator.get("layers", [])
+            if isinstance(indicator.get("layers"), list)
             and layer_id in layers_dict.keys()
         ]
         indicator["city_ids"] = [
             cities_dict[city_id]
             for city_id in cities_dict.keys()
-            if city_id in indicator.get("Cities 3", [])
+            if city_id in indicator.get("cities", [])
         ]
         indicators.append(
             {
-                key: indicator[key]
+                key: (
+                    json.loads(indicator[key])
+                    if key.endswith("styling")
+                    else indicator[key]
+                )
                 for key in INDICATORS_LIST_RESPONSE_KEYS
                 if key in indicator
             }
