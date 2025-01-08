@@ -1,10 +1,6 @@
-import csv
-import io
 import logging
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Path
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -12,9 +8,8 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.interventions_schema import Intervention, InterventionList
+from app.schemas.interventions_schema import InterventionList
 from app.services import interventions_service
-from app.utils.dependencies import validate_query_params
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

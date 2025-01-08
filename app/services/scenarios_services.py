@@ -1,13 +1,9 @@
-import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.const import SCENARIOS_RESPONSE_KEYS
 from app.repositories.scenarios_repository import (
     fetch_scenarios,
-    fetch_first_scenario,
 )
-from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
 
 settings = Settings()
