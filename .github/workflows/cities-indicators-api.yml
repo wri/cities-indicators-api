@@ -30,7 +30,7 @@ jobs:
           source-connection-arn: arn:aws:apprunner:us-east-1:540362055257:connection/cities-app-runner-connection/6cf41ebe057d4dec8e202d97888a23e1
           repo: https://github.com/${{ github.repository }}
           branch: ${{ github.ref }}
-          runtime: python311
+          runtime: PYTHON_311
           build-command: |
             yum --version || echo "yum not found"
             yum search gdal || echo "gdal not found"
