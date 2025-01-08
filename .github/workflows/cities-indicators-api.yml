@@ -31,9 +31,7 @@ jobs:
           repo: https://github.com/${{ github.repository }}
           branch: ${{ github.ref }}
           runtime: PYTHON_311
-          build-command: |
-            yum --version || echo "yum not found"
-            yum search gdal || echo "gdal not found"
+          build-command: "yum --version || echo 'yum not found' && yum search gdal || echo 'gdal not found'"
           start-command: uvicorn app.main:app --host 0.0.0.0 --port 8000
           port: 8000
           region: us-east-1
