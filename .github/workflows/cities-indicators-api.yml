@@ -1,0 +1,60 @@
+name: Deploy to App Runner
+
+on:
+  push:
+    branches: [ccl-develop] # Trigger workflow on git push to ccl-develop branch
+  workflow_dispatch: # Allow manual invocation of the workflow
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+      # OIDC Assume Role
+      - name: Configure AWS Credentials
+        id: configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE }}
+          aws-region: us-east-1
+
+      # Deploy to App Runner
+      - name: Deploy to App Runner
+        id: deploy-apprunner
+        uses: awslabs/amazon-app-runner-deploy@main
+        with:
+          service: cities-api-app-runner-service-CCL-DEV
+          source-connection-arn: arn:aws:apprunner:us-east-1:540362055257:connection/cities-app-runner-connection/6cf41ebe057d4dec8e202d97888a23e1
+          repo: https://github.com/${{ github.repository }}
+          branch: ${{ github.ref }}
+          runtime: python311
+          build-command: |
+            yum --version || echo "yum not found"
+            yum search gdal || echo "gdal not found"
+          start-command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+          port: 8000
+          region: us-east-1
+          cpu: 1
+          memory: 2
+          wait-for-service-stability-seconds: 600
+          copy-env-vars: |
+            SERVER_PORT
+            CITIES_API_AIRTABLE_KEY
+            AIRTABLE_BASE_ID
+          copy-secret-env-vars: |
+            SECRET_ENV
+          instance-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner
+          tags: >
+            { "env": "test" }
+        env:
+          SERVER_PORT: 8000
+          SECRET_ENV: secret_env
+          CITIES_API_AIRTABLE_KEY: ${{ secrets.CITIES_API_AIRTABLE_KEY }}
+          AIRTABLE_BASE_ID: ${{ vars.AIRTABLE_BASE_ID }}
+
+      # Log App Runner URL
+      - name: Log App Runner URL
+        run: echo "App Runner URL: ${{ steps.deploy-apprunner.outputs.service-url }}"
