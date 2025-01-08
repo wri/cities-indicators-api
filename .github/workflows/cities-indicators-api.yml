@@ -8,11 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     permissions:
       id-token: write
       contents: read
-
+       
+    Steps:
       # OIDC Assume Role
       - name: Configure AWS Credentials
         id: configure-aws-credentials
