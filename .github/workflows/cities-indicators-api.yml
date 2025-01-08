@@ -11,7 +11,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-       
+
     Steps:
       # OIDC Assume Role
       - name: Configure AWS Credentials
@@ -47,7 +47,7 @@ jobs:
           copy-secret-env-vars: |
             SECRET_ENV
           instance-role-arn: arn:aws:iam::540362055257:role/cities-api-app-runner
-          tags: >
+          tags: |
             { "env": "test" }
         env:
           SERVER_PORT: 8000
@@ -57,4 +57,5 @@ jobs:
 
       # Log App Runner URL
       - name: Log App Runner URL
-        run: echo "App Runner URL: ${{ steps.deploy-apprunner.outputs.service-url }}"
+        run: | 
+          echo "App Runner URL: ${{ steps.deploy-apprunner.outputs.service-url }}"
