@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      CITIES_API_AIRTABLE_KEY='patsFvxGKOUr1DUPk.46471593dcc865c3335021a6f54dffb966907fedabb72b24881fe3da85a9a282'
-      AIRTABLE_BASE_ID='appFGpvPnF6t7Uv5q'
+      CITIES_API_AIRTABLE_KEY: 'patsFvxGKOUr1DUPk.46471593dcc865c3335021a6f54dffb966907fedabb72b24881fe3da85a9a282'
+      AIRTABLE_BASE_ID: 'appFGpvPnF6t7Uv5q'
     strategy:
       matrix:
         python-version: ["3.11"]
