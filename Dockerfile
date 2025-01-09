@@ -1,19 +1,23 @@
+# Python 3.11 base image
 FROM python:3.11
 
-RUN apt-get update && apt-get install -y libgdal-dev
+# Set work directory
+WORKDIR /app
 
-WORKDIR /code
+# Install pipenv
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install pipenv
 
 # Copy Pipfile and Pipfile.lock
-COPY ./Pipfile ./Pipfile.lock /code/
+COPY Pipfile Pipfile.lock ./ 
 
-# Install pipenv and use it to install dependencies globally
-RUN pip install --upgrade pip
-RUN pip install pipenv
+# Install dependencies
 RUN pipenv install --deploy --ignore-pipfile --system
 
-# Copy the rest of the application code
-COPY ./ /code/
+# Copy source code
+COPY ./ /app/
 
-# Run Uvicorn
+EXPOSE 8000
+
+# Run the application directly without the fetch_secret script
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
