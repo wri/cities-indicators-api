@@ -77,9 +77,13 @@ def get_intervention_by_city_id(city_id: str) -> Optional[Dict]:
     # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(fetch_scenarios): "scenarios",
-            executor.submit(fetch_interventions): "interventions",
-            executor.submit(fetch_cities): "cities",
+            executor.submit(
+                lambda: fetch_scenarios(f'"{city_id}" = {{cities}}')
+            ): "scenarios",
+            executor.submit(
+                lambda: fetch_interventions(f'"{city_id}" = {{cities}}')
+            ): "interventions",
+            executor.submit(lambda: fetch_cities(f'"{city_id}" = {{id}}')): "cities",
         }
 
         results = {}
@@ -102,10 +106,6 @@ def get_intervention_by_city_id(city_id: str) -> Optional[Dict]:
             for city_id in cities_dict.keys()
             if city_id in intervention.get("cities", [])
         ]
-
-        # Continue to the next intervention if the requested city_id is not present in this intervention
-        if city_id not in intervention["cities"]:
-            continue
 
         intervention["scenarios"] = [
             scenarios_dict[scenario_id]
