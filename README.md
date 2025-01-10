@@ -64,12 +64,12 @@ The pipeline `Cities API Image Builder` builds the Docker image that will be use
 3. Build the image;
 
     ```sh
-    docker build -t cities-indicators-api-img:<TAG>
+    docker build -t cities-indicators-api-img:<TAG> .
     ```
 4. Tag the image;
 
     ```sh
-    docker tag my-image:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/cities-indicators-api-img:<TAG>
+    docker tag cities-indicators-api-img:<TAG> 540362055257.dkr.ecr.us-east-1.amazonaws.com/cities-indicators-api-img:<TAG>
     ```
 5. Push the image to ECR;
 
