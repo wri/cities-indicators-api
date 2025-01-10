@@ -73,12 +73,12 @@ jobs:
         id: deploy-apprunner
         run: |
           aws apprunner start-deployment \
-            --service-arn ${{ vars.SERVICE_ARN }} \
+            --service-arn "$SERVICE_NAME" \
             --region us-east-1 \
             --no-paginate \
             --output json
 
-          SERVICE_STATUS=$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text)
+          SERVICE_STATUS=$(aws apprunner describe-service --service-arn "$SERVICE_NAME" --region us-east-1 --query "Service.Status" --output text)
 
           while [ "$SERVICE_STATUS" != "RUNNING" ]; do
             if [[ "$SERVICE_STATUS" == "FAILED" || "$SERVICE_STATUS" == "ROLLBACK_SUCCEEDED" ]]; then
@@ -87,7 +87,7 @@ jobs:
             fi
             echo "Deployment in progress..."
             sleep 30
-            SERVICE_STATUS=$(aws apprunner describe-service --service-arn ${{ vars.SERVICE_ARN }} --region us-east-1 --query "Service.Status" --output text)
+            SERVICE_STATUS=$(aws apprunner describe-service --service-arn "$SERVICE_NAME" --region us-east-1 --query "Service.Status" --output text)
           done
 
           echo "Deployment completed."
