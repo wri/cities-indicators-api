@@ -52,7 +52,7 @@ The API is deployed via AWS App Runner.
 
 ## Build Docker Image and Push to AWS ECR (ccl-develop branch)
 
-The pipeline `Cities API Image Builder` builds the Docker image that will be used by the AWS APP Runner service `cities-api-app-runner-service-Docker` using the tag `latest`. If you want to build and push a different tag to AWS ECR, follow the steps below:
+The pipeline `Cities API Image Builder` builds the Docker image that will be used by the AWS APP Runner service `cities-api-app-runner-service-docker-<BRANCH>` using the branch name as a tag. If you want to build and push a different tag to AWS ECR, follow the steps below:
 
 1. Setup your AWS credentials locally;
 
