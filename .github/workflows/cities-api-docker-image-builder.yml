@@ -3,6 +3,8 @@ name: Cities API Image Builder
 on:
   push:
     branches:
+      - main
+      - develop
       - ccl-develop
   workflow_dispatch:
 
@@ -26,6 +28,18 @@ jobs:
           echo "AIRTABLE_BASE_ID=${{ vars.AIRTABLE_BASE_ID }}" >> $GITHUB_ENV
           echo "REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
 
+          # Define SERVICE_NAME based on branch
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "SERVICE_NAME=${{ vars.SERVICE_ARN_PRD }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "SERVICE_NAME=${{ vars.SERVICE_ARN_DEV }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "ccl-develop" ]]; then
+            echo "SERVICE_NAME=${{ vars.SERVICE_ARN_CCL_DEV }}" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch: ${{ github.ref_name }}"
+            exit 1
+          fi
+
       # OIDC Assume Role
       - name: OIDC Assume Role
         id: oidc-assume-role
@@ -42,14 +56,14 @@ jobs:
       - name: Build Docker image
         id: build-image
         run: |
-          docker build -t ${{ env.REPOSITORY_NAME }}-img:latest .
-          docker tag ${{ env.REPOSITORY_NAME }}-img:latest 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
+          docker build -t ${{ env.REPOSITORY_NAME }}-img:${{ github.ref }} .
+          docker tag ${{ env.REPOSITORY_NAME }}-img:${{ github.ref }} 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:${{ github.ref }}
 
       # Push to ECR
       - name: Push to AWS ECR
         id: push-image
         run: |
-          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
+          docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:${{ github.ref }}
 
       # Deploy to AWS APP Runner
       - name: Deploy to App Runner
@@ -81,6 +95,6 @@ jobs:
         if: failure()
         run: |
           REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          IMAGE_TAG=540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:latest
+          IMAGE_TAG=540362055257.dkr.ecr.us-east-1.amazonaws.com/${{ env.REPOSITORY_NAME }}-img:${{ github.ref }}
           echo "Deleting Docker image from ECR: $IMAGE_TAG"
-          aws ecr batch-delete-image --repository-name ${REPOSITORY_NAME}-img --image-ids imageTag=latest --region us-east-1
+          aws ecr batch-delete-image --repository-name ${REPOSITORY_NAME}-img --image-ids imageTag=${{ github.ref }} --region us-east-1
