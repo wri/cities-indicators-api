@@ -3,7 +3,6 @@ name: Cities API Image Builder
 on:
   push:
     branches:
-      - main
       - develop
       - ccl-develop
   workflow_dispatch:
