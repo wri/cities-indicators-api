@@ -102,7 +102,7 @@ def list_indicators(
         ]
         indicator["layers"] = [
             {
-                "id": layer_id,
+                "id": layers_dict[layer_id]["id"],
                 "legend": layers_dict[layer_id].get("layer_legend", ""),
                 "name": layers_dict[layer_id]["layer_name"],
             }
