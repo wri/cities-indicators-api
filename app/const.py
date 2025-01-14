@@ -12,6 +12,31 @@ CITY_RESPONSE_KEYS = [
     "longitude",
     "projects",
 ]
+INTERVENTIONS_RESPONSE_KEYS = [
+    "id",
+    "name",
+    "areas_id",
+    "areas_name",
+    "filter_solution_type",
+    "filter_impact_timescale",
+    "filter_solution_area",
+    "card_intervention_short_description",
+    "card_intervention_long_description",
+    "card_cooling_impact_estimation",
+    "card_timescale_impact",
+    "card_investment",
+    "card_intervention_photo",
+    "cities",
+    "scenarios",
+]
+SCENARIOS_RESPONSE_KEYS = [
+    "id",
+    "name",
+    "description",
+    "layers",
+    "cities",
+    "interventions",
+]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",
     "city_ids",
