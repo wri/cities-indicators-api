@@ -3,8 +3,8 @@
 FastAPI connected to Airtable & Carto
 
 Docs: 
-- [Production Environment](https://xpakp4mkpz.us-east-1.awsapprunner.com)
-- [Development Environment](https://sn3rgxtgsn.us-east-1.awsapprunner.com)
+- [Production Environment](https://2pyfwqr3de.us-east-1.awsapprunner.com)
+- [Development Environment](https://eczjnwsa29.us-east-1.awsapprunner.com)
 
 
 ## Local Development Setup
