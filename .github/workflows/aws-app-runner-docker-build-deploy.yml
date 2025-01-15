@@ -35,7 +35,7 @@ jobs:
 
           if [[ "$BRANCH" == "main" ]]; then
             echo "SERVICE_NAME=none" >> $GITHUB_ENV
-          if [[ "$BRANCH" == "develop" ]]; then
+          elif [[ "$BRANCH" == "develop" ]]; then
             echo "SERVICE_NAME=${{ vars.SERVICE_ARN_DEV }}" >> $GITHUB_ENV
           elif [[ "$BRANCH" == "ccl-develop" ]]; then
             echo "SERVICE_NAME=${{ vars.SERVICE_ARN_CCL_DEV }}" >> $GITHUB_ENV
@@ -72,7 +72,7 @@ jobs:
       # Deploy to AWS APP Runner
       - name: Deploy to App Runner
         id: deploy-apprunner
-        if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/ccl-develop') # Define which branches trigger the deplyment step
+        if: env.SERVICE_NAME != "none"
         run: |
           aws apprunner start-deployment \
             --service-arn "$SERVICE_NAME" \
