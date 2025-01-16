@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      AIRTABLE_BASE_ID: 'appFGpvPnF6t7Uv5q'
     strategy:
       matrix:
         python-version: ["3.11"]
