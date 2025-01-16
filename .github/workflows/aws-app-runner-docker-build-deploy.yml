@@ -72,7 +72,7 @@ jobs:
       # Deploy to AWS APP Runner
       - name: Deploy to App Runner
         id: deploy-apprunner
-        if: env.SERVICE_NAME != "none"
+        if: ${{ env.SERVICE_NAME != 'none' }}
         run: |
           aws apprunner start-deployment \
             --service-arn "$SERVICE_NAME" \
