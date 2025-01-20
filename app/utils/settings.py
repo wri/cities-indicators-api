@@ -12,7 +12,8 @@ class Settings(BaseSettings):
 
     # Airtable
     cities_api_airtable_key: str
-    airtable_base_id: str = "appDWCVIQlVnLLaW2"
+    airtable_base_id: str
+    # airtable_base_id: str = "appDWCVIQlVnLLaW2"
     airtable_rate_limit_calls: int = 5
     airtable_rate_limit_period: int = 1
 
