@@ -1,13 +1,15 @@
 import json
 import os
+from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Union
 
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
 from app.utils.filters import generate_search_query
 
 
-def get_city_layer(city_id: str, layer_id: str):
+def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None):
     """
     Retrieve layer and city information, then construct a URL path
     for the layer file stored on S3.
@@ -15,6 +17,7 @@ def get_city_layer(city_id: str, layer_id: str):
     Args:
     - city_id (str): The unique identifier of the city.
     - layer_id (str): The unique identifier of the layer.
+    - aoi_id (str, optional): The unique identifier for the area of interest
 
     Returns:
         - Dict[str, str]: A dictionary containing:
@@ -45,16 +48,24 @@ def get_city_layer(city_id: str, layer_id: str):
     layer_fields = results["layer"]["fields"]
     city_fields = results["city"]["fields"]
 
-    # Construct the S3 file path
-    s3_base_url = "https://cities-indicators.s3.amazonaws.com/"
-    s3_path = layer_fields["layer_url"].replace("s3://cities-indicators/", "")
-    layer_url = (
-        f"{s3_base_url}{s3_path}{city_id}-"
-        f"{city_fields['city_admin_level']}-"
-        f"{layer_fields['layer_file_name']}"
-        f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
-        f".{layer_fields['file_type']}"
-    )
+    s3_path = layer_fields["s3_path"]
+    if aoi_id:
+        layer_file_name = (
+            f"{city_id}__{aoi_id}__"
+            f"{layer_fields['layer_file_name']}__"
+            f"{layer_fields['version'] if 'version' in layer_fields else ''}"
+            f".{layer_fields['file_type']}"
+        )
+    else:
+        layer_file_name = (
+            f"{city_id}-"
+            f"{city_fields['city_admin_level']}-"
+            f"{layer_fields['layer_file_name']}"
+            f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
+            f".{layer_fields['file_type']}"
+        )
+    layer_url = urljoin(s3_path, layer_file_name)
+
     try:
         map_styling = json.loads(layer_fields["map_styling"])
         legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
