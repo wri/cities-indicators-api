@@ -140,10 +140,12 @@ def list_indicators_themes() -> Set[str]:
     indicators = fetch_indicators()
     themes_set = set()
 
-    for indicator in indicators:
-        theme_list = indicator["fields"].get("themes")
-        for theme in theme_list:
-            themes_set.add(theme)
+    if indicators:
+        for indicator in indicators:
+            theme_list = indicator["fields"].get("themes")
+            if theme_list:
+                for theme in theme_list:
+                    themes_set.add(theme)
 
     return themes_set
 

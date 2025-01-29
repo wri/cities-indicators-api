@@ -111,10 +111,17 @@ def get_city_by_city_id(
     if not city:
         raise HTTPException(status_code=404, detail="No city found")
 
+    s3_base_path = city.get(
+        "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
+    )
+    if s3_base_path.endswith("/"):
+        s3_base_path = s3_base_path[:-1]
+
     city["layers_url"] = {
-        "pmtiles": f"https://cities-indicators.s3.amazonaws.com/{city_id}/cif_indicators.pmtiles",
-        "geojson": f"https://cities-indicators.s3.amazonaws.com/{city_id}/cif_indicators.geojson",
+        "pmtiles": f"{s3_base_path}/data-pmtiles/{city_id}.pmtiles",
+        "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
     }
+
     return city
 
 
