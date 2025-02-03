@@ -80,8 +80,8 @@ def list_cities(
             s3_base_path = s3_base_path[:-1]
 
         city_response["layers_url"] = {
-            "pmtiles": f"{s3_base_path}/data-pmtiles/{city_id}.pmtiles",
-            "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
+            "pmtiles": f"{s3_base_path}",
+            "geojson": f"{s3_base_path.replace("pmtiles", "geojson")}",
         }
         city_res_list.append(city_response)
     return city_res_list
