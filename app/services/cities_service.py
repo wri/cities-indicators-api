@@ -75,13 +75,13 @@ def list_cities(
         s3_base_path = city_response.get(
             "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
         )
-        if s3_base_path.endswith("/"):
+        if s3_base_path and s3_base_path.endswith("/"):
             s3_base_path = s3_base_path[:-1]
 
-        city_response["layers_url"] = {
-            "pmtiles": f"{s3_base_path}",
-            "geojson": f"{s3_base_path.replace("pmtiles", "geojson")}",
-        }
+            city_response["layers_url"] = {
+                "pmtiles": f"{s3_base_path}",
+                "geojson": f'{s3_base_path.replace("pmtiles", "geojson")}',
+            }
         city_res_list.append(city_response)
     return city_res_list
 
