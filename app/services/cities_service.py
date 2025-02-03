@@ -69,10 +69,22 @@ def list_cities(
         city["fields"]["projects"] = city_projects
 
     # Return the filtered cities data
-    return [
-        {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
-        for city in cities_list
-    ]
+    city_res_list = []
+    for city in cities_list:
+        city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
+        city_id = city_response.get("id")
+        s3_base_path = city_response.get(
+            "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
+        )
+        if s3_base_path.endswith("/"):
+            s3_base_path = s3_base_path[:-1]
+
+        city_response["layers_url"] = {
+            "pmtiles": f"{s3_base_path}/data-pmtiles/{city_id}.pmtiles",
+            "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
+        }
+        city_res_list.append(city_response)
+    return city_res_list
 
 
 def get_city_by_city_id(city_id: str) -> Optional[Dict]:
@@ -121,6 +133,16 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
 
     city_response = {key: city[key] for key in CITY_RESPONSE_KEYS if key in city}
 
+    s3_base_path = city_response.get(
+        "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
+    )
+    if s3_base_path.endswith("/"):
+        s3_base_path = s3_base_path[:-1]
+
+    city_response["layers_url"] = {
+        "pmtiles": f"{s3_base_path}/data-pmtiles/{city_id}.pmtiles",
+        "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
+    }
     return city_response
 
 
@@ -259,7 +281,7 @@ def get_city_geometry_with_indicators(
             admin_level=admin_level,
             table_name=table_name,
         )
-    
+
     if admin_level is None:
         admin_level = "subcity_admin_level"
 
