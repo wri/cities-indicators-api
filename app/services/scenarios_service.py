@@ -39,7 +39,7 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
             executor.submit(
                 lambda: fetch_scenarios(construct_filter_formula(filters))
             ): "scenarios",
-            executor.submit(lambda: fetch_layers()): "layers",
+            executor.submit(fetch_layers): "layers",
             executor.submit(
                 lambda: fetch_first_city(generate_search_query("id", city_id))
             ): "city",

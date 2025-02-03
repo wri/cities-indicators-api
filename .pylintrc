@@ -10,7 +10,7 @@ ignore=venv, __pycache__, tests
 load-plugins=
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.9
+py-version=3.11
 
 [MESSAGES CONTROL]
 # Disable the message, report, category or checker with the given id(s).
