@@ -72,7 +72,6 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
-        city_id = city_response.get("id")
         s3_base_path = city_response.get(
             "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
         )
