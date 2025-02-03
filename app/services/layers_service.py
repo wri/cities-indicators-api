@@ -1,12 +1,59 @@
 import json
 import os
-from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Union
+from urllib.parse import urljoin
 
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
 from app.utils.filters import generate_search_query
+
+
+def generate_layer_response(
+    city_id: str, aoi_id: str | None, layer_fields: dict, city_fields: dict
+):
+
+    s3_path = layer_fields["s3_path"]
+    if aoi_id:
+        layer_file_name = (
+            f"{city_id}__{aoi_id}__"
+            f"{layer_fields['layer_file_name']}__"
+            f"{layer_fields['version'] if 'version' in layer_fields else ''}"
+            f".{layer_fields['file_type']}"
+        )
+    else:
+        layer_file_name = (
+            f"{city_id}-"
+            f"{city_fields['city_admin_level']}-"
+            f"{layer_fields['layer_file_name']}"
+            f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
+            f".{layer_fields['file_type']}"
+        )
+    layer_url = urljoin(s3_path, layer_file_name)
+
+    try:
+        map_styling = json.loads(layer_fields["map_styling"])
+        legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
+    except json.JSONDecodeError:
+        map_styling = {}
+        legend_styling = {}
+    return_dict = {
+        "city_id": city_id,
+        "layer_id": layer_fields.get("id"),
+        "class_name": layer_fields.get("cif_class_name"),
+        "file_type": layer_fields.get("file_type"),
+        "source_layer_id": layer_fields.get("source_layer_id"),
+        "map_styling": map_styling,
+        "legend_styling": legend_styling,
+    }
+    if layer_fields["layer_type"] == "vector":
+        return_dict["layers_url"] = {
+            "geojson": layer_url,
+            "pmtiles": f"{os.path.splitext(layer_url)[0]}.pmtiles",
+        }
+    else:
+        return_dict["layers_url"] = {"cog": layer_url}
+    return return_dict
 
 
 def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None):
@@ -48,44 +95,9 @@ def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None)
     layer_fields = results["layer"]["fields"]
     city_fields = results["city"]["fields"]
 
-    s3_path = layer_fields["s3_path"]
-    if aoi_id:
-        layer_file_name = (
-            f"{city_id}__{aoi_id}__"
-            f"{layer_fields['layer_file_name']}__"
-            f"{layer_fields['version'] if 'version' in layer_fields else ''}"
-            f".{layer_fields['file_type']}"
-        )
-    else:
-        layer_file_name = (
-            f"{city_id}-"
-            f"{city_fields['city_admin_level']}-"
-            f"{layer_fields['layer_file_name']}"
-            f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
-            f".{layer_fields['file_type']}"
-        )
-    layer_url = urljoin(s3_path, layer_file_name)
-
-    try:
-        map_styling = json.loads(layer_fields["map_styling"])
-        legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
-    except json.JSONDecodeError:
-        map_styling = {}
-        legend_styling = {}
-    return_dict = {
-        "city_id": city_id,
-        "layer_id": layer_id,
-        "class_name": layer_fields.get("cif_class_name"),
-        "file_type": layer_fields.get("file_type"),
-        "source_layer_id": layer_fields.get("source_layer_id"),
-        "map_styling": map_styling,
-        "legend_styling": legend_styling,
-    }
-    if layer_fields["layer_type"] == "vector":
-        return_dict["layers_url"] = {
-            "geojson": layer_url,
-            "pmtiles": f"{os.path.splitext(layer_url)[0]}.pmtiles",
-        }
-    else:
-        return_dict["layers_url"] = {"cog": layer_url}
-    return return_dict
+    return generate_layer_response(
+        city_id=city_id,
+        aoi_id=aoi_id,
+        layer_fields=layer_fields,
+        city_fields=city_fields,
+    )
