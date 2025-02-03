@@ -35,8 +35,6 @@ SCENARIOS_RESPONSE_KEYS = [
     "name",
     "description",
     "layers",
-    "cities",
-    "interventions",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",
