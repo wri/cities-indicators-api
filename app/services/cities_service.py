@@ -35,7 +35,7 @@ def list_cities(
         List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
     # Fetch active projects based on provided project IDs
-    projects_filters = {"status": "Active"}
+    projects_filters = {}
     if projects:
         projects_filters["id"] = projects
 
