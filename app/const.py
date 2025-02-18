@@ -11,6 +11,7 @@ CITY_RESPONSE_KEYS = [
     "latitude",
     "longitude",
     "projects",
+    "bounding_box",
     "s3_base_path",
 ]
 INTERVENTIONS_RESPONSE_KEYS = [

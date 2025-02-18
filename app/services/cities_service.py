@@ -132,7 +132,7 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
     city_projects = [project_id_map.get(project) for project in city["projects"]]
     city["projects"] = city_projects
 
-    city_response = {key: city[key] for key in CITY_RESPONSE_KEYS if key in city}
+    city_response = {key: city.get(key) for key in CITY_RESPONSE_KEYS}
 
     s3_base_path = city_response.get(
         "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
