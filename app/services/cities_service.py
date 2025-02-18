@@ -22,7 +22,7 @@ set_default_credentials(
 
 
 def list_cities(
-    projects: Optional[List[str]], country_code_iso3: Optional[str]
+    application_id: str, projects: Optional[List[str]], country_code_iso3: Optional[str]
 ) -> List[Dict[str, Any]]:
     """
     Retrieve a list of cities based on the provided filters.
@@ -35,7 +35,7 @@ def list_cities(
         List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
     # Fetch projects based on provided project IDs if provided
-    projects_filters = {}
+    projects_filters: Dict[str, str | List[str]] = {"application_id": application_id}
     if projects:
         projects_filters["id"] = projects
     projects_filter_formula = construct_filter_formula(projects_filters)

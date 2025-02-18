@@ -30,7 +30,7 @@ router = APIRouter()
 
 
 @router.get(
-    "",
+    "/{application_id}",
     dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityList},
@@ -39,6 +39,7 @@ router = APIRouter()
     },
 )
 def list_cities(
+    application_id: str = Path(),
     projects: Optional[List[str]] = Query(None),
     country_code_iso3: Optional[str] = Query(None),
 ):
@@ -58,7 +59,9 @@ def list_cities(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        cities_list = cities_service.list_cities(projects, country_code_iso3)
+        cities_list = cities_service.list_cities(
+            application_id, projects, country_code_iso3
+        )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
