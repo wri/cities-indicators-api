@@ -26,7 +26,7 @@ router = APIRouter()
 
 
 @router.get(
-    "",
+    "/{application_id}",
     dependencies=[Depends(validate_query_params("project", "city_id"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
@@ -41,6 +41,7 @@ router = APIRouter()
     },
 )
 def list_indicators(
+    application_id: str = Path(),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
 ):
@@ -65,7 +66,9 @@ def list_indicators(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        indicators_list = indicators_service.list_indicators(project, city_id)
+        indicators_list = indicators_service.list_indicators(
+            application_id, project, city_id
+        )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(

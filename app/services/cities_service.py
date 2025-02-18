@@ -22,7 +22,7 @@ set_default_credentials(
 
 
 def list_cities(
-    projects: Optional[List[str]], country_code_iso3: Optional[str]
+    application_id: str, projects: Optional[List[str]], country_code_iso3: Optional[str]
 ) -> List[Dict[str, Any]]:
     """
     Retrieve a list of cities based on the provided filters.
@@ -34,21 +34,22 @@ def list_cities(
     Returns:
         List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
-    # Fetch active projects based on provided project IDs
-    projects_filters = {}
+    # Fetch projects based on provided project IDs if provided
+    projects_filters: Dict[str, str | List[str]] = {"application_id": application_id}
     if projects:
         projects_filters["id"] = projects
-
     projects_filter_formula = construct_filter_formula(projects_filters)
-    active_projects = fetch_projects(projects_filter_formula)
-    active_project_ids = {
-        project["id"]: project["fields"]["id"] for project in active_projects
+    fetched_projects = fetch_projects(projects_filter_formula)
+    if not fetched_projects:
+        return None
+    fetched_project_ids = {
+        project["id"]: project["fields"]["id"] for project in fetched_projects
     }
 
-    # Filter cities based on active projects and country code
+    # Filter cities based on retrieved projects and country code
     cities_filters = {}
-    if active_project_ids:
-        cities_filters["projects"] = list(active_project_ids.values())
+    if fetched_project_ids:
+        cities_filters["projects"] = list(fetched_project_ids.values())
     if country_code_iso3:
         cities_filters["country_code_iso3"] = country_code_iso3
 
@@ -59,12 +60,12 @@ def list_cities(
     if not cities_list:
         return []
 
-    # Update project IDs in each city to reflect active projects
+    # Update project IDs in each city to reflect  projects
     for city in cities_list:
         city_projects = [
-            active_project_ids[project]
+            fetched_project_ids[project]
             for project in city["fields"]["projects"]
-            if project in active_project_ids.keys()
+            if project in fetched_project_ids.keys()
         ]
         city["fields"]["projects"] = city_projects
 

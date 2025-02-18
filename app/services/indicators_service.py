@@ -36,7 +36,9 @@ SPECIAL_INDICATOR_TABLES = {
 
 
 def list_indicators(
-    project: Optional[str] = None, city_id: Optional[List[str]] = None
+    application_id: Optional[str] = None,
+    project: Optional[str] = None,
+    city_id: Optional[List[str]] = None,
 ) -> List[Dict]:
     """
     Retrieve a list of indicators, optionally filtered by project.
@@ -52,19 +54,22 @@ def list_indicators(
     """
     # Create filters
     indicators_filters = {}
-
-    if project:
-        indicators_filters["projects"] = project
+    project_filter = {"application_id": application_id}
+    projects = fetch_projects(construct_filter_formula(project_filter))
+    projects_dict = {}
+    if projects:
+        projects_dict = {project["id"]: project["fields"]["id"] for project in projects}
+        indicators_filters["projects"] = [
+            project["fields"]["id"] for project in projects
+        ]
     if city_id:
         indicators_filters["cities"] = city_id
-
     indicators_filter_formula = construct_filter_formula(indicators_filters)
 
     # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(fetch_cities): "cities",
-            executor.submit(fetch_projects): "projects",
             executor.submit(fetch_datasets): "datasets",
             executor.submit(fetch_layers): "layers",
             executor.submit(fetch_indicators, indicators_filter_formula): "indicators",
@@ -83,9 +88,7 @@ def list_indicators(
     datasets_dict = {
         dataset["id"]: dataset["fields"]["name"] for dataset in results["datasets"]
     }
-    projects_dict = {
-        project["id"]: project["fields"]["id"] for project in results["projects"]
-    }
+
     layers_dict = {layer["id"]: layer["fields"] for layer in results["layers"]}
 
     # Format the output
@@ -97,8 +100,9 @@ def list_indicators(
             for data_source in data_sources_link
         ]
         indicator["projects"] = [
-            projects_dict.get(project, project)
+            projects_dict.get(project)
             for project in indicator.get("projects", [])
+            if project in projects_dict
         ]
         indicator["layers"] = [
             {
