@@ -2,10 +2,10 @@
 
 FastAPI connected to Airtable & Carto
 
-Docs: 
-- [Production Environment](https://xpakp4mkpz.us-east-1.awsapprunner.com)
-- [Development Environment](https://sn3rgxtgsn.us-east-1.awsapprunner.com)
+Docs:
 
+- [Production Environment](https://2pyfwqr3de.us-east-1.awsapprunner.com)
+- [Development Environment](https://eczjnwsa29.us-east-1.awsapprunner.com)
 
 ## Local Development Setup
 
@@ -47,8 +47,39 @@ Docs:
 ## Deployment
 
 The API is deployed via AWS App Runner.
+
 - Deployments to the development environment happen when any changes to the `develop` branch occur.
 - Deployments to the production environment happen when manually forcing a deployment of the `main` branch using the AWS App Runner console.
+
+## Build Docker Image and Push to AWS ECR (ccl-develop branch)
+
+The pipeline `Cities API Image Builder` builds the Docker image that will be used by the AWS APP Runner service `cities-api-app-runner-service-docker-<BRANCH>` using the branch name as a tag. If you want to build and push a different tag to AWS ECR, follow the steps below:
+
+1. Setup your AWS credentials locally;
+
+2. Login to AWS ECR;
+
+    ```sh
+    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 540362055257.dkr.ecr.us-east-1.amazonaws.com
+    ```
+
+3. Build the image;
+
+    ```sh
+    docker build -t cities-indicators-api-img:<TAG> .
+    ```
+
+4. Tag the image;
+
+    ```sh
+    docker tag cities-indicators-api-img:<TAG> 540362055257.dkr.ecr.us-east-1.amazonaws.com/cities-indicators-api-img:<TAG>
+    ```
+
+5. Push the image to ECR;
+
+    ```sh
+    docker push 540362055257.dkr.ecr.us-east-1.amazonaws.com/cities-indicators-api-img:<TAG>
+    ```
 
 ## Best Practices
 

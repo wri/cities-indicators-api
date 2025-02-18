@@ -8,8 +8,10 @@ from app.routers import (
     cities_router,
     datasets_router,
     indicators_router,
+    interventions_router,
     layers_router,
     projects_router,
+    scenarios_router,
 )
 from app.utils.settings import Settings
 
@@ -65,6 +67,10 @@ app.include_router(datasets_router.router, prefix="/datasets", tags=["Datasets"]
 app.include_router(indicators_router.router, prefix="/indicators", tags=["Indicators"])
 app.include_router(layers_router.router, prefix="/layers", tags=["Layers"])
 app.include_router(projects_router.router, prefix="/projects", tags=["Projects"])
+app.include_router(
+    interventions_router.router, prefix="/interventions", tags=["Interventions"]
+)
+app.include_router(scenarios_router.router, prefix="/scenarios", tags=["Scenarios"])
 
 
 @app.get(
