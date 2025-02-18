@@ -36,7 +36,7 @@ SPECIAL_INDICATOR_TABLES = {
 
 
 def list_indicators(
-    application_id: str,
+    application_id: Optional[str] = None,
     project: Optional[str] = None,
     city_id: Optional[List[str]] = None,
 ) -> List[Dict]:
