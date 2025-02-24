@@ -1,10 +1,13 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
-from app.const import SCENARIOS_RESPONSE_KEYS
+from app.const import SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS, SCENARIOS_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_layers
-from app.repositories.scenarios_repository import fetch_scenarios
+from app.repositories.scenarios_repository import (
+    fetch_indicator_values,
+    fetch_scenarios,
+)
 from app.services import layers_service
 from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
@@ -39,6 +42,11 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
             executor.submit(
                 lambda: fetch_scenarios(construct_filter_formula(filters))
             ): "scenarios",
+            executor.submit(
+                lambda: fetch_indicator_values(
+                    construct_filter_formula({"cities": city_id} if city_id else {})
+                )
+            ): "indicator_values",
             executor.submit(fetch_layers): "layers",
             executor.submit(
                 lambda: fetch_first_city(generate_search_query("id", city_id))
@@ -56,6 +64,39 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
         for scenario in results["scenarios"]
     ]
 
+    indicators_list = [
+        {
+            key: indicator["fields"].get(key)
+            for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
+        }
+        for indicator in results["indicator_values"]
+    ]
+
+    scenario_indicator_dict = {}
+
+    for indicator in results["indicator_values"]:
+        data = indicator["fields"]
+        scenario = data["scenarios_ids"]
+        if scenario:
+            scenario_id = scenario[0]
+            if scenario_id in scenario_indicator_dict:
+                existing_list = scenario_indicator_dict[scenario_id]
+                if existing_list:
+                    existing_list.append(
+                        {
+                            key: indicator["fields"].get(key)
+                            for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
+                        }
+                    )
+                    scenario_indicator_dict[scenario_id] = existing_list
+            else:
+                scenario_indicator_dict[scenario_id] = [
+                    {
+                        key: indicator["fields"].get(key)
+                        for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
+                    }
+                ]
+
     for scenario in scenario_list:
         layers = []
         for layer_id in scenario["layers"]:
@@ -70,5 +111,9 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
                     )
                 )
         scenario["layers"] = layers
+        if scenario["id"] in scenario_indicator_dict:
+            scenario["indicators"] = scenario_indicator_dict[scenario["id"]]
+        else:
+            scenario["indicators"] = []
 
     return scenario_list
