@@ -22,20 +22,25 @@ set_default_credentials(
 
 
 def list_cities(
-    application_id: str, projects: Optional[List[str]], country_code_iso3: Optional[str]
+    application_id: Optional[str],
+    projects: Optional[List[str]],
+    country_code_iso3: Optional[str],
 ) -> List[Dict[str, Any]]:
     """
     Retrieve a list of cities based on the provided filters.
 
     Args:
+        application_id (Optional[str]): A WRI application ID to filter by.
         projects (Optional[List[str]]): List of Project IDs to filter by.
         country_code_iso3 (Optional[str]): ISO 3166-1 alpha-3 country code to filter by.
 
     Returns:
         List[Dict[str, Any]]: A list of dictionaries containing the filtered cities' data.
     """
-    # Fetch projects based on provided project IDs if provided
-    projects_filters: Dict[str, str | List[str]] = {"application_id": application_id}
+    # Fetch projects based on provided project IDs/application ID if provided
+    projects_filters = {}
+    if application_id:
+        projects_filters["application_id"] = application_id
     if projects:
         projects_filters["id"] = projects
     projects_filter_formula = construct_filter_formula(projects_filters)

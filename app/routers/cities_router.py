@@ -30,8 +30,12 @@ router = APIRouter()
 
 
 @router.get(
-    "/{application_id}",
-    dependencies=[Depends(validate_query_params("projects", "country_code_iso3"))],
+    "",
+    dependencies=[
+        Depends(
+            validate_query_params("projects", "country_code_iso3", "application_id")
+        )
+    ],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityList},
         400: COMMON_400_ERROR_RESPONSE,
@@ -39,7 +43,7 @@ router = APIRouter()
     },
 )
 def list_cities(
-    application_id: str = Path(),
+    application_id: Optional[str] = Query(None),
     projects: Optional[List[str]] = Query(None),
     country_code_iso3: Optional[str] = Query(None),
 ):
@@ -47,6 +51,7 @@ def list_cities(
     Retrieve a list of cities filtered by project IDs and/or country code.
 
     ### Args:
+    - **application_id** (`Optional[str]`): A WRI cities application ID used to filter the cities.
     - **projects** (`Optional[List[str]]`): A list of Project IDs used to filter the cities.
     - **country_code_iso3** (`Optional[str]`): An ISO 3166-1 alpha-3 country code used to filter the cities.
 
