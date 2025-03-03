@@ -3,6 +3,7 @@ from typing import List
 
 from app.const import SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS, SCENARIOS_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_first_city
+from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.scenarios_repository import (
     fetch_indicator_values,
@@ -35,7 +36,6 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
         filters["cities"] = city_id
     if intervention_id and aoi_id:
         filters["Interventions"] = f"{intervention_id}__{city_id}__{aoi_id}"
-
     # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
         futures = {
@@ -47,6 +47,11 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
                     construct_filter_formula({"cities": city_id} if city_id else {})
                 )
             ): "indicator_values",
+            executor.submit(
+                lambda: fetch_indicators(
+                    construct_filter_formula({"cities": city_id} if city_id else {})
+                )
+            ): "indicators",
             executor.submit(fetch_layers): "layers",
             executor.submit(
                 lambda: fetch_first_city(generate_search_query("id", city_id))
@@ -64,18 +69,19 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
         for scenario in results["scenarios"]
     ]
 
-    indicators_list = [
-        {
-            key: indicator["fields"].get(key)
-            for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
-        }
-        for indicator in results["indicator_values"]
-    ]
-
+    indicators_dict = {
+        indicator["id"]: indicator["fields"].get("name")
+        for indicator in results["indicators"]
+    }
     scenario_indicator_dict = {}
 
     for indicator in results["indicator_values"]:
         data = indicator["fields"]
+        name = (
+            indicators_dict.get(data["indicators"][0], "")
+            if isinstance(data["indicators"], list) and len(data["indicators"]) > 0
+            else ""
+        )
         scenario = data["scenarios_ids"]
         if scenario:
             scenario_id = scenario[0]
@@ -84,7 +90,7 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
                 if existing_list:
                     existing_list.append(
                         {
-                            key: indicator["fields"].get(key)
+                            key: name if key == "name" else data.get(key)
                             for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
                         }
                     )
@@ -92,7 +98,7 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
             else:
                 scenario_indicator_dict[scenario_id] = [
                     {
-                        key: indicator["fields"].get(key)
+                        key: (name if key == "name" else data.get(key))
                         for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
                     }
                 ]
