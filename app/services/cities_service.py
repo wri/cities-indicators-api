@@ -90,8 +90,8 @@ def list_cities(
                 "geojson": f'{s3_base_path.replace("pmtiles", "geojson")}',
             }
         city_response["layers_url_v2"] = {
-            "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}__{city_response['city_admin_level']}.pmtiles",
-            "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_response['id']}__{city_response['city_admin_level']}.geojson",
+            "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}.pmtiles",
+            "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_response['id']}.geojson",
         }
         city_res_list.append(city_response)
     return city_res_list
@@ -164,8 +164,8 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
         "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
     }
     city_response["layers_url_v2"] = {
-        "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}__{city['city_admin_level']}.pmtiles",
-        "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}__{city['city_admin_level']}.geojson",
+        "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
+        "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}.geojson",
     }
     return city_response
 
