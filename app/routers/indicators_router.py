@@ -24,8 +24,10 @@ router = APIRouter()
 
 
 @router.get(
-    "/{application_id}",
-    dependencies=[Depends(validate_query_params("project", "city_id"))],
+    "",
+    dependencies=[
+        Depends(validate_query_params("project", "city_id", "application_id"))
+    ],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
         400: COMMON_400_ERROR_RESPONSE,
@@ -39,7 +41,7 @@ router = APIRouter()
     },
 )
 def list_indicators(
-    application_id: str = Path(),
+    application_id: Optional[str] = Query(None),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
 ):
