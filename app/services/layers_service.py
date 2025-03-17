@@ -13,26 +13,26 @@ def generate_layer_response(
     city_id: str, aoi_id: str | None, layer_fields: dict, city_fields: dict
 ):
 
-    s3_path = layer_fields["s3_path"]
+    s3_path = layer_fields.get("s3_path", "")
     if aoi_id:
         layer_file_name = (
             f"{city_id}__{aoi_id}__"
-            f"{layer_fields['layer_file_name']}__"
+            f"{layer_fields.get('layer_file_name')}__"
             f"{layer_fields['version'] if 'version' in layer_fields else ''}"
-            f".{layer_fields['file_type']}"
+            f".{layer_fields.get('file_type')}"
         )
     else:
         layer_file_name = (
             f"{city_id}-"
-            f"{city_fields['city_admin_level']}-"
-            f"{layer_fields['layer_file_name']}"
+            f"{city_fields.get('city_admin_level')}-"
+            f"{layer_fields.get('layer_file_name')}"
             f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
-            f".{layer_fields['file_type']}"
+            f".{layer_fields.get('file_type')}"
         )
     layer_url = urljoin(s3_path, layer_file_name)
 
     try:
-        map_styling = json.loads(layer_fields["map_styling"])
+        map_styling = json.loads(layer_fields.get("map_styling", "{}"))
         legend_styling = json.loads(layer_fields.get("legend_styling", "{}"))
     except json.JSONDecodeError:
         map_styling = {}
@@ -46,7 +46,7 @@ def generate_layer_response(
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
-    if layer_fields["layer_type"] == "vector":
+    if layer_fields.get("layer_type") == "vector":
         return_dict["layers_url"] = {
             "geojson": layer_url,
             "pmtiles": f"{os.path.splitext(layer_url)[0]}.pmtiles",
@@ -94,7 +94,6 @@ def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None)
 
     layer_fields = results["layer"]["fields"]
     city_fields = results["city"]["fields"]
-
     return generate_layer_response(
         city_id=city_id,
         aoi_id=aoi_id,
