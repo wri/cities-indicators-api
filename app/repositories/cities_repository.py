@@ -18,7 +18,7 @@ cities_table = airtable_api.table(settings.airtable_base_id, "Cities")
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_cities(filter_formula: Optional[str] = None):
-    return cities_table.all(view="api", formula=filter_formula)
+    return cities_table.all(view="all", formula=filter_formula)
 
 
 @sleep_and_retry
@@ -26,4 +26,4 @@ def fetch_cities(filter_formula: Optional[str] = None):
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_first_city(filter_formula: Optional[str] = None):
-    return cities_table.first(view="api", formula=filter_formula)
+    return cities_table.first(view="all", formula=filter_formula)

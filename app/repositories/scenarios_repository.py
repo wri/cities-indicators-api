@@ -21,7 +21,7 @@ indicator_values_table = airtable_api.table(
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_scenarios(filter_formula: Optional[str] = None):
-    return scenarios_table.all(view="api-ccl", formula=filter_formula)
+    return scenarios_table.all(view="all", formula=filter_formula)
 
 
 @sleep_and_retry
@@ -29,7 +29,7 @@ def fetch_scenarios(filter_formula: Optional[str] = None):
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_first_scenario(filter_formula: Optional[str] = None):
-    return scenarios_table.first(view="api-ccl", formula=filter_formula)
+    return scenarios_table.first(view="all", formula=filter_formula)
 
 
 @sleep_and_retry

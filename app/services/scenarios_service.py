@@ -62,9 +62,7 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
         for future in as_completed(futures):
             func_name = futures[future]
             results[func_name] = future.result()
-    _layers_dict = {
-        layer["id"]: layer["fields"]["layer_file_name"] for layer in results["layers"]
-    }
+
     layers_dict = {layer["id"]: layer["fields"] for layer in results["layers"]}
 
     scenario_list = [
