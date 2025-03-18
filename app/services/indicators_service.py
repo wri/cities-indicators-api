@@ -96,7 +96,7 @@ def list_indicators(
             {
                 "id": layers_dict[layer_id]["id"],
                 "legend": layers_dict[layer_id].get("layer_legend", ""),
-                "name": layers_dict[layer_id]["layer_name"],
+                "name": layers_dict[layer_id].get("layer_name", ""),
             }
             for layer_id in indicator.get("layers", [])
             if isinstance(indicator.get("layers"), list)
