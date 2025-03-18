@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Path
 
+from app.schemas.common_schema import ApplicationIdParam
 from app.services import scenarios_service
 
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,7 @@ router = APIRouter()
     "/{city_id}/{aoi_id}/{intervention_id}",
 )
 def get_scenario_by_city_id_aoi_id_intervention_id(
+    application_id: ApplicationIdParam = Path(),
     city_id: str = Path(),
     aoi_id: str = Path(),
     intervention_id: str = Path(),

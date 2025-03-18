@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.projects_repository import fetch_projects
+from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula
 from app.utils.settings import Settings
 
@@ -28,7 +29,7 @@ def list_cities(
     """
     # Fetch projects based on provided project IDs/application ID if provided
     projects_filters = {}
-    if application_id:
+    if not application_id == ApplicationIdParam.all:
         projects_filters["application_id"] = application_id
     if projects:
         projects_filters["id"] = projects
@@ -86,7 +87,7 @@ def list_cities(
     return city_res_list
 
 
-def get_city_by_city_id(city_id: str) -> Optional[Dict]:
+def get_city_by_city_id(application_id: str, city_id: str) -> Optional[Dict]:
     """
     Retrieve city data for a specific city ID.
 
@@ -117,7 +118,11 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
         return None
 
     city = city_data[0]["fields"]
-    project_filter_formula = construct_filter_formula({"cities": [city_id]})
+    projects_filters = {}
+    if not application_id == ApplicationIdParam.all:
+        projects_filters["application_id"] = application_id
+    projects_filters["cities"] = [city_id]
+    project_filter_formula = construct_filter_formula(projects_filters)
 
     # Asynchronously fetch all projects related to the city
     with ThreadPoolExecutor() as executor:
@@ -157,44 +162,3 @@ def get_city_by_city_id(city_id: str) -> Optional[Dict]:
         "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}__{city['city_admin_level']}.geojson",
     }
     return city_response
-
-
-def get_city_geometry_with_indicators_csv(
-    city_id: str, admin_level: Optional[str], indicator_id: Optional[str]
-) -> Optional[Dict]:
-    """
-    Retrieve the geometry, bounding boxes, and indicators of a specific city and
-    administrative level in CSV format.
-
-    Args:
-        city_id (str): The ID of the city to retrieve geometry and indicators for.
-        admin_level (Optional[str]): The administrative level to filter the geometry and indicators. If not provided, defaults to the city's admin_level.
-        indicator_id (Optional[str]): The ID of the indicator to retrieve. If not provided, all indicators are fetched.
-
-    Returns:
-        dict: A dictionary representing the city's geometry along with its indicators, bounding boxes, and units formatted in a CSV-compatible structure.
-    """
-
-    table_name = None
-    if indicator_id == "AQ_1_airPollution":
-        table_name = "indicators_aq_1"
-    elif indicator_id == "AQ_2_exceedancedays_atleastone":
-        table_name = "indicators_aq_2"
-    elif indicator_id == "GHG_1_ghg_emissions":
-        table_name = "indicators_ghg_1"
-
-    if table_name:
-        data = process_special_indicators(
-            city_id=city_id,
-            indicator_id=indicator_id,
-            admin_level=admin_level,
-            table_name=table_name,
-        )
-
-        return {"filename": indicator_id, "data": data}
-
-    data = process_normal_indicators(
-        city_id=city_id, admin_level=admin_level, indicator_id=indicator_id
-    )
-
-    return {"filename": f"{city_id}_indicators", "data": data}
