@@ -12,7 +12,7 @@ settings = Settings()
 
 
 def list_cities(
-    application_id: Optional[str],
+    application_id: Optional[ApplicationIdParam],
     projects: Optional[List[str]],
     country_code_iso3: Optional[str],
 ) -> List[Dict[str, Any]]:
@@ -29,8 +29,8 @@ def list_cities(
     """
     # Fetch projects based on provided project IDs/application ID if provided
     projects_filters = {}
-    if not application_id == ApplicationIdParam.all:
-        projects_filters["application_id"] = application_id
+    if application_id:
+        projects_filters["application_id"] = application_id.value
     if projects:
         projects_filters["id"] = projects
     projects_filter_formula = construct_filter_formula(projects_filters)
@@ -87,7 +87,9 @@ def list_cities(
     return city_res_list
 
 
-def get_city_by_city_id(application_id: str, city_id: str) -> Optional[Dict]:
+def get_city_by_city_id(
+    application_id: Optional[ApplicationIdParam], city_id: str
+) -> Optional[Dict]:
     """
     Retrieve city data for a specific city ID.
 
@@ -119,8 +121,8 @@ def get_city_by_city_id(application_id: str, city_id: str) -> Optional[Dict]:
 
     city = city_data[0]["fields"]
     projects_filters = {}
-    if not application_id == ApplicationIdParam.all:
-        projects_filters["application_id"] = application_id
+    if application_id:
+        projects_filters["application_id"] = application_id.value
     projects_filters["cities"] = [city_id]
     project_filter_formula = construct_filter_formula(projects_filters)
 

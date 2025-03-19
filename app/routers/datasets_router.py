@@ -1,14 +1,13 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
     COMMON_400_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
 from app.utils.dependencies import validate_query_params
@@ -29,7 +28,6 @@ router = APIRouter()
     },
 )
 def list_datasets(
-    application_id: ApplicationIdParam = Path(),
     city_id: Optional[str] = Query(None),
     layer_id: Optional[List[str]] = Query(None),
 ):

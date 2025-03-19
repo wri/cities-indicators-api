@@ -8,6 +8,5 @@ class ErrorResponse(BaseModel):
 
 
 class ApplicationIdParam(str, Enum):
-    all = "all"
     ccl = "ccl"
     cid = "cid"

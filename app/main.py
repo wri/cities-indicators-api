@@ -62,29 +62,17 @@ app.add_middleware(
 # Routes
 # ----------------------------------------
 
-app.include_router(
-    cities_router.router, prefix="/{application_id}/cities", tags=["Cities"]
-)
-app.include_router(
-    datasets_router.router, prefix="/{application_id}/datasets", tags=["Datasets"]
-)
-app.include_router(
-    indicators_router.router, prefix="/{application_id}/indicators", tags=["Indicators"]
-)
-app.include_router(
-    layers_router.router, prefix="/{application_id}/layers", tags=["Layers"]
-)
-app.include_router(
-    projects_router.router, prefix="/{application_id}/projects", tags=["Projects"]
-)
+app.include_router(cities_router.router, prefix="/cities", tags=["Cities"])
+app.include_router(datasets_router.router, prefix="/datasets", tags=["Datasets"])
+app.include_router(indicators_router.router, prefix="/indicators", tags=["Indicators"])
+app.include_router(layers_router.router, prefix="/layers", tags=["Layers"])
+app.include_router(projects_router.router, prefix="/projects", tags=["Projects"])
 app.include_router(
     interventions_router.router,
-    prefix="/{application_id}/interventions",
+    prefix="/interventions",
     tags=["Interventions"],
 )
-app.include_router(
-    scenarios_router.router, prefix="/{application_id}/scenarios", tags=["Scenarios"]
-)
+app.include_router(scenarios_router.router, prefix="/scenarios", tags=["Scenarios"])
 
 
 @app.get(

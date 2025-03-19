@@ -11,6 +11,7 @@ from app.repositories.indicators_repository import (
 )
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
+from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula, generate_search_query
 from app.utils.settings import Settings
 
@@ -24,7 +25,7 @@ SPECIAL_INDICATOR_TABLES = {
 
 
 def list_indicators(
-    application_id: Optional[str] = None,
+    application_id: Optional[ApplicationIdParam] = None,
     project: Optional[str] = None,
     city_id: Optional[List[str]] = None,
 ) -> List[Dict]:
@@ -42,7 +43,7 @@ def list_indicators(
     """
     # Create filters
     indicators_filters = {}
-    project_filter = {"application_id": application_id}
+    project_filter = {"application_id": application_id.value} if application_id else {}
     projects = fetch_projects(construct_filter_formula(project_filter))
     projects_dict = {}
     if projects:

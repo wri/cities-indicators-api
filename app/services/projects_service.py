@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 from app.repositories.projects_repository import fetch_projects
-from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import generate_search_query
 
 
@@ -14,8 +13,8 @@ def list_projects(application_id) -> List[Dict]:
 
     """
     filter_formula = (
-        generate_search_query("application_id", application_id)
-        if not application_id == ApplicationIdParam.all
+        generate_search_query("application_id", application_id.value)
+        if application_id
         else {}
     )
     projects = fetch_projects(filter_formula)

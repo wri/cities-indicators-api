@@ -34,7 +34,7 @@ router = APIRouter()
     },
 )
 def list_cities(
-    application_id: ApplicationIdParam = Path(),
+    application_id: ApplicationIdParam = Query(None),
     projects: Optional[List[str]] = Query(None),
     country_code_iso3: Optional[str] = Query(None),
 ):
@@ -56,7 +56,7 @@ def list_cities(
     """
     try:
         cities_list = cities_service.list_cities(
-            application_id.value, projects, country_code_iso3
+            application_id, projects, country_code_iso3
         )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
@@ -82,7 +82,7 @@ def list_cities(
     },
 )
 def get_city_by_city_id(
-    application_id: ApplicationIdParam = Path(),
+    application_id: ApplicationIdParam = Query(None),
     city_id: str = Path(),
 ):
     """

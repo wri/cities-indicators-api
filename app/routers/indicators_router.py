@@ -42,7 +42,7 @@ router = APIRouter()
     },
 )
 def list_indicators(
-    application_id: ApplicationIdParam = Path(),
+    application_id: ApplicationIdParam = Query(None),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
 ):
@@ -68,7 +68,7 @@ def list_indicators(
     """
     try:
         indicators_list = indicators_service.list_indicators(
-            application_id.value, project, city_id
+            application_id, project, city_id
         )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
@@ -90,9 +90,7 @@ def list_indicators(
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-def list_indicators_themes(
-    application_id: ApplicationIdParam = Path(),
-):
+def list_indicators_themes():
     """
     Retrieve a set of unique themes from all indicators.
 
@@ -131,7 +129,6 @@ def list_indicators_themes(
     },
 )
 def get_metadata_by_indicator_id(
-    application_id: ApplicationIdParam = Path(),
     indicator_id: str = Path(),
 ):
     """

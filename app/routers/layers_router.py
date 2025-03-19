@@ -8,7 +8,6 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.layers_schema import LayerResponse
 from app.services import layers_service
 from app.utils.dependencies import validate_query_params
@@ -32,7 +31,6 @@ router = APIRouter()
     },
 )
 def get_layer(
-    application_id: ApplicationIdParam = Path(),
     city_id: str = Path(),
     layer_id: str = Path(),
     aoi_id: Optional[str] = Query(None),

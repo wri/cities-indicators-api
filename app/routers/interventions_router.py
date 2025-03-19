@@ -8,7 +8,6 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
-from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.interventions_schema import InterventionList
 from app.services import interventions_service
 
@@ -26,9 +25,7 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-def list_interventions(
-    application_id: ApplicationIdParam = Path(),
-):
+def list_interventions():
     """
     Retrieve a list of all interventions.
 
@@ -67,7 +64,6 @@ def list_interventions(
     },
 )
 def get_city_by_city_id(
-    application_id: ApplicationIdParam = Path(),
     city_id: str = Path(),
 ):
     """
