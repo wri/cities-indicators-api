@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Path, Query, Depends
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -30,7 +31,9 @@ router = APIRouter()
     },
 )
 def get_layer(
-    city_id: str = Path(), layer_id: str = Path(), aoi_id: Optional[str] = Query(None)
+    city_id: str = Path(),
+    layer_id: str = Path(),
+    aoi_id: Optional[str] = Query(None),
 ):
     """
     Retrieve information about a specific layer for a given city.

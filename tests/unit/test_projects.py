@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
+from app.schemas.common_schema import ApplicationIdParam
 from app.services.projects_service import list_projects
 
 
@@ -35,7 +36,7 @@ class TestListProjects:
     def test_list_projects(self, mock_fetch_projects, mock_projects):
         mock_fetch_projects.return_value = mock_projects
 
-        result = list_projects("cid")
+        result = list_projects(ApplicationIdParam.cid)
 
         assert result[0]["id"] == "Project 1"
         assert result[0]["name"] == "Project One"
