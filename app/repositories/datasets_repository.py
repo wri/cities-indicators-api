@@ -18,4 +18,4 @@ datasets_table = airtable_api.table(settings.airtable_base_id, "Datasets")
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_datasets(filter_formula: Optional[str] = None):
-    return datasets_table.all(view="api", formula=filter_formula)
+    return datasets_table.all(view="all", formula=filter_formula)

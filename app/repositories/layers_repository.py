@@ -18,7 +18,7 @@ layers_table = airtable_api.table(settings.airtable_base_id, "Layers")
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_layers(filter_formula: Optional[str] = None):
-    return layers_table.all(view="api", formula=filter_formula)
+    return layers_table.all(view="all", formula=filter_formula)
 
 
 @sleep_and_retry
@@ -26,4 +26,4 @@ def fetch_layers(filter_formula: Optional[str] = None):
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_first_layer(filter_formula: Optional[str] = None):
-    return layers_table.first(view="api", formula=filter_formula)
+    return layers_table.first(view="all", formula=filter_formula)

@@ -18,4 +18,4 @@ projects_table = airtable_api.table(settings.airtable_base_id, "Projects")
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_projects(filter_formula: Optional[str] = None):
-    return projects_table.all(view="api", formula=filter_formula)
+    return projects_table.all(view="all", formula=filter_formula)

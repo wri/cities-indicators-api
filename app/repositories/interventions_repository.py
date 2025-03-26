@@ -18,7 +18,7 @@ interventions_table = airtable_api.table(settings.airtable_base_id, "Interventio
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_interventions(filter_formula: Optional[str] = None):
-    return interventions_table.all(view="api-ccl", formula=filter_formula)
+    return interventions_table.all(view="all", formula=filter_formula)
 
 
 @sleep_and_retry
@@ -26,4 +26,4 @@ def fetch_interventions(filter_formula: Optional[str] = None):
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
 def fetch_first_intervention(filter_formula: Optional[str] = None):
-    return interventions_table.first(view="api-ccl", formula=filter_formula)
+    return interventions_table.first(view="all", formula=filter_formula)

@@ -11,6 +11,8 @@ CITY_RESPONSE_KEYS = [
     "latitude",
     "longitude",
     "projects",
+    "bounding_box",
+    "s3_base_path",
 ]
 INTERVENTIONS_RESPONSE_KEYS = [
     "id",
@@ -34,8 +36,12 @@ SCENARIOS_RESPONSE_KEYS = [
     "name",
     "description",
     "layers",
-    "cities",
-    "interventions",
+]
+SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS = [
+    "id",
+    "name",
+    "time",
+    "value",
 ]
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",

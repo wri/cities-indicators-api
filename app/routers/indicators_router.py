@@ -9,9 +9,8 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.indicators_schema import (
-    CitiesByIndicatorIdResponse,
-    CityIndicatorValueResponse,
     IndicatorsResponse,
     IndicatorsThemesResponse,
     MetadataByIndicatorIdResponse,
@@ -27,7 +26,9 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(validate_query_params("project", "city_id"))],
+    dependencies=[
+        Depends(validate_query_params("project", "city_id", "application_id"))
+    ],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": IndicatorsResponse},
         400: COMMON_400_ERROR_RESPONSE,
@@ -41,6 +42,7 @@ router = APIRouter()
     },
 )
 def list_indicators(
+    application_id: ApplicationIdParam = Query(None),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
 ):
@@ -65,7 +67,9 @@ def list_indicators(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        indicators_list = indicators_service.list_indicators(project, city_id)
+        indicators_list = indicators_service.list_indicators(
+            application_id, project, city_id
+        )
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
@@ -108,50 +112,6 @@ def list_indicators_themes():
         ) from e
 
     return {"themes": themes}
-
-
-@router.get(
-    "/{indicator_id}",
-    responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CitiesByIndicatorIdResponse},
-        404: {
-            **COMMON_404_ERROR_RESPONSE,
-            "content": {"application/json": {"example": {"detail": "No cities found"}}},
-        },
-        500: COMMON_500_ERROR_RESPONSE,
-    },
-)
-def get_cities_by_indicator_id(
-    indicator_id: str = Path(),
-):
-    """
-    Retrieve a list of cities associated with a specific indicator.
-
-    ### Args:
-    - **indicator_id** (`str`): The unique identifier of the indicator to filter cities by.
-
-    ### Returns:
-    - **CitiesByIndicatorIdResponse**: A Pydantic model containing a list of cities
-      associated with the specified indicator.
-
-    ### Raises:
-    - **HTTPException**:
-        - 404: If no cities are found for the given indicator.
-        - 500: If an error occurs during the retrieval process.
-    """
-    try:
-        cities_list = indicators_service.get_cities_by_indicator_id(indicator_id)
-    except Exception as e:
-        logger.exception("An error occurred: %s", e, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred: Retrieving cities for the specified indicator failed.",
-        ) from e
-
-    if not cities_list:
-        raise HTTPException(status_code=404, detail="No cities found")
-
-    return cities_list
 
 
 @router.get(
@@ -202,53 +162,3 @@ def get_metadata_by_indicator_id(
         raise HTTPException(status_code=404, detail="No indicators metadata found")
 
     return indicators_metadata_list
-
-
-@router.get(
-    "/{indicator_id}/{city_id}",
-    responses={
-        200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": CityIndicatorValueResponse},
-        404: {
-            **COMMON_404_ERROR_RESPONSE,
-            "content": {
-                "application/json": {"example": {"detail": "No indicator found"}}
-            },
-        },
-        500: COMMON_500_ERROR_RESPONSE,
-    },
-)
-def get_city_indicator_by_indicator_id_and_city_id(
-    indicator_id: str = Path(),
-    city_id: str = Path(),
-):
-    """
-    Retrieve indicator data for a specific city and indicator.
-
-    ### Args:
-    - **indicator_id** (`str`): The unique identifier of the indicator to filter by.
-    - **city_id** (`str`): The unique identifier of the city to filter by.
-
-    ### Returns:
-    - **IndicatorValueResponse**: A Pydantic model containing indicator data for the
-      specified city and indicator.
-
-    ### Raises:
-    - **HTTPException**:
-        - 404: If no indicator data is found for the given city and indicator.
-        - 500: If an error occurs during the retrieval process.
-    """
-    try:
-        indicator = indicators_service.get_city_indicator_by_indicator_id_and_city_id(
-            indicator_id, city_id
-        )
-    except Exception as e:
-        logger.exception("An error occurred: %s", e, exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred: Retrieving indicator data for the specified city and indicator failed.",
-        ) from e
-
-    if not indicator:
-        raise HTTPException(status_code=404, detail="No indicator found")
-
-    return indicator

@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -8,6 +8,7 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.projects_schema import ListProjectsResponse
 from app.services import projects_service
 
@@ -31,7 +32,9 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-def list_projects():
+def list_projects(
+    application_id: ApplicationIdParam = Query(None),
+):
     """
     Retrieve the list of projects.
 
@@ -45,7 +48,7 @@ def list_projects():
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        projects_list = projects_service.list_projects()
+        projects_list = projects_service.list_projects(application_id)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(

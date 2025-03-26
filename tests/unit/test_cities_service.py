@@ -85,7 +85,7 @@ class TestListCities:
 
         projects = ["proj1"]
         country_code_iso3 = "USA"
-        response = list_cities(projects, country_code_iso3)
+        response = list_cities("cid", projects, country_code_iso3)
 
         assert isinstance(response, list)
         assert len(response) == 1
@@ -106,7 +106,7 @@ class TestListCities:
 
         projects = ["proj1"]
         country_code_iso3 = "USA"
-        response = list_cities(projects, country_code_iso3)
+        response = list_cities("cid", projects, country_code_iso3)
 
         assert isinstance(response, list)
         assert len(response) == 0
