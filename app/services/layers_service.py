@@ -29,7 +29,6 @@ def generate_layer_response(
             f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
             f".{layer_fields.get('file_type')}"
         )
-    layer_url = urljoin(s3_path, layer_file_name)
 
     try:
         map_styling = json.loads(layer_fields.get("map_styling", "{}"))
@@ -47,12 +46,21 @@ def generate_layer_response(
         "legend_styling": legend_styling,
     }
     if layer_fields.get("layer_type") == "vector":
+        geojson_sub_url = urljoin(s3_path, "geojson/")
+        geojson_layer_url = urljoin(geojson_sub_url, layer_file_name)
+        pmtiles_sub_url = urljoin(s3_path, "pmtiles/")
+        pmtiles_layer_url = (
+            f"{os.path.splitext(urljoin(pmtiles_sub_url, layer_file_name))[0]}.pmtiles"
+        )
         return_dict["layers_url"] = {
-            "geojson": layer_url,
-            "pmtiles": f"{os.path.splitext(layer_url)[0]}.pmtiles",
+            "geojson": geojson_layer_url,
+            "pmtiles": pmtiles_layer_url,
         }
     else:
-        return_dict["layers_url"] = {"cog": layer_url}
+        cog_sub_url = urljoin(s3_path, "cog/")
+        cog_layer_url = urljoin(cog_sub_url, layer_file_name)
+        return_dict["layers_url"] = {"cog": cog_layer_url}
+
     return return_dict
 
 
