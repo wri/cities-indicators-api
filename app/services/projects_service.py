@@ -12,12 +12,16 @@ def list_projects(application_id) -> List[Dict]:
         List[str]: A list containing the unique project IDs.
 
     """
-    filter_formula = generate_search_query("application_id", application_id)
+    filter_formula = (
+        generate_search_query("application_id", application_id.value)
+        if application_id
+        else {}
+    )
     projects = fetch_projects(filter_formula)
     projects_list = [
         {
             "id": project["fields"]["id"],
-            "name": project["fields"]["name"][0],
+            "name": project["fields"].get("name", [""])[0],
         }
         for project in projects
     ]

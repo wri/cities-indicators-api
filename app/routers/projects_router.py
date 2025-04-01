@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -8,6 +8,7 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.projects_schema import ListProjectsResponse
 from app.services import projects_service
 
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/{application_id}",
+    "",
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": ListProjectsResponse},
         400: COMMON_400_ERROR_RESPONSE,
@@ -32,7 +33,7 @@ router = APIRouter()
     },
 )
 def list_projects(
-    application_id: str = Path(),
+    application_id: ApplicationIdParam = Query(None),
 ):
     """
     Retrieve the list of projects.

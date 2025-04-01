@@ -9,6 +9,7 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.indicators_schema import (
     IndicatorsResponse,
     IndicatorsThemesResponse,
@@ -41,7 +42,7 @@ router = APIRouter()
     },
 )
 def list_indicators(
-    application_id: Optional[str] = Query(None),
+    application_id: ApplicationIdParam = Query(None),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
 ):

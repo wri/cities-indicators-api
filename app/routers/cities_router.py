@@ -10,6 +10,7 @@ from app.const import (
     COMMON_500_ERROR_RESPONSE,
 )
 from app.schemas.cities_schema import City, CityList
+from app.schemas.common_schema import ApplicationIdParam
 from app.services import cities_service
 from app.utils.dependencies import validate_query_params
 
@@ -33,7 +34,7 @@ router = APIRouter()
     },
 )
 def list_cities(
-    application_id: Optional[str] = Query(None),
+    application_id: ApplicationIdParam = Query(None),
     projects: Optional[List[str]] = Query(None),
     country_code_iso3: Optional[str] = Query(None),
 ):
@@ -81,6 +82,7 @@ def list_cities(
     },
 )
 def get_city_by_city_id(
+    application_id: ApplicationIdParam = Query(None),
     city_id: str = Path(),
 ):
     """
@@ -98,7 +100,7 @@ def get_city_by_city_id(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        city = cities_service.get_city_by_city_id(city_id)
+        city = cities_service.get_city_by_city_id(application_id, city_id)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
