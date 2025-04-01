@@ -68,18 +68,8 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
-        s3_base_path = city_response.get(
-            "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
-        )
-        if s3_base_path:
-            if s3_base_path.endswith("/"):
-                s3_base_path = s3_base_path[:-1]
 
-            city_response["layers_url"] = {
-                "pmtiles": f"{s3_base_path}",
-                "geojson": f'{s3_base_path.replace("pmtiles", "geojson")}',
-            }
-        city_response["layers_url_v2"] = {
+        city_response["layers_url"] = {
             "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}.pmtiles",
             "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_response['id']}.geojson",
         }
@@ -156,10 +146,6 @@ def get_city_by_city_id(
         s3_base_path = s3_base_path[:-1]
 
     city_response["layers_url"] = {
-        "pmtiles": f"{s3_base_path}/data-pmtiles/{city_id}.pmtiles",
-        "geojson": f"{s3_base_path}/data-geojson/{city_id}.geojson",
-    }
-    city_response["layers_url_v2"] = {
         "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
         "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}.geojson",
     }
