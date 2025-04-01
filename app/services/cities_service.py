@@ -68,9 +68,7 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
-        s3_base_path = city_response.get(
-            "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
-        )
+
         city_response["layers_url"] = {
             "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}.pmtiles",
             "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_response['id']}.geojson",
