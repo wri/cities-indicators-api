@@ -2,11 +2,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 from app.const import INTERVENTIONS_RESPONSE_KEYS
-from app.repositories.interventions_repository import (
-    fetch_interventions,
-)
-from app.repositories.scenarios_repository import fetch_scenarios
 from app.repositories.cities_repository import fetch_cities
+from app.repositories.interventions_repository import fetch_interventions
+from app.repositories.scenarios_repository import fetch_scenarios
 from app.utils.settings import Settings
 
 settings = Settings()

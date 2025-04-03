@@ -30,6 +30,7 @@ INTERVENTIONS_RESPONSE_KEYS = [
     "card_intervention_photo",
     "cities",
     "scenarios",
+    "category",
 ]
 SCENARIOS_RESPONSE_KEYS = [
     "id",
