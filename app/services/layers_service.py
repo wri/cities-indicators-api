@@ -14,6 +14,7 @@ def generate_layer_response(
 ):
 
     s3_path = layer_fields.get("s3_path", "")
+
     if aoi_id:
         layer_file_name = (
             f"{city_id}__{aoi_id}__"
@@ -23,10 +24,10 @@ def generate_layer_response(
         )
     else:
         layer_file_name = (
-            f"{city_id}-"
-            f"{city_fields.get('city_admin_level')}-"
-            f"{layer_fields.get('layer_file_name')}"
-            f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
+            f"{city_id}__"
+            f"{city_fields.get('city_admin_level')}__"
+            f"{layer_fields.get('layer_file_name')}__"
+            f"{layer_fields['version'] if 'version' in layer_fields else ''}"
             f".{layer_fields.get('file_type')}"
         )
 
