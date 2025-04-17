@@ -82,7 +82,7 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
             if isinstance(data["indicators"], list) and len(data["indicators"]) > 0
             else ""
         )
-        scenario = data["scenarios_ids"]
+        scenario = data.get("scenarios_ids")
         if scenario:
             scenario_id = scenario[0]
             if scenario_id in scenario_indicator_dict:
