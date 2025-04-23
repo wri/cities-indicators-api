@@ -11,6 +11,7 @@ from app.const import (
 from app.schemas.layers_schema import LayerResponse
 from app.services import layers_service
 from app.utils.dependencies import validate_query_params
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,4 +76,5 @@ def get_layer(
     if not layer:
         raise HTTPException(status_code=404, detail="No layer found")
 
-    return layer
+    return_dict = cleanup_spaces_in_response(layer)
+    return return_dict

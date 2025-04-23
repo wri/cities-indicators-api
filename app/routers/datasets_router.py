@@ -11,6 +11,7 @@ from app.const import (
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
 from app.utils.dependencies import validate_query_params
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,4 +60,5 @@ def list_datasets(
             detail="An error occurred: Retrieving the list of datasets failed.",
         ) from e
 
-    return {"datasets": datasets}
+    return_dict = cleanup_spaces_in_response({"datasets": datasets})
+    return return_dict
