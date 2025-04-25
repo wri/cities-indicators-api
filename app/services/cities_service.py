@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.projects_repository import fetch_projects
+from app.repositories.areas_of_interest_repository import fetch_areas_of_interest
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula
 from app.utils.settings import Settings
@@ -51,6 +52,8 @@ def list_cities(
     cities_filter_formula = construct_filter_formula(cities_filters)
     cities_list = fetch_cities(cities_filter_formula)
 
+    areas_of_interest_list = fetch_areas_of_interest()
+
     # Return empty list if no cities found
     if not cities_list:
         return []
@@ -67,7 +70,16 @@ def list_cities(
     # Return the filtered cities data
     city_res_list = []
     for city in cities_list:
+        bbox_dict = {}
+        for aoi in areas_of_interest_list:
+            if (
+                city["id"] in aoi["fields"]["cities"]
+                and "bounding_box" in aoi["fields"]
+            ):
+                bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
+        city_response["bounding_box"] = bbox_dict
 
         city_response["layers_url"] = {
             "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}.pmtiles",
@@ -94,10 +106,12 @@ def get_city_by_city_id(
     # Define the tasks to be executed asynchronously
     future_to_func = {
         lambda: fetch_cities(filter_formula): "city_data",
+        lambda: fetch_areas_of_interest(): "aoi_data",
     }
 
     city_data = []
     all_projects = []
+    aoi_list = []
 
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(func): name for func, name in future_to_func.items()}
@@ -105,6 +119,8 @@ def get_city_by_city_id(
             func_name = futures[future]
             if func_name == "city_data":
                 city_data = future.result()
+            elif func_name == "aoi_data":
+                aoi_list = future.result()
 
     if not city_data:
         return None
@@ -128,6 +144,15 @@ def get_city_by_city_id(
     city["projects"] = city_projects
 
     city_response = {key: city.get(key) for key in CITY_RESPONSE_KEYS}
+
+    bbox_dict = {}
+    for aoi in aoi_list:
+        if (
+            city_data[0]["id"] in aoi["fields"]["cities"]
+            and "bounding_box" in aoi["fields"]
+        ):
+            bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+    city_response["bounding_box"] = bbox_dict
 
     s3_base_path = city_response.get(
         "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
