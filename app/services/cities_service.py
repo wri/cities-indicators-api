@@ -92,10 +92,21 @@ def list_cities(
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         city_id = city_response["id"]
         indicator_values = grouped_indicator_values.get(city_id)
-        city_response["indicator_values"] = []
+        city_response["indicator_values"] = {}
         if indicator_values:
-            city_response["indicator_values"] = [
-                {
+            sorted_selected_indicator_values = sorted(
+                indicator_values if indicator_values else [],
+                key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+            )
+            grouped_selected_indicator_values = {
+                key: list(group)
+                for key, group in itertools.groupby(
+                    sorted_selected_indicator_values,
+                    lambda x: x["fields"]["areas_of_interest_id"][0],
+                )
+            }
+            for aoi, value in grouped_selected_indicator_values.items():
+                city_response["indicator_values"][aoi] = {
                     f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
                         i["fields"]["value"]
                         if i["fields"].get("indicators_id")
@@ -103,9 +114,9 @@ def list_cities(
                         and i["fields"].get("value")
                         else None
                     )
-                    for i in indicator_values
+                    for i in value
                 }
-            ]
+
         city_response["layers_url"] = {
             "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
             "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}.geojson",
@@ -198,19 +209,31 @@ def get_city_by_city_id(
 
     city_response["indicator_values"] = []
     selected_city_indicator_values = grouped_indicator_values.get(city_id)
-    if selected_city_indicator_values:
-        city_response["indicator_values"] = [
-            {
-                f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
-                    i["fields"]["value"]
-                    if i["fields"].get("indicators_id")
-                    and i["fields"].get("areas_of_interest_id")
-                    and i["fields"].get("value")
-                    else None
-                )
-                for i in selected_city_indicator_values
-            }
-        ]
+
+    sorted_selected_indicator_values = sorted(
+        selected_city_indicator_values if selected_city_indicator_values else [],
+        key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+    )
+    grouped_selected_indicator_values = {
+        key: list(group)
+        for key, group in itertools.groupby(
+            sorted_selected_indicator_values,
+            lambda x: x["fields"]["areas_of_interest_id"][0],
+        )
+    }
+    city_response["indicator_values"] = {}
+    for aoi, value in grouped_selected_indicator_values.items():
+        city_response["indicator_values"][aoi] = {
+            f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
+                i["fields"]["value"]
+                if i["fields"].get("indicators_id")
+                and i["fields"].get("areas_of_interest_id")
+                and i["fields"].get("value")
+                else None
+            )
+            for i in value
+        }
+
     city_response["layers_url"] = {
         "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
         "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}.geojson",
