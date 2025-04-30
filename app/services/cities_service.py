@@ -1,9 +1,11 @@
+import itertools
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 from app.const import CITY_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.projects_repository import fetch_projects
+from app.repositories.scenarios_repository import fetch_indicator_values
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula
 from app.utils.settings import Settings
@@ -48,9 +50,29 @@ def list_cities(
     if country_code_iso3:
         cities_filters["country_code_iso3"] = country_code_iso3
 
-    cities_filter_formula = construct_filter_formula(cities_filters)
-    cities_list = fetch_cities(cities_filter_formula)
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(
+                lambda: fetch_cities(construct_filter_formula(cities_filters))
+            ): "cities",
+            executor.submit(lambda: fetch_indicator_values()): "indicator_values",
+        }
 
+        results = {}
+        for future in as_completed(futures):
+            func_name = futures[future]
+            results[func_name] = future.result()
+
+    cities_list = results["cities"]
+    sorted_indicator_values = sorted(
+        results["indicator_values"], key=lambda x: (x["fields"]["cities_id"][0])
+    )
+    grouped_indicator_values = {
+        key: list(group)
+        for key, group in itertools.groupby(
+            sorted_indicator_values, lambda x: x["fields"]["cities_id"][0]
+        )
+    }
     # Return empty list if no cities found
     if not cities_list:
         return []
@@ -68,10 +90,36 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
+        city_id = city_response["id"]
+        indicator_values = grouped_indicator_values.get(city_id)
+        city_response["indicator_values"] = {}
+        if indicator_values:
+            sorted_selected_indicator_values = sorted(
+                indicator_values if indicator_values else [],
+                key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+            )
+            grouped_selected_indicator_values = {
+                key: list(group)
+                for key, group in itertools.groupby(
+                    sorted_selected_indicator_values,
+                    lambda x: x["fields"]["areas_of_interest_id"][0],
+                )
+            }
+            for aoi, value in grouped_selected_indicator_values.items():
+                city_response["indicator_values"][aoi] = {
+                    f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
+                        i["fields"]["value"]
+                        if i["fields"].get("indicators_id")
+                        and i["fields"].get("areas_of_interest_id")
+                        and i["fields"].get("value")
+                        else None
+                    )
+                    for i in value
+                }
 
         city_response["layers_url"] = {
-            "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_response['id']}.pmtiles",
-            "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_response['id']}.geojson",
+            "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
+            "geojson": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/{city_id}.geojson",
         }
         city_res_list.append(city_response)
     return city_res_list
@@ -94,9 +142,13 @@ def get_city_by_city_id(
     # Define the tasks to be executed asynchronously
     future_to_func = {
         lambda: fetch_cities(filter_formula): "city_data",
+        lambda: fetch_indicator_values(
+            {"cities": city_id} if city_id else {}
+        ): "indicator_values",
     }
 
     city_data = []
+    indicator_values = []
     all_projects = []
 
     with ThreadPoolExecutor() as executor:
@@ -105,10 +157,20 @@ def get_city_by_city_id(
             func_name = futures[future]
             if func_name == "city_data":
                 city_data = future.result()
-
+            if func_name == "indicator_values":
+                indicator_values = future.result()
     if not city_data:
         return None
-
+    sorted_indicator_values = sorted(
+        indicator_values if indicator_values else [],
+        key=lambda x: (x["fields"]["cities_id"][0]),
+    )
+    grouped_indicator_values = {
+        key: list(group)
+        for key, group in itertools.groupby(
+            sorted_indicator_values, lambda x: x["fields"]["cities_id"][0]
+        )
+    }
     city = city_data[0]["fields"]
     projects_filters = {}
     if application_id:
@@ -144,6 +206,33 @@ def get_city_by_city_id(
     )
     if s3_base_path.endswith("/"):
         s3_base_path = s3_base_path[:-1]
+
+    city_response["indicator_values"] = []
+    selected_city_indicator_values = grouped_indicator_values.get(city_id)
+
+    sorted_selected_indicator_values = sorted(
+        selected_city_indicator_values if selected_city_indicator_values else [],
+        key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+    )
+    grouped_selected_indicator_values = {
+        key: list(group)
+        for key, group in itertools.groupby(
+            sorted_selected_indicator_values,
+            lambda x: x["fields"]["areas_of_interest_id"][0],
+        )
+    }
+    city_response["indicator_values"] = {}
+    for aoi, value in grouped_selected_indicator_values.items():
+        city_response["indicator_values"][aoi] = {
+            f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
+                i["fields"]["value"]
+                if i["fields"].get("indicators_id")
+                and i["fields"].get("areas_of_interest_id")
+                and i["fields"].get("value")
+                else None
+            )
+            for i in value
+        }
 
     city_response["layers_url"] = {
         "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
