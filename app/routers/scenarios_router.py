@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Path
 
 from app.services import scenarios_service
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,4 +50,5 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
     if not scenarios_list:
         raise HTTPException(status_code=404, detail="No scenarios found")
 
-    return scenarios_list
+    return_dict = cleanup_spaces_in_response(scenarios_list)
+    return return_dict

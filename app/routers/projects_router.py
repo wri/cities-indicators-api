@@ -11,6 +11,7 @@ from app.const import (
 from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.projects_schema import ListProjectsResponse
 from app.services import projects_service
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,4 +60,5 @@ def list_projects(
     if not projects_list:
         raise HTTPException(status_code=404, detail="No projects found")
 
-    return {"projects": projects_list}
+    return_dict = cleanup_spaces_in_response({"projects": projects_list})
+    return return_dict

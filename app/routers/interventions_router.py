@@ -10,6 +10,7 @@ from app.const import (
 )
 from app.schemas.interventions_schema import InterventionList
 from app.services import interventions_service
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +50,8 @@ def list_interventions():
     if not interventions_list:
         raise HTTPException(status_code=404, detail="No interventions found")
 
-    return {"interventions": interventions_list}
+    return_dict = cleanup_spaces_in_response({"interventions": interventions_list})
+    return return_dict
 
 
 @router.get(
@@ -93,4 +95,5 @@ def get_city_by_city_id(
     if not interventions_list:
         raise HTTPException(status_code=404, detail="No interventions found")
 
-    return {"interventions": interventions_list}
+    return_dict = cleanup_spaces_in_response({"interventions": interventions_list})
+    return return_dict
