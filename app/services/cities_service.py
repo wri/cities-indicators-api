@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 from app.const import CITY_RESPONSE_KEYS
+from app.repositories.areas_of_interest_repository import fetch_areas_of_interest
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.projects_repository import fetch_projects
 from app.repositories.scenarios_repository import fetch_indicator_values
@@ -56,6 +57,7 @@ def list_cities(
                 lambda: fetch_cities(construct_filter_formula(cities_filters))
             ): "cities",
             executor.submit(lambda: fetch_indicator_values()): "indicator_values",
+            executor.submit(lambda: fetch_areas_of_interest()): "aoi_data",
         }
 
         results = {}
@@ -65,14 +67,17 @@ def list_cities(
 
     cities_list = results["cities"]
     sorted_indicator_values = sorted(
-        results["indicator_values"], key=lambda x: (x["fields"]["cities_id"][0])
+        results["indicator_values"],
+        key=lambda x: (x["fields"].get("cities_id", [""])[0]),
     )
     grouped_indicator_values = {
         key: list(group)
         for key, group in itertools.groupby(
-            sorted_indicator_values, lambda x: x["fields"]["cities_id"][0]
+            sorted_indicator_values, lambda x: x["fields"].get("cities_id", [""])[0]
         )
     }
+    areas_of_interest_list = results["aoi_data"]
+
     # Return empty list if no cities found
     if not cities_list:
         return []
@@ -89,6 +94,15 @@ def list_cities(
     # Return the filtered cities data
     city_res_list = []
     for city in cities_list:
+        bbox_dict = {}
+        if areas_of_interest_list:
+            for aoi in areas_of_interest_list:
+                if (
+                    city["id"] in aoi["fields"].get("cities", [])
+                    and "bounding_box" in aoi["fields"]
+                ):
+                    bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         city_id = city_response["id"]
         indicator_values = grouped_indicator_values.get(city_id)
@@ -116,6 +130,7 @@ def list_cities(
                     )
                     for i in value
                 }
+        city_response["bounding_box"] = bbox_dict
 
         city_response["layers_url"] = {
             "pmtiles": f"https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/pmtiles/{city_id}.pmtiles",
@@ -145,11 +160,13 @@ def get_city_by_city_id(
         lambda: fetch_indicator_values(
             {"cities": city_id} if city_id else {}
         ): "indicator_values",
+        lambda: fetch_areas_of_interest(): "aoi_data",
     }
 
     city_data = []
     indicator_values = []
     all_projects = []
+    aoi_list = []
 
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(func): name for func, name in future_to_func.items()}
@@ -159,16 +176,19 @@ def get_city_by_city_id(
                 city_data = future.result()
             if func_name == "indicator_values":
                 indicator_values = future.result()
+            if func_name == "aoi_data":
+                aoi_list = future.result()
+
     if not city_data:
         return None
     sorted_indicator_values = sorted(
         indicator_values if indicator_values else [],
-        key=lambda x: (x["fields"]["cities_id"][0]),
+        key=lambda x: (x["fields"].get("cities_id", [""])[0]),
     )
     grouped_indicator_values = {
         key: list(group)
         for key, group in itertools.groupby(
-            sorted_indicator_values, lambda x: x["fields"]["cities_id"][0]
+            sorted_indicator_values, lambda x: x["fields"].get("cities_id", [""])[0]
         )
     }
     city = city_data[0]["fields"]
@@ -190,6 +210,16 @@ def get_city_by_city_id(
     city["projects"] = city_projects
 
     city_response = {key: city.get(key) for key in CITY_RESPONSE_KEYS}
+
+    bbox_dict = {}
+    if aoi_list:
+        for aoi in aoi_list:
+            if (
+                city_data[0]["id"] in aoi["fields"].get("cities", [])
+                and "bounding_box" in aoi["fields"]
+            ):
+                bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+    city_response["bounding_box"] = bbox_dict
 
     s3_base_path = city_response.get(
         "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
