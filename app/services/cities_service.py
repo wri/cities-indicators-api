@@ -8,7 +8,7 @@ from app.repositories.cities_repository import fetch_cities
 from app.repositories.projects_repository import fetch_projects
 from app.repositories.scenarios_repository import fetch_indicator_values
 from app.schemas.common_schema import ApplicationIdParam
-from app.utils.filters import construct_filter_formula
+from app.utils.filters import construct_filter_formula, construct_filter_formula_v2
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -50,6 +50,9 @@ def list_cities(
         cities_filters["projects"] = list(fetched_project_ids.values())
     if country_code_iso3:
         cities_filters["country_code_iso3"] = country_code_iso3
+    aoi_filters = {}
+    if application_id:
+        aoi_filters["application_id"] = application_id.value
 
     with ThreadPoolExecutor() as executor:
         futures = {
@@ -57,7 +60,11 @@ def list_cities(
                 lambda: fetch_cities(construct_filter_formula(cities_filters))
             ): "cities",
             executor.submit(lambda: fetch_indicator_values()): "indicator_values",
-            executor.submit(lambda: fetch_areas_of_interest()): "aoi_data",
+            executor.submit(
+                lambda: fetch_areas_of_interest(
+                    construct_filter_formula_v2(aoi_filters)
+                )
+            ): "aoi_data",
         }
 
         results = {}
@@ -95,18 +102,20 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         bbox_dict = {}
+        admin_levels = []
         if areas_of_interest_list:
             for aoi in areas_of_interest_list:
-                if (
-                    city["id"] in aoi["fields"].get("cities", [])
-                    and "bounding_box" in aoi["fields"]
-                ):
-                    bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+                if city["id"] in aoi["fields"].get("cities", []):
+                    if "bounding_box" in aoi["fields"]:
+                        bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+                    admin_levels.append(aoi["fields"]["id"])
 
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         city_id = city_response["id"]
         indicator_values = grouped_indicator_values.get(city_id)
         city_response["indicator_values"] = {}
+        if admin_levels:
+            city_response["admin_levels"] = admin_levels
         if indicator_values:
             sorted_selected_indicator_values = sorted(
                 indicator_values if indicator_values else [],
@@ -152,17 +161,23 @@ def get_city_by_city_id(
     Returns:
         dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
     """
-    filter_formula = f'"{city_id}" = {{id}}'
+    filter_formula = {}
+    if city_id:
+        filter_formula["cities"] = city_id
+    if application_id:
+        filter_formula["application_id"] = application_id.value
 
     # Define the tasks to be executed asynchronously
     future_to_func = {
-        lambda: fetch_cities(filter_formula): "city_data",
+        lambda: fetch_projects(construct_filter_formula(filter_formula)): "projects",
+        lambda: fetch_cities(f'"{city_id}" = {{id}}'): "city_data",
         lambda: fetch_indicator_values(
             {"cities": city_id} if city_id else {}
         ): "indicator_values",
-        lambda: fetch_areas_of_interest(): "aoi_data",
+        lambda: fetch_areas_of_interest(
+            construct_filter_formula_v2(filter_formula)
+        ): "aoi_data",
     }
-
     city_data = []
     indicator_values = []
     all_projects = []
@@ -172,13 +187,14 @@ def get_city_by_city_id(
         futures = {executor.submit(func): name for func, name in future_to_func.items()}
         for future in as_completed(futures):
             func_name = futures[future]
+            if func_name == "projects":
+                all_projects = future.result()
             if func_name == "city_data":
                 city_data = future.result()
             if func_name == "indicator_values":
                 indicator_values = future.result()
             if func_name == "aoi_data":
                 aoi_list = future.result()
-
     if not city_data:
         return None
     sorted_indicator_values = sorted(
@@ -191,36 +207,31 @@ def get_city_by_city_id(
             sorted_indicator_values, lambda x: x["fields"].get("cities_id", [""])[0]
         )
     }
-    city = city_data[0]["fields"]
-    projects_filters = {}
-    if application_id:
-        projects_filters["application_id"] = application_id.value
-    projects_filters["cities"] = [city_id]
-    project_filter_formula = construct_filter_formula(projects_filters)
-
-    # Asynchronously fetch all projects related to the city
-    with ThreadPoolExecutor() as executor:
-        all_projects = executor.submit(fetch_projects, project_filter_formula).result()
 
     project_id_map = {
         project["id"]: project["fields"]["id"] for project in all_projects
     }
+    city = city_data[0]["fields"]
 
-    city_projects = [project_id_map.get(project) for project in city["projects"]]
-    city["projects"] = city_projects
+    city["projects"] = [
+        project_id_map.get(project)
+        for project in city["projects"]
+        if project in project_id_map.keys()
+    ]
 
     city_response = {key: city.get(key) for key in CITY_RESPONSE_KEYS}
 
     bbox_dict = {}
+    admin_levels = []
     if aoi_list:
         for aoi in aoi_list:
-            if (
-                city_data[0]["id"] in aoi["fields"].get("cities", [])
-                and "bounding_box" in aoi["fields"]
-            ):
-                bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+            if city_data[0]["id"] in aoi["fields"].get("cities", []):
+                if "bounding_box" in aoi["fields"]:
+                    bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
+                admin_levels.append(aoi["fields"]["id"])
     city_response["bounding_box"] = bbox_dict
-
+    if admin_levels:
+        city_response["admin_levels"] = admin_levels
     s3_base_path = city_response.get(
         "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
     )
