@@ -17,8 +17,8 @@ from app.utils.settings import Settings
 settings = Settings()
 
 
-def get_scenario_by_city_id_aoi_id_intervention_id(
-    city_id: str, aoi_id: str, intervention_id: str
+def get_scenario_by_city_id_aoi_id_intervention_category(
+    city_id: str, aoi_id: str, intervention_category: str
 ) -> List:
     """
     Retrieve scenario data for a specific city ID.
@@ -26,15 +26,15 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
     Args:
         city_id (str): The ID of the city to retrieve.
         aoi_id (str): The ID of the aoi to retrieve.
-        intervention_id (str): The ID of the intervention to retrieve.
+        intervention_category (str): The category of the intervention to retrieve.
 
     Returns:
         List[Dict[str, Any]]: A list of interventions for the specified city_id.
     """
     filters = {}
 
-    if intervention_id:
-        filters["category"] = f"{intervention_id}"
+    if intervention_category:
+        filters["category"] = f"{intervention_category}"
     if aoi_id:
         filters["areas_of_interest"] = f"{aoi_id}"
     if city_id:

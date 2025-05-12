@@ -12,12 +12,12 @@ router = APIRouter()
 
 
 @router.get(
-    "/{city_id}/{aoi_id}/{intervention_id}",
+    "/{city_id}/{aoi_id}/{intervention_category}",
 )
-def get_scenario_by_city_id_aoi_id_intervention_id(
+def get_scenario_by_city_id_aoi_id_intervention_category(
     city_id: str = Path(),
     aoi_id: str = Path(),
-    intervention_id: str = Path(),
+    intervention_category: str = Path(),
 ):
     """
     Retrieve all scenarios that correspond to a specific city by its ID.
@@ -36,8 +36,8 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
 
     try:
         scenarios_list = (
-            scenarios_service.get_scenario_by_city_id_aoi_id_intervention_id(
-                city_id, aoi_id, intervention_id
+            scenarios_service.get_scenario_by_city_id_aoi_id_intervention_category(
+                city_id, aoi_id, intervention_category
             )
         )
     except Exception as e:
