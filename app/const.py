@@ -5,6 +5,7 @@ CITY_RESPONSE_KEYS = [
     "id",
     "admin_levels",
     "city_admin_level",
+    "subcity_admin_level",
     "name",
     "country_name",
     "country_code_iso3",
