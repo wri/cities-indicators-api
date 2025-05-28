@@ -102,20 +102,22 @@ def list_cities(
     city_res_list = []
     for city in cities_list:
         bbox_dict = {}
-        admin_levels = []
+        area_of_interests = []
         if areas_of_interest_list:
             for aoi in areas_of_interest_list:
                 if city["id"] in aoi["fields"].get("cities", []):
                     if "bounding_box" in aoi["fields"]:
                         bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
-                    admin_levels.append(aoi["fields"]["id"])
+                    area_of_interests.append(aoi["fields"]["id"])
 
         city_response = {key: city["fields"].get(key) for key in CITY_RESPONSE_KEYS}
         city_id = city_response["id"]
         indicator_values = grouped_indicator_values.get(city_id)
         city_response["indicator_values"] = {}
-        if admin_levels:
-            city_response["admin_levels"] = admin_levels
+        if area_of_interests:
+            city_response["area_of_interests"] = area_of_interests
+            city_response["admin_levels"] = area_of_interests
+
         if indicator_values:
             sorted_selected_indicator_values = sorted(
                 indicator_values if indicator_values else [],
@@ -222,16 +224,18 @@ def get_city_by_city_id(
     city_response = {key: city.get(key) for key in CITY_RESPONSE_KEYS}
 
     bbox_dict = {}
-    admin_levels = []
+    area_of_interests = []
     if aoi_list:
         for aoi in aoi_list:
             if city_data[0]["id"] in aoi["fields"].get("cities", []):
                 if "bounding_box" in aoi["fields"]:
                     bbox_dict[aoi["fields"]["id"]] = aoi["fields"]["bounding_box"]
-                admin_levels.append(aoi["fields"]["id"])
+                area_of_interests.append(aoi["fields"]["id"])
     city_response["bounding_box"] = bbox_dict
-    if admin_levels:
-        city_response["admin_levels"] = admin_levels
+    if area_of_interests:
+        city_response["area_of_interests"] = area_of_interests
+        city_response["admin_levels"] = area_of_interests
+
     s3_base_path = city_response.get(
         "s3_base_path", "https://cities-indicators.s3.eu-west-3.amazonaws.com"
     )
