@@ -8,6 +8,7 @@ from app.const import (
     COMMON_400_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
 from app.utils.dependencies import validate_query_params
@@ -21,7 +22,9 @@ router = APIRouter()
 
 @router.get(
     "",
-    dependencies=[Depends(validate_query_params("city_id", "layer_id"))],
+    dependencies=[
+        Depends(validate_query_params("application_id", "city_id", "layer_id"))
+    ],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": DatasetsResponse},
         400: COMMON_400_ERROR_RESPONSE,
@@ -29,6 +32,7 @@ router = APIRouter()
     },
 )
 def list_datasets(
+    application_id: ApplicationIdParam = Query(None),
     city_id: Optional[str] = Query(None),
     layer_id: Optional[List[str]] = Query(None),
 ):
@@ -52,7 +56,7 @@ def list_datasets(
         - 500: If an error occurs during the retrieval process.
     """
     try:
-        datasets = datasets_service.list_datasets(city_id, layer_id)
+        datasets = datasets_service.list_datasets(application_id, city_id, layer_id)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
