@@ -78,12 +78,14 @@ DATASETS_LIST_RESPONSE_KEYS = [
     "temporal_resolution",
     "spatial_coverage",
     "temporal_coverage",
-    "cautions" "license",
+    "cautions",
+    "license",
     "image",
     "city_ids",
     "indicators",
     "layers",
     "storage",
+    "function",
 ]
 CITY_INDICATORS_RESPONSE_KEYS = [
     "city_id",
