@@ -11,6 +11,7 @@ from app.const import (
 from app.schemas.layers_schema import LayerResponse
 from app.services import layers_service
 from app.utils.dependencies import validate_query_params
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ router = APIRouter()
 
 @router.get(
     "/{layer_id}/{city_id}",
-    dependencies=[Depends(validate_query_params("aoi_id"))],
+    dependencies=[Depends(validate_query_params("aoi_id", "year"))],
     responses={
         200: {**COMMON_200_SUCCESSFUL_RESPONSE, "model": LayerResponse},
         404: {
@@ -34,6 +35,7 @@ def get_layer(
     city_id: str = Path(),
     layer_id: str = Path(),
     aoi_id: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
 ):
     """
     Retrieve information about a specific layer for a given city.
@@ -51,6 +53,7 @@ def get_layer(
         the layer's metadata.
     - **aoi_id** (`Optional[str]`): The unique ID associated with the area of interest
         for which the layer is required.
+    - **year** (`Optional[str]`): The version of the layer generated for the specified year.
 
     ### Returns:
     - **LayerResponse**: A Pydantic model containing the layer's details. If
@@ -63,8 +66,10 @@ def get_layer(
             `layer_id` is not found.
         - 500: If an error occurs during the retrieval process.
     """
+    if year:
+        year = year.strip()
     try:
-        layer = layers_service.get_city_layer(city_id, layer_id, aoi_id)
+        layer = layers_service.get_city_layer(city_id, layer_id, aoi_id, year)
     except Exception as e:
         logger.exception("An error occurred: %s", e, exc_info=True)
         raise HTTPException(
@@ -75,4 +80,5 @@ def get_layer(
     if not layer:
         raise HTTPException(status_code=404, detail="No layer found")
 
-    return layer
+    return_dict = cleanup_spaces_in_response(layer)
+    return return_dict

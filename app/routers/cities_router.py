@@ -13,6 +13,7 @@ from app.schemas.cities_schema import City, CityList
 from app.schemas.common_schema import ApplicationIdParam
 from app.services import cities_service
 from app.utils.dependencies import validate_query_params
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,7 +68,8 @@ def list_cities(
     if not cities_list:
         raise HTTPException(status_code=404, detail="No cities found")
 
-    return {"cities": cities_list}
+    return_dict = cleanup_spaces_in_response({"cities": cities_list})
+    return return_dict
 
 
 @router.get(
@@ -111,4 +113,4 @@ def get_city_by_city_id(
     if not city:
         raise HTTPException(status_code=404, detail="No city found")
 
-    return city
+    return cleanup_spaces_in_response(city)

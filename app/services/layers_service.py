@@ -6,14 +6,18 @@ from urllib.parse import urljoin
 
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
-from app.utils.filters import generate_search_query
+from app.utils.filters import generate_search_query, construct_filter_formula
 
 
 def generate_layer_response(
-    city_id: str, aoi_id: str | None, layer_fields: dict, city_fields: dict
+    city_id: str,
+    aoi_id: str | None,
+    layer_fields: dict,
+    city_fields: dict,
 ):
 
     s3_path = layer_fields.get("s3_path", "")
+
     if aoi_id:
         layer_file_name = (
             f"{city_id}__{aoi_id}__"
@@ -23,10 +27,10 @@ def generate_layer_response(
         )
     else:
         layer_file_name = (
-            f"{city_id}-"
-            f"{city_fields.get('city_admin_level')}-"
-            f"{layer_fields.get('layer_file_name')}"
-            f"{'-' + layer_fields['version'] if 'version' in layer_fields else ''}"
+            f"{city_id}__"
+            f"{city_fields.get('city_admin_level')}__"
+            f"{layer_fields.get('layer_file_name')}__"
+            f"{layer_fields['version'] if 'version' in layer_fields else ''}"
             f".{layer_fields.get('file_type')}"
         )
 
@@ -64,7 +68,12 @@ def generate_layer_response(
     return return_dict
 
 
-def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None):
+def get_city_layer(
+    city_id: str,
+    layer_id: str,
+    aoi_id: Union[str, None] = None,
+    year: Union[str, None] = None,
+):
     """
     Retrieve layer and city information, then construct a URL path
     for the layer file stored on S3.
@@ -73,6 +82,7 @@ def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None)
     - city_id (str): The unique identifier of the city.
     - layer_id (str): The unique identifier of the layer.
     - aoi_id (str, optional): The unique identifier for the area of interest
+    - year (str, optional): The version of the layer corresponding to the year specified
 
     Returns:
         - Dict[str, str]: A dictionary containing:
@@ -82,17 +92,18 @@ def get_city_layer(city_id: str, layer_id: str, aoi_id: Union[str, None] = None)
             - "file_type": The file type of the layer.
             - "styling": The styling parameters associated with the layer, if available, as a JSON object.
     """
-    layer_filter = generate_search_query("id", layer_id)
+    layer_filters = {"id": layer_id}
+    if year:
+        layer_filters["version"] = year
+    layers_filter_formula = construct_filter_formula(layer_filters)
     city_filter = generate_search_query("id", city_id)
-
-    tasks = {
-        "layer": lambda: fetch_first_layer(layer_filter),
-        "city": lambda: fetch_first_city(city_filter),
-    }
 
     results = {}
     with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(func): name for name, func in tasks.items()}
+        futures = {
+            executor.submit(lambda: fetch_first_layer(layers_filter_formula)): "layer",
+            executor.submit(lambda: fetch_first_city(city_filter)): "city",
+        }
         for future in as_completed(futures):
             results[futures[future]] = future.result()
 

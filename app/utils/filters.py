@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List, Union
 
 
 def generate_search_query(column_name: str, value: Union[str, List[str]]) -> str:
@@ -45,5 +45,22 @@ def construct_filter_formula(filters: dict) -> str:
     filter_clauses = []
     for column, value in filters.items():
         filter_clauses.append(generate_search_query(column, value))
+
+    return f"AND({', '.join(filter_clauses)})" if filter_clauses else ""
+
+
+def construct_filter_formula_v2(filters: dict) -> str:
+    """
+    Constructs the Airtable filter formula based on provided filter parameters.
+
+    Args:
+        filters (dict): A dictionary where the key is the column name and the value is the filter value.
+
+    Returns:
+        str: A string representing the filter formula for Airtable.
+    """
+    filter_clauses = []
+    for column, value in filters.items():
+        filter_clauses.append(f'"{value}"={{{column}}}')
 
     return f"AND({', '.join(filter_clauses)})" if filter_clauses else ""

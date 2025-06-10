@@ -4,6 +4,7 @@ from typing import List
 from app.const import SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS, SCENARIOS_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.indicators_repository import fetch_indicators
+from app.repositories.interventions_repository import fetch_interventions
 from app.repositories.layers_repository import fetch_layers
 from app.repositories.scenarios_repository import (
     fetch_indicator_values,
@@ -16,8 +17,8 @@ from app.utils.settings import Settings
 settings = Settings()
 
 
-def get_scenario_by_city_id_aoi_id_intervention_id(
-    city_id: str, aoi_id: str, intervention_id: str
+def get_scenario_by_city_id_aoi_id_intervention_category(
+    city_id: str, aoi_id: str, intervention_category: str
 ) -> List:
     """
     Retrieve scenario data for a specific city ID.
@@ -25,22 +26,29 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
     Args:
         city_id (str): The ID of the city to retrieve.
         aoi_id (str): The ID of the aoi to retrieve.
-        intervention_id (str): The ID of the intervention to retrieve.
+        intervention_category (str): The category of the intervention to retrieve.
 
     Returns:
         List[Dict[str, Any]]: A list of interventions for the specified city_id.
     """
     filters = {}
 
+    if intervention_category:
+        filters["category"] = f"{intervention_category}"
+    if aoi_id:
+        filters["areas_of_interest"] = f"{aoi_id}"
     if city_id:
-        filters["cities"] = city_id
-    if intervention_id and aoi_id:
-        filters["Interventions"] = f"{intervention_id}__{city_id}__{aoi_id}"
+        filters["cities"] = f"{city_id}"
     # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(
-                lambda: fetch_scenarios(construct_filter_formula(filters))
+                lambda: fetch_interventions(construct_filter_formula(filters))
+            ): "interventions",
+            executor.submit(
+                lambda: fetch_scenarios(
+                    construct_filter_formula({"cities": city_id} if city_id else {})
+                )
             ): "scenarios",
             executor.submit(
                 lambda: fetch_indicator_values(
@@ -64,11 +72,19 @@ def get_scenario_by_city_id_aoi_id_intervention_id(
             results[func_name] = future.result()
 
     layers_dict = {layer["id"]: layer["fields"] for layer in results["layers"]}
+    intervention_ids_list = [
+        intervention["id"] for intervention in results["interventions"]
+    ]
 
     scenario_list = [
-        {key: scenario["fields"].get(key) for key in SCENARIOS_RESPONSE_KEYS}
+        (
+            {key: scenario["fields"].get(key) for key in SCENARIOS_RESPONSE_KEYS}
+            if scenario["fields"].get("Interventions", [""])[0] in intervention_ids_list
+            else None
+        )
         for scenario in results["scenarios"]
     ]
+    scenario_list = [scenario for scenario in scenario_list if scenario]
     indicators_dict = {
         indicator["id"]: indicator["fields"].get("name")
         for indicator in results["indicators"]

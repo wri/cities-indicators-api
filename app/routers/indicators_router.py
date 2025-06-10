@@ -17,6 +17,7 @@ from app.schemas.indicators_schema import (
 )
 from app.services import indicators_service
 from app.utils.dependencies import validate_query_params
+from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,7 +81,8 @@ def list_indicators(
     if not indicators_list:
         raise HTTPException(status_code=404, detail="No indicators found")
 
-    return {"indicators": indicators_list}
+    return_dict = cleanup_spaces_in_response({"indicators": indicators_list})
+    return return_dict
 
 
 @router.get(
@@ -111,7 +113,8 @@ def list_indicators_themes():
             detail="An error occurred: Retrieving the list of indicator themes failed.",
         ) from e
 
-    return {"themes": themes}
+    return_dict = cleanup_spaces_in_response({"themes": themes})
+    return return_dict
 
 
 @router.get(
@@ -161,4 +164,5 @@ def get_metadata_by_indicator_id(
     if not indicators_metadata_list:
         raise HTTPException(status_code=404, detail="No indicators metadata found")
 
-    return indicators_metadata_list
+    return_dict = cleanup_spaces_in_response(indicators_metadata_list)
+    return return_dict
