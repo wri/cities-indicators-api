@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-      - ccl-develop
+      - staging
   workflow_dispatch:
 
 jobs:
@@ -37,8 +37,8 @@ jobs:
             echo "SERVICE_NAME=none" >> $GITHUB_ENV
           elif [[ "$BRANCH" == "develop" ]]; then
             echo "SERVICE_NAME=${{ vars.SERVICE_ARN_DEV }}" >> $GITHUB_ENV
-          elif [[ "$BRANCH" == "ccl-develop" ]]; then
-            echo "SERVICE_NAME=${{ vars.SERVICE_ARN_CCL_DEV }}" >> $GITHUB_ENV
+          elif [[ "$BRANCH" == "staging" ]]; then
+            echo "SERVICE_NAME=${{ vars.SERVICE_ARN_STG }}" >> $GITHUB_ENV
           else
             echo "Unsupported branch: $BRANCH"
             exit 1
