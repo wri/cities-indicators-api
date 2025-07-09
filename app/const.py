@@ -39,6 +39,7 @@ SCENARIOS_RESPONSE_KEYS = [
     "layers",
     "description_infrastructure",
     "description_impact",
+    "layers_config",
 ]
 SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS = [
     "id",

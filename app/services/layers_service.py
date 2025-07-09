@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
-from app.utils.filters import generate_search_query, construct_filter_formula
+from app.utils.filters import construct_filter_formula, generate_search_query
 
 
 def generate_layer_response(
@@ -44,8 +44,10 @@ def generate_layer_response(
         "city_id": city_id,
         "layer_id": layer_fields.get("id"),
         "class_name": layer_fields.get("cif_class_name"),
+        "datasets_id": layer_fields.get("datasets_id"),
         "file_type": layer_fields.get("file_type"),
         "source_layer_id": layer_fields.get("source_layer_id"),
+        "layers_group_mask": layer_fields.get("layers_group_mask"),
         "map_styling": map_styling,
         "legend_styling": legend_styling,
     }
