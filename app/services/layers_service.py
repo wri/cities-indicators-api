@@ -7,6 +7,9 @@ from urllib.parse import urljoin
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
 from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.settings import Settings
+
+settings = Settings()
 
 
 def generate_layer_response(
@@ -17,7 +20,7 @@ def generate_layer_response(
 ):
 
     s3_path = layer_fields.get("s3_path", "")
-
+    s3_path = s3_path.replace("/prd/", f"/{settings.env}/")
     if aoi_id:
         layer_file_name = (
             f"{city_id}__{aoi_id}__"
