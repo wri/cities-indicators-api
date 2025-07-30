@@ -40,6 +40,7 @@ SCENARIOS_RESPONSE_KEYS = [
     "description_infrastructure",
     "description_impact",
     "layers_config",
+    "sidebar_config",
 ]
 SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS = [
     "id",
