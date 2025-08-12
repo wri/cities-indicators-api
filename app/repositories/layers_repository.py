@@ -4,6 +4,7 @@ from pyairtable import Api
 from ratelimit import limits, sleep_and_retry
 
 from app.utils.settings import Settings
+from app.utils.telemetry import timed
 
 # Load settings
 settings = Settings()
@@ -17,6 +18,7 @@ layers_table = airtable_api.table(settings.airtable_base_id, "Layers")
 @limits(
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
+@timed
 def fetch_layers(filter_formula: Optional[str] = None):
     return layers_table.all(view="all", formula=filter_formula)
 
@@ -25,5 +27,6 @@ def fetch_layers(filter_formula: Optional[str] = None):
 @limits(
     calls=settings.airtable_rate_limit_calls, period=settings.airtable_rate_limit_period
 )
+@timed
 def fetch_first_layer(filter_formula: Optional[str] = None):
     return layers_table.first(view="all", formula=filter_formula)

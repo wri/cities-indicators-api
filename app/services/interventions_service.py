@@ -4,12 +4,14 @@ from typing import Any, Dict, List, Optional
 from app.const import INTERVENTIONS_RESPONSE_KEYS
 from app.repositories.cities_repository import fetch_cities
 from app.repositories.interventions_repository import fetch_interventions
+from app.utils.telemetry import timed
 from app.repositories.scenarios_repository import fetch_scenarios
 from app.utils.settings import Settings
 
 settings = Settings()
 
 
+@timed
 def list_interventions() -> List[Dict[str, Any]]:
     """
     Retrieve a list of all interventios.
@@ -61,6 +63,7 @@ def list_interventions() -> List[Dict[str, Any]]:
     return interventions
 
 
+@timed
 def get_intervention_by_city_id(city_id: str) -> Optional[Dict]:
     """
     Retrieve intervention data for a specific city ID.

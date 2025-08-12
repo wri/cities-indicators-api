@@ -1,4 +1,5 @@
 import logging
+import time
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,8 +26,24 @@ settings = Settings()
 # Logging Configuration
 # ----------------------------------------
 
-logging.basicConfig(level=logging.INFO)
+try:
+    if settings.env.lower() in {"local", "dev", "development"}:
+        log_level = logging.DEBUG
+except Exception:
+    # Fallback if env not set yet
+    log_level = logging.INFO
+
+logging.basicConfig(level=log_level)
+
+# Ensure root and uvicorn loggers honor the chosen level even if handlers already exist
+root_logger = logging.getLogger()
+root_logger.setLevel(log_level)
+for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    logging.getLogger(name).setLevel(log_level)
+
 logger = logging.getLogger(__name__)
+logger.info(f"Log level set to {log_level}")
+logger.debug("Debug logging enabled; timing middleware and @timed decorators will emit DEBUG logs.")
 
 # ----------------------------------------
 # Application Initialization
@@ -57,6 +74,25 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
 )
+
+
+@app.middleware("http")
+async def timing_middleware(request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.debug(
+        "HTTP %s %s -> %s in %.2f ms",
+        request.method,
+        request.url.path,
+        getattr(response, "status_code", "-"),
+        duration_ms,
+    )
+    try:
+        response.headers["X-Process-Time-ms"] = f"{duration_ms:.2f}"
+    except Exception:
+        pass
+    return response
 
 # ----------------------------------------
 # Routes

@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from app.repositories.cities_repository import fetch_first_city
 from app.repositories.layers_repository import fetch_first_layer
 from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.telemetry import timed
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -73,6 +74,7 @@ def generate_layer_response(
     return return_dict
 
 
+@timed
 def get_city_layer(
     city_id: str,
     layer_id: str,

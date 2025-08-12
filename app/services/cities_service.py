@@ -10,10 +10,12 @@ from app.repositories.scenarios_repository import fetch_indicator_values
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula, construct_filter_formula_v2
 from app.utils.settings import Settings
+from app.utils.telemetry import timed
 
 settings = Settings()
 
 
+@timed
 def list_cities(
     application_id: Optional[ApplicationIdParam],
     projects: Optional[List[str]],
@@ -151,6 +153,7 @@ def list_cities(
     return city_res_list
 
 
+@timed
 def get_city_by_city_id(
     application_id: Optional[ApplicationIdParam], city_id: str
 ) -> Optional[Dict]:
