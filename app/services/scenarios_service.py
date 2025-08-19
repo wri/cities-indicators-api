@@ -11,7 +11,11 @@ from app.repositories.scenarios_repository import (
     fetch_scenarios,
 )
 from app.services import layers_service
-from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.filters import (
+    construct_filter_formula,
+    generate_search_query,
+    construct_filter_formula_v2,
+)
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -43,7 +47,7 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
     with ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(
-                lambda: fetch_interventions(construct_filter_formula(filters))
+                lambda: fetch_interventions(construct_filter_formula_v2(filters))
             ): "interventions",
             executor.submit(
                 lambda: fetch_scenarios(
