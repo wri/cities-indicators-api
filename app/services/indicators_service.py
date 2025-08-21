@@ -13,6 +13,7 @@ from app.repositories.layers_repository import fetch_layers
 from app.repositories.projects_repository import fetch_projects
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula, generate_search_query
+from app.utils.telemetry import timed
 from app.utils.settings import Settings
 
 settings = Settings()
@@ -24,6 +25,7 @@ SPECIAL_INDICATOR_TABLES = {
 }
 
 
+@timed
 def list_indicators(
     application_id: Optional[ApplicationIdParam] = None,
     project: Optional[str] = None,
@@ -123,6 +125,7 @@ def list_indicators(
     return indicators
 
 
+@timed
 def list_indicators_themes() -> Set[str]:
     """
     Retrieve a unique set of themes from all indicators.
@@ -143,6 +146,7 @@ def list_indicators_themes() -> Set[str]:
     return themes_set
 
 
+@timed
 def get_metadata_by_indicator_id(indicator_id: str) -> Dict:
     """
     Retrieve metadata for a specific indicator.

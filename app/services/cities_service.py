@@ -10,10 +10,12 @@ from app.repositories.scenarios_repository import fetch_indicator_values
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula, construct_filter_formula_v2
 from app.utils.settings import Settings
+from app.utils.telemetry import timed
 
 settings = Settings()
 
 
+@timed
 def list_cities(
     application_id: Optional[ApplicationIdParam],
     projects: Optional[List[str]],
@@ -59,7 +61,15 @@ def list_cities(
             executor.submit(
                 lambda: fetch_cities(construct_filter_formula(cities_filters))
             ): "cities",
-            executor.submit(lambda: fetch_indicator_values()): "indicator_values",
+            executor.submit(
+                lambda: fetch_indicator_values(
+                    construct_filter_formula_v2(
+                        {"application_id": application_id.value}
+                    )
+                    if application_id
+                    else None
+                )
+            ): "indicator_values",
             executor.submit(
                 lambda: fetch_areas_of_interest(
                     construct_filter_formula_v2(aoi_filters)
@@ -151,6 +161,7 @@ def list_cities(
     return city_res_list
 
 
+@timed
 def get_city_by_city_id(
     application_id: Optional[ApplicationIdParam], city_id: str
 ) -> Optional[Dict]:
@@ -163,24 +174,29 @@ def get_city_by_city_id(
     Returns:
         dict: A dictionary containing the city's data based on CITY_RESPONSE_KEYS.
     """
-    filter_formula = {}
-    if city_id:
-        filter_formula["cities"] = city_id
-    if application_id:
-        filter_formula["application_id"] = application_id.value
+    # Fetch the city record first to get its Airtable record id (rec...)
+    city_records = fetch_cities(f'"{city_id}" = {{id}}') if city_id else []
+    if not city_records:
+        return None
+    city_record_id = city_records[0]["id"]
 
-    # Define the tasks to be executed asynchronously
+    # Build filters
+    projects_filter = {"application_id": application_id.value} if application_id else {}
+    indicator_values_filter = construct_filter_formula_v2({"cities_id": city_id}) if city_id else None
+    # For AOIs, filter by application_id only; we'll filter by the city record id in memory
+    aoi_filter = (
+        construct_filter_formula_v2({"application_id": application_id.value})
+        if application_id
+        else None
+    )
+
+    # Define the tasks to be executed asynchronously (after city is known)
     future_to_func = {
-        lambda: fetch_projects(construct_filter_formula(filter_formula)): "projects",
-        lambda: fetch_cities(f'"{city_id}" = {{id}}'): "city_data",
-        lambda: fetch_indicator_values(
-            {"cities": city_id} if city_id else {}
-        ): "indicator_values",
-        lambda: fetch_areas_of_interest(
-            construct_filter_formula_v2(filter_formula)
-        ): "aoi_data",
+        lambda: fetch_projects(construct_filter_formula(projects_filter)): "projects",
+        lambda: fetch_indicator_values(indicator_values_filter): "indicator_values",
+        lambda: fetch_areas_of_interest(aoi_filter): "aoi_data",
     }
-    city_data = []
+    city_data = city_records
     indicator_values = []
     all_projects = []
     aoi_list = []

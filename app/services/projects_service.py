@@ -1,9 +1,11 @@
 from typing import Dict, List
 
 from app.repositories.projects_repository import fetch_projects
+from app.utils.telemetry import timed
 from app.utils.filters import generate_search_query
 
 
+@timed
 def list_projects(application_id) -> List[Dict]:
     """
     Retrieve a list of unique project IDs from the projects table.
