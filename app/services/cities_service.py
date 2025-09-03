@@ -142,11 +142,9 @@ def list_cities(
             }
             for aoi, value in grouped_selected_indicator_values.items():
                 city_response["indicator_values"][aoi] = {
-                    f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
+                    f'{i["fields"]["id"]}': (
                         i["fields"]["value"]
-                        if i["fields"].get("indicators_id")
-                        and i["fields"].get("areas_of_interest_id")
-                        and i["fields"].get("value")
+                        if i["fields"].get("id") and i["fields"].get("value")
                         else None
                     )
                     for i in value
@@ -182,7 +180,9 @@ def get_city_by_city_id(
 
     # Build filters
     projects_filter = {"application_id": application_id.value} if application_id else {}
-    indicator_values_filter = construct_filter_formula_v2({"cities_id": city_id}) if city_id else None
+    indicator_values_filter = (
+        construct_filter_formula_v2({"cities_id": city_id}) if city_id else None
+    )
     # For AOIs, filter by application_id only; we'll filter by the city record id in memory
     aoi_filter = (
         construct_filter_formula_v2({"application_id": application_id.value})
@@ -285,11 +285,9 @@ def get_city_by_city_id(
     city_response["indicator_values"] = {}
     for aoi, value in grouped_selected_indicator_values.items():
         city_response["indicator_values"][aoi] = {
-            f'{i["fields"]["indicators_id"][0]}__{i["fields"]["areas_of_interest_id"][0]}': (
+            f'{i["fields"]["id"]}': (
                 i["fields"]["value"]
-                if i["fields"].get("indicators_id")
-                and i["fields"].get("areas_of_interest_id")
-                and i["fields"].get("value")
+                if i["fields"].get("id") and i["fields"].get("value")
                 else None
             )
             for i in value
