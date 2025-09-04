@@ -13,8 +13,8 @@ from app.repositories.scenarios_repository import (
 from app.services import layers_service
 from app.utils.filters import (
     construct_filter_formula,
-    generate_search_query,
     construct_filter_formula_v2,
+    generate_search_query,
 )
 from app.utils.settings import Settings
 
@@ -51,17 +51,21 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
             ): "interventions",
             executor.submit(
                 lambda: fetch_scenarios(
-                    construct_filter_formula_v2({"cities": city_id}) if city_id else None
+                    construct_filter_formula({"cities": city_id}) if city_id else None
                 )
             ): "scenarios",
             executor.submit(
                 lambda: fetch_indicator_values(
-                    construct_filter_formula_v2({"cities": city_id}) if city_id else None
+                    construct_filter_formula_v2({"cities": city_id})
+                    if city_id
+                    else None
                 )
             ): "indicator_values",
             executor.submit(
                 lambda: fetch_indicators(
-                    construct_filter_formula_v2({"cities": city_id}) if city_id else None
+                    construct_filter_formula_v2({"cities": city_id})
+                    if city_id
+                    else None
                 )
             ): "indicators",
             executor.submit(fetch_layers): "layers",
