@@ -43,6 +43,7 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
         filters["areas_of_interest"] = f"{aoi_id}"
     if city_id:
         filters["cities"] = f"{city_id}"
+
     # Fetch all necessary data in parallel
     with ThreadPoolExecutor() as executor:
         futures = {
@@ -73,7 +74,6 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
                 lambda: fetch_first_city(generate_search_query("id", city_id))
             ): "city",
         }
-
         results = {}
         for future in as_completed(futures):
             func_name = futures[future]
@@ -87,12 +87,13 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
     scenario_list = [
         (
             {key: scenario["fields"].get(key) for key in SCENARIOS_RESPONSE_KEYS}
-            if scenario["fields"].get("Interventions", [""])[0] in intervention_ids_list
+            if intervention_ids_list[0] in scenario["fields"].get("Interventions", [""])
             else None
         )
         for scenario in results["scenarios"]
     ]
     scenario_list = [scenario for scenario in scenario_list if scenario]
+
     indicators_dict = {
         indicator["id"]: indicator["fields"].get("name")
         for indicator in results["indicators"]
@@ -126,7 +127,6 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
                         for key in SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS
                     }
                 ]
-
     for scenario in scenario_list:
         layers = []
         for layer_id in scenario["layers"]:
@@ -145,5 +145,4 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
             scenario["indicators"] = scenario_indicator_dict[scenario["id"]]
         else:
             scenario["indicators"] = []
-
     return scenario_list
