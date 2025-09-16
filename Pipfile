@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 black = "*"
-cartoframes = "*"
 fastapi = "*"
 mypy = "*"
 pre-commit = "*"

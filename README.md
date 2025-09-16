@@ -11,7 +11,7 @@ Docs:
 
 1. Create an Airtable API token with the `data.records:read` scope and `Cities Indicators Metadata` access at [https://airtable.com/create/tokens/new](https://airtable.com/create/tokens/new).
 2. Copy `.env.example` file to `.env` and store your Airtable API token in the `CITIES_API_AIRTABLE_KEY` environment variable.
-3. Run `docker-compose up` to start the server, or if you prefer running it without Docker, use the following commands in your terminal:
+3. Run `docker compose up` to start the server, or if you prefer running it without Docker, use the following commands in your terminal:
     1. Install `pipenv` (if you haven't already):
 
         ```sh
