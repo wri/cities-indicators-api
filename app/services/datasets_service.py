@@ -6,10 +6,12 @@ from app.repositories.cities_repository import fetch_cities
 from app.repositories.datasets_repository import fetch_datasets
 from app.repositories.indicators_repository import fetch_indicators
 from app.repositories.layers_repository import fetch_layers
+from app.utils.telemetry import timed
 from app.schemas.common_schema import ApplicationIdParam
 from app.utils.filters import construct_filter_formula
 
 
+@timed
 def list_datasets(
     application_id: Optional[ApplicationIdParam],
     city_id: Optional[str],

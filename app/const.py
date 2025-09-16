@@ -31,6 +31,9 @@ INTERVENTIONS_RESPONSE_KEYS = [
     "cities",
     "scenarios",
     "category",
+    "short_description",
+    "tags",
+    "interventions_variants",
 ]
 SCENARIOS_RESPONSE_KEYS = [
     "id",
