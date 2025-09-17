@@ -19,7 +19,7 @@ run:
       value: "1"
     - name: cors_origins
       value: '["*"]'
-    - name: cors_origins
+    - name: AIRTABLE_BASE_ID
       value: "app97AMAwgKhPCSLk"
   secrets:
     - name: cities_api_airtable_key
