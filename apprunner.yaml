@@ -19,8 +19,6 @@ run:
       value: "1"
     - name: cors_origins
       value: '["*"]'
-    - name: AIRTABLE_BASE_ID
-      value: "app97AMAwgKhPCSLk"
   secrets:
     - name: cities_api_airtable_key
       value-from: "arn:aws:secretsmanager:us-east-1:540362055257:secret:airtable-api-key-value-ogq3dA"
