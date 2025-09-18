@@ -25,6 +25,7 @@ settings = Settings()
 # ----------------------------------------
 # Logging Configuration
 # ----------------------------------------
+log_level = logging.INFO
 
 try:
     if settings.env.lower() in {"local", "dev", "development"}:
@@ -43,7 +44,9 @@ for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
 
 logger = logging.getLogger(__name__)
 logger.info(f"Log level set to {log_level}")
-logger.debug("Debug logging enabled; timing middleware and @timed decorators will emit DEBUG logs.")
+logger.debug(
+    "Debug logging enabled; timing middleware and @timed decorators will emit DEBUG logs."
+)
 
 # ----------------------------------------
 # Application Initialization
@@ -93,6 +96,7 @@ async def timing_middleware(request, call_next):
     except Exception:
         pass
     return response
+
 
 # ----------------------------------------
 # Routes
