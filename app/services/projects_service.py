@@ -1,8 +1,8 @@
 from typing import Dict, List
 
 from app.repositories.projects_repository import fetch_projects
-from app.utils.telemetry import timed
 from app.utils.filters import generate_search_query
+from app.utils.telemetry import timed
 
 
 @timed
@@ -24,6 +24,7 @@ def list_projects(application_id) -> List[Dict]:
         {
             "id": project["fields"]["id"],
             "name": project["fields"].get("name", [""])[0],
+            "about_text": project["fields"].get("about_text", ""),
         }
         for project in projects
     ]
