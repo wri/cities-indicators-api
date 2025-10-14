@@ -54,6 +54,7 @@ SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS = [
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",
     "city_ids",
+    "percentile_order",
     "data_sources",
     "data_sources_link",
     "data_views",
