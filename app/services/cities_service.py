@@ -144,7 +144,8 @@ def list_cities(
                 city_response["indicator_values"][aoi] = {
                     f'{i["fields"]["id"]}': (
                         i["fields"]["value"]
-                        if i["fields"].get("id") and i["fields"].get("value")
+                        if i["fields"].get("id")
+                        and (i["fields"].get("value") or i["fields"].get("value") == 0)
                         else None
                     )
                     for i in value
@@ -287,7 +288,8 @@ def get_city_by_city_id(
         city_response["indicator_values"][aoi] = {
             f'{i["fields"]["id"]}': (
                 i["fields"]["value"]
-                if i["fields"].get("id") and i["fields"].get("value")
+                if i["fields"].get("id")
+                and (i["fields"].get("value") or i["fields"].get("value") == 0)
                 else None
             )
             for i in value
