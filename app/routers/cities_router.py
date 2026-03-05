@@ -88,7 +88,7 @@ def list_cities(
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-# @cache_response()
+@cache_response()
 def get_city_by_city_id(
     application_id: ApplicationIdParam = Query(None),
     city_id: str = Path(),
