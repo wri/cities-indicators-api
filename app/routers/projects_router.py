@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -8,9 +9,11 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.projects_schema import ListProjectsResponse
 from app.services import projects_service
+from app.utils.cache import cache_response
 from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
@@ -33,8 +36,10 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def list_projects(
     application_id: ApplicationIdParam = Query(None),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve the list of projects.

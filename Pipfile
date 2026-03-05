@@ -24,6 +24,7 @@ pydantic-settings = "*"
 pytest = "*"
 httpx = "*"
 pytest-mock = "*"
+redis="*"
 
 [requires]
 python_version = "3.11"

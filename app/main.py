@@ -1,10 +1,12 @@
 import logging
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
+from app.core import redis_client
 from app.routers import (
     cities_router,
     datasets_router,
@@ -14,7 +16,16 @@ from app.routers import (
     projects_router,
     scenarios_router,
 )
+from app.utils.cache import flush_fastapi_cache
 from app.utils.settings import Settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # Shutdown logic: clean up the redis connection
+    await redis_client.aclose()
+
 
 # ----------------------------------------
 # Load settings
@@ -67,7 +78,9 @@ app = FastAPI(
         "name": "License TBD",
         "url": "https://opensource.org/licenses/",
     },
+    lifespan=lifespan,
 )
+
 
 # ----------------------------------------
 # Middleware Configuration
@@ -130,6 +143,15 @@ def health_check():
     Health check endpoint to verify if the API is running.
     """
     return {"status": "ok"}
+
+
+@app.get(
+    "/clear-redis-cache",
+    tags=["Default"],
+)
+async def clear_cache():
+    await flush_fastapi_cache()
+    return
 
 
 @app.get("/", include_in_schema=False)

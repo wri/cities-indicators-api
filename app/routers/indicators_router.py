@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
@@ -9,6 +10,7 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.indicators_schema import (
     IndicatorsResponse,
@@ -16,6 +18,7 @@ from app.schemas.indicators_schema import (
     MetadataByIndicatorIdResponse,
 )
 from app.services import indicators_service
+from app.utils.cache import cache_response
 from app.utils.dependencies import validate_query_params
 from app.utils.utilities import cleanup_spaces_in_response
 
@@ -42,10 +45,12 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def list_indicators(
     application_id: ApplicationIdParam = Query(None),
     project: Optional[str] = Query(None),
     city_id: Optional[List[str]] = Query(None),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve a list of indicators based on the provided project filter.
@@ -92,7 +97,10 @@ def list_indicators(
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-def list_indicators_themes():
+@cache_response()
+def list_indicators_themes(
+    cache: redis.Redis = Depends(get_redis),
+):
     """
     Retrieve a set of unique themes from all indicators.
 
@@ -131,8 +139,10 @@ def list_indicators_themes():
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def get_metadata_by_indicator_id(
     indicator_id: str = Path(),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve metadata for a specific indicator.

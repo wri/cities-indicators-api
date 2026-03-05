@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Path
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from app.const import (
     COMMON_200_SUCCESSFUL_RESPONSE,
@@ -8,8 +9,10 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.interventions_schema import InterventionList
 from app.services import interventions_service
+from app.utils.cache import cache_response
 from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +29,10 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
-def list_interventions():
+@cache_response()
+def list_interventions(
+    cache: redis.Redis = Depends(get_redis),
+):
     """
     Retrieve a list of all interventions.
 
@@ -65,8 +71,10 @@ def list_interventions():
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def get_city_by_city_id(
     city_id: str = Path(),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve all interventions that correspond to a specific city by its ID.

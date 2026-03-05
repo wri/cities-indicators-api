@@ -39,13 +39,12 @@ def list_cities(
     if projects:
         projects_filters["id"] = projects
     projects_filter_formula = construct_filter_formula(projects_filters)
-    fetched_projects = fetch_projects(projects_filter_formula)
+    fetched_projects = fetch_projects(projects_filter_formula, fields=["id"])
     if not fetched_projects:
-        return None
+        return []
     fetched_project_ids = {
         project["id"]: project["fields"]["id"] for project in fetched_projects
     }
-
     # Filter cities based on retrieved projects and country code
     cities_filters = {}
     if fetched_project_ids:
@@ -85,7 +84,7 @@ def list_cities(
     cities_list = results["cities"]
     sorted_indicator_values = sorted(
         results["indicator_values"],
-        key=lambda x: (x["fields"].get("cities_id", [""])[0]),
+        key=lambda x: x["fields"].get("cities_id", [""])[0],
     )
     grouped_indicator_values = {
         key: list(group)
@@ -131,7 +130,7 @@ def list_cities(
         if indicator_values:
             sorted_selected_indicator_values = sorted(
                 indicator_values if indicator_values else [],
-                key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+                key=lambda x: x["fields"]["areas_of_interest_id"][0],
             )
             grouped_selected_indicator_values = {
                 key: list(group)
@@ -142,7 +141,7 @@ def list_cities(
             }
             for aoi, value in grouped_selected_indicator_values.items():
                 city_response["indicator_values"][aoi] = {
-                    f'{i["fields"]["id"]}': (
+                    f"{i['fields']['id']}": (
                         i["fields"]["value"]
                         if i["fields"].get("id")
                         and (i["fields"].get("value") or i["fields"].get("value") == 0)
@@ -218,7 +217,7 @@ def get_city_by_city_id(
         return None
     sorted_indicator_values = sorted(
         indicator_values if indicator_values else [],
-        key=lambda x: (x["fields"].get("cities_id", [""])[0]),
+        key=lambda x: x["fields"].get("cities_id", [""])[0],
     )
     grouped_indicator_values = {
         key: list(group)
@@ -274,7 +273,7 @@ def get_city_by_city_id(
 
     sorted_selected_indicator_values = sorted(
         selected_city_indicator_values if selected_city_indicator_values else [],
-        key=lambda x: (x["fields"]["areas_of_interest_id"][0]),
+        key=lambda x: x["fields"]["areas_of_interest_id"][0],
     )
     grouped_selected_indicator_values = {
         key: list(group)
@@ -286,7 +285,7 @@ def get_city_by_city_id(
     city_response["indicator_values"] = {}
     for aoi, value in grouped_selected_indicator_values.items():
         city_response["indicator_values"][aoi] = {
-            f'{i["fields"]["id"]}': (
+            f"{i['fields']['id']}": (
                 i["fields"]["value"]
                 if i["fields"].get("id")
                 and (i["fields"].get("value") or i["fields"].get("value") == 0)

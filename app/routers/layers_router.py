@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
@@ -8,8 +9,10 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.layers_schema import LayerResponse
 from app.services import layers_service
+from app.utils.cache import cache_response
 from app.utils.dependencies import validate_query_params
 from app.utils.utilities import cleanup_spaces_in_response
 
@@ -31,11 +34,13 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def get_layer(
     city_id: str = Path(),
     layer_id: str = Path(),
     aoi_id: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve information about a specific layer for a given city.
