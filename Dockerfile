@@ -8,6 +8,10 @@ WORKDIR /app
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install pipenv
 
+RUN apt-get update && \
+    apt-get install -y redis-server && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Copy Pipfile and Pipfile.lock
 COPY Pipfile Pipfile.lock ./ 
 
