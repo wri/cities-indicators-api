@@ -16,6 +16,7 @@ pydantic-settings = "*"
 pytest = "*"
 pytest-mock = "*"
 ratelimit = "*"
+redis="*"
 [dev-packages]
 pylint = "*"
 black = "*"
