@@ -13,6 +13,7 @@ CITY_RESPONSE_KEYS = [
     "longitude",
     "projects",
     "s3_base_path",
+    "utci_simulation_date",
 ]
 INTERVENTIONS_RESPONSE_KEYS = [
     "id",
