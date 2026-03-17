@@ -7,3 +7,15 @@ services:
       - .:/code
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0 
+    depends_on:
+      - redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_cache_data:/data
+volumes:
+  redis_cache_data:

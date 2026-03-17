@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.const import (
@@ -9,9 +10,11 @@ from app.const import (
     COMMON_404_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.cities_schema import City, CityList
 from app.schemas.common_schema import ApplicationIdParam
 from app.services import cities_service
+from app.utils.cache import cache_response
 from app.utils.dependencies import validate_query_params
 from app.utils.utilities import cleanup_spaces_in_response
 
@@ -34,10 +37,12 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def list_cities(
     application_id: ApplicationIdParam = Query(None),
     projects: Optional[List[str]] = Query(None),
     country_code_iso3: Optional[str] = Query(None),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve a list of cities filtered by project IDs and/or country code.
@@ -83,9 +88,11 @@ def list_cities(
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def get_city_by_city_id(
     application_id: ApplicationIdParam = Query(None),
     city_id: str = Path(),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve information about a specific city by its ID.

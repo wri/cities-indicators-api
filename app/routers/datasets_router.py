@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.const import (
@@ -8,9 +9,11 @@ from app.const import (
     COMMON_400_ERROR_RESPONSE,
     COMMON_500_ERROR_RESPONSE,
 )
+from app.core.redis_db import get_redis
 from app.schemas.common_schema import ApplicationIdParam
 from app.schemas.datasets_schema import DatasetsResponse
 from app.services import datasets_service
+from app.utils.cache import cache_response
 from app.utils.dependencies import validate_query_params
 from app.utils.utilities import cleanup_spaces_in_response
 
@@ -31,10 +34,12 @@ router = APIRouter()
         500: COMMON_500_ERROR_RESPONSE,
     },
 )
+@cache_response()
 def list_datasets(
     application_id: ApplicationIdParam = Query(None),
     city_id: Optional[str] = Query(None),
     layer_id: Optional[List[str]] = Query(None),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve a list of datasets, optionally filtered by a specific city and/or layer.

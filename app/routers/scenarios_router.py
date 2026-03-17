@@ -1,8 +1,11 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Path
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Path
 
+from app.core.redis_db import get_redis
 from app.services import scenarios_service
+from app.utils.cache import cache_response
 from app.utils.utilities import cleanup_spaces_in_response
 
 logging.basicConfig(level=logging.INFO)
@@ -14,10 +17,12 @@ router = APIRouter()
 @router.get(
     "/{city_id}/{aoi_id}/{intervention_category}",
 )
+@cache_response()
 def get_scenario_by_city_id_aoi_id_intervention_category(
     city_id: str = Path(),
     aoi_id: str = Path(),
     intervention_category: str = Path(),
+    cache: redis.Redis = Depends(get_redis),
 ):
     """
     Retrieve all scenarios that correspond to a specific city by its ID.

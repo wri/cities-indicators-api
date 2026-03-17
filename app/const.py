@@ -13,6 +13,8 @@ CITY_RESPONSE_KEYS = [
     "longitude",
     "projects",
     "s3_base_path",
+    "aoi_area",
+    "utci_simulation_date",
 ]
 INTERVENTIONS_RESPONSE_KEYS = [
     "id",
@@ -54,6 +56,7 @@ SCENARIOS_INDICATOR_VALUES_RESPONSE_KEYS = [
 INDICATORS_LIST_RESPONSE_KEYS = [
     "id",
     "city_ids",
+    "percentile_order",
     "data_sources",
     "data_sources_link",
     "data_views",

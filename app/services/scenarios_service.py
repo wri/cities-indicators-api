@@ -48,11 +48,19 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
     with ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(
-                lambda: fetch_interventions(construct_filter_formula_v2(filters))
+                lambda: fetch_interventions(
+                    construct_filter_formula_v2({"category": intervention_category})
+                    if intervention_category == "baseline"
+                    else construct_filter_formula_v2(filters)
+                )
             ): "interventions",
             executor.submit(
                 lambda: fetch_scenarios(
-                    construct_filter_formula({"cities": city_id}) if city_id else None
+                    construct_filter_formula(
+                        {"id": "baseline"}
+                        if intervention_category == "baseline"
+                        else {"cities": city_id}
+                    )
                 )
             ): "scenarios",
             executor.submit(
@@ -83,7 +91,6 @@ def get_scenario_by_city_id_aoi_id_intervention_category(
     intervention_ids_list = [
         intervention["id"] for intervention in results["interventions"]
     ]
-
     scenario_list = [
         (
             {key: scenario["fields"].get(key) for key in SCENARIOS_RESPONSE_KEYS}
